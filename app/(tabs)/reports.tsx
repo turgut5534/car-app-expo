@@ -3,7 +3,7 @@ import { View, Text } from "react-native";
 export default function HomeScreen() {
   return (
     <View>
-      <Text>My Cars</Text>
+      <Text>Reports</Text>
     </View>
   );
 }

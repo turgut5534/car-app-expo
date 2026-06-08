@@ -8,9 +8,50 @@ import {
 import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
+import { useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function LoginScreen() {
   const { t } = useTranslation();
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const login = async () => {
+    try {
+      setError("");
+      setLoading(true);
+
+      const response = await fetch("http://192.168.0.10:3000/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.message || "Login failed");
+        return;
+      }
+
+      // JWT varsa burada sakla
+      await AsyncStorage.setItem("token", data.accessToken);
+
+      router.replace("/home");
+    } catch (e) {
+      setError("Server connection error");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -27,17 +68,24 @@ export default function LoginScreen() {
 
         <TextInput
           style={styles.input}
+          value={email}
+          onChangeText={setEmail}
           placeholder={t("auth.emailPlaceholder")}
           keyboardType="email-address"
+          autoCapitalize="none"
         />
 
         <Text style={styles.label}>{t("auth.password")}</Text>
 
         <TextInput
           style={styles.input}
+          value={password}
+          onChangeText={setPassword}
           placeholder={t("auth.passwordPlaceholder")}
           secureTextEntry
         />
+
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
         <TouchableOpacity
           onPress={() => router.push("/(auth)/forgot-password")}
@@ -45,8 +93,14 @@ export default function LoginScreen() {
           <Text style={styles.forgot}>{t("auth.forgotPassword")}</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.button}>
-          <Text style={styles.buttonText}>{t("auth.login")}</Text>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={login}
+          disabled={loading}
+        >
+          <Text style={styles.buttonText}>
+            {loading ? t("common.loading") : t("auth.login")}
+          </Text>
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => router.push("/(auth)/register")}>
@@ -134,5 +188,9 @@ const styles = StyleSheet.create({
   link: {
     color: "#0057E7",
     fontWeight: "700",
+  },
+  errorText: {
+    color: "#DC2626",
+    marginTop: 8,
   },
 });

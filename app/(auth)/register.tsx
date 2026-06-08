@@ -21,6 +21,7 @@ export default function RegisterScreen() {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   const continueWithEmail = async () => {
+    
     if (!email.trim()) {
       setEmailError(t("register.emailRequired"));
       return;
@@ -29,6 +30,38 @@ export default function RegisterScreen() {
     if (!emailRegex.test(email)) {
       setEmailError(t("register.invalidEmail"));
       return;
+    }
+
+    try {
+      const response = await fetch("http://192.168.0.10:3000/auth/check-email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message);
+      }
+
+      if (data.exists) {
+        setEmailError(t("register.emailAlreadyExists"));
+        return;
+      }
+
+      console.log(data)
+
+      router.push({
+        pathname: "/(auth)/create-password",
+        params: { email },
+      });
+    } catch (error) {
+      setEmailError(error instanceof Error ? error.message : t("common.error"));
     }
 
     router.push({

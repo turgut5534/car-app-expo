@@ -6,11 +6,17 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
-  Alert,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
+
+type Errors = {
+  email?: string;
+  password?: string;
+  passwordAgain?: string;
+  general?: string;
+};
 
 export default function CreatePasswordScreen() {
   const { t } = useTranslation();
@@ -19,32 +25,37 @@ export default function CreatePasswordScreen() {
   const [password, setPassword] = useState("");
   const [passwordAgain, setPasswordAgain] = useState("");
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<Errors>({});
 
   const createAccount = async () => {
+    const nextErrors: Errors = {};
+
     if (!email) {
-      Alert.alert(t("common.error"), t("register.emailMissing"));
-      return;
+      nextErrors.email = t("register.emailMissing");
     }
 
-    if (!password || !passwordAgain) {
-      Alert.alert(t("common.error"), t("register.fillAllFields"));
-      return;
+    if (!password) {
+      nextErrors.password = t("register.fillAllFields");
+    } else if (password.length < 8) {
+      nextErrors.password = t("register.passwordTooShort");
     }
 
-    if (password.length < 8) {
-      Alert.alert(t("common.error"), t("register.passwordTooShort"));
-      return;
+    if (!passwordAgain) {
+      nextErrors.passwordAgain = t("register.fillAllFields");
+    } else if (password !== passwordAgain) {
+      nextErrors.passwordAgain = t("register.passwordsNotMatch");
     }
 
-    if (password !== passwordAgain) {
-      Alert.alert(t("common.error"), t("register.passwordsNotMatch"));
+    if (Object.keys(nextErrors).length > 0) {
+      setErrors(nextErrors);
       return;
     }
 
     try {
       setLoading(true);
+      setErrors({});
 
-      const response = await fetch("http://YOUR_BACKEND_URL/auth/register", {
+      const response = await fetch("http://192.168.0.10:3000/users", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -63,10 +74,12 @@ export default function CreatePasswordScreen() {
 
       router.replace("/(tabs)/home");
     } catch (error) {
-      Alert.alert(
-        t("common.error"),
-        error instanceof Error ? error.message : t("register.registerFailed")
-      );
+      setErrors({
+        general:
+          error instanceof Error
+            ? error.message
+            : t("register.registerFailed"),
+      });
     } finally {
       setLoading(false);
     }
@@ -74,7 +87,10 @@ export default function CreatePasswordScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.content}
+      >
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()}>
             <Text style={styles.back}>‹</Text>
@@ -85,50 +101,113 @@ export default function CreatePasswordScreen() {
           <Text style={styles.logoText}>🔐</Text>
         </View>
 
-        <Text style={styles.title}>{t("register.createPasswordTitle")}</Text>
+        <Text style={styles.title}>
+          {t("register.createPasswordTitle")}
+        </Text>
+
         <Text style={styles.subtitle}>
           {t("register.createPasswordSubtitle")}
         </Text>
 
         <Text style={styles.label}>{t("auth.email")}</Text>
+
         <TextInput
-          style={[styles.input, styles.disabledInput]}
+          style={[
+            styles.input,
+            styles.disabledInput,
+            errors.email && styles.inputError,
+          ]}
           value={email ?? ""}
           editable={false}
         />
 
+        {errors.email && (
+          <Text style={styles.errorText}>{errors.email}</Text>
+        )}
+
         <Text style={styles.label}>{t("auth.password")}</Text>
+
         <TextInput
-          style={styles.input}
+          style={[
+            styles.input,
+            errors.password && styles.inputError,
+          ]}
           value={password}
-          onChangeText={setPassword}
+          onChangeText={(text) => {
+            setPassword(text);
+            setErrors((prev) => ({
+              ...prev,
+              password: undefined,
+              general: undefined,
+            }));
+          }}
           placeholder={t("register.passwordPlaceholder")}
           secureTextEntry
         />
 
-        <Text style={styles.label}>{t("register.passwordAgain")}</Text>
+        {errors.password && (
+          <Text style={styles.errorText}>{errors.password}</Text>
+        )}
+
+        <Text style={styles.label}>
+          {t("register.passwordAgain")}
+        </Text>
+
         <TextInput
-          style={styles.input}
+          style={[
+            styles.input,
+            errors.passwordAgain && styles.inputError,
+          ]}
           value={passwordAgain}
-          onChangeText={setPasswordAgain}
+          onChangeText={(text) => {
+            setPasswordAgain(text);
+            setErrors((prev) => ({
+              ...prev,
+              passwordAgain: undefined,
+              general: undefined,
+            }));
+          }}
           placeholder={t("register.passwordAgainPlaceholder")}
           secureTextEntry
         />
 
+        {errors.passwordAgain && (
+          <Text style={styles.errorText}>
+            {errors.passwordAgain}
+          </Text>
+        )}
+
+        {errors.general && (
+          <View style={styles.errorBox}>
+            <Text style={styles.errorBoxText}>
+              {errors.general}
+            </Text>
+          </View>
+        )}
+
         <TouchableOpacity
-          style={[styles.button, loading && styles.disabledButton]}
+          style={[
+            styles.button,
+            loading && styles.disabledButton,
+          ]}
           onPress={createAccount}
           disabled={loading}
         >
           <Text style={styles.buttonText}>
-            {loading ? t("common.loading") : t("register.createAccount")}
+            {loading
+              ? t("common.loading")
+              : t("register.createAccount")}
           </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => router.push("/(auth)/login")}>
+        <TouchableOpacity
+          onPress={() => router.push("/(auth)/login")}
+        >
           <Text style={styles.bottomText}>
             {t("register.haveAccount")}{" "}
-            <Text style={styles.link}>{t("auth.login")}</Text>
+            <Text style={styles.link}>
+              {t("auth.login")}
+            </Text>
           </Text>
         </TouchableOpacity>
       </ScrollView>
@@ -139,8 +218,11 @@ export default function CreatePasswordScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#FFFFFF",
     paddingHorizontal: 24,
+  },
+  content: {
+    paddingBottom: 32,
   },
   header: {
     marginTop: 8,
@@ -189,11 +271,36 @@ const styles = StyleSheet.create({
     borderColor: "#D6DCE8",
     borderRadius: 12,
     paddingHorizontal: 14,
-    backgroundColor: "#fff",
+    backgroundColor: "#FFFFFF",
   },
   disabledInput: {
     backgroundColor: "#F4F7FD",
     color: "#637083",
+  },
+  inputError: {
+    borderColor: "#EF4444",
+    backgroundColor: "#FFF7F7",
+  },
+  errorText: {
+    color: "#EF4444",
+    fontSize: 12,
+    fontWeight: "500",
+    marginTop: 6,
+    marginLeft: 4,
+  },
+  errorBox: {
+    backgroundColor: "#FEF2F2",
+    borderWidth: 1,
+    borderColor: "#FECACA",
+    borderRadius: 12,
+    padding: 12,
+    marginTop: 18,
+  },
+  errorBoxText: {
+    color: "#B91C1C",
+    fontSize: 13,
+    fontWeight: "600",
+    textAlign: "center",
   },
   button: {
     height: 56,
@@ -201,20 +308,19 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 28,
+    marginTop: 24,
   },
   disabledButton: {
     opacity: 0.6,
   },
   buttonText: {
-    color: "#fff",
+    color: "#FFFFFF",
     fontWeight: "700",
     fontSize: 16,
   },
   bottomText: {
     textAlign: "center",
     marginTop: 22,
-    marginBottom: 24,
     color: "#637083",
   },
   link: {

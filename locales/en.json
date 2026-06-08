@@ -70,7 +70,13 @@
     "error": "Error",
     "somethingWentWrong": "Something went wrong.",
     "retry": "Try Again",
-    "viewAll": "See All"
+    "viewAll": "See All",
+    "edit": "Edit",
+    "delete": "Delete",
+    "cancel": "Cancel",
+    "viewDetails": "View Details",
+    "yes": "Yes",
+    "no": "No"
   },
   "vehicles": {
     "title": "MY CARS",
@@ -96,7 +102,9 @@
     "createVehicle": "Add My Vehicle",
     "fillAllFields": "Please fill in all fields.",
     "createFailed": "Failed to create vehicle.",
-    "currentMileage": "Current mileage"
+    "currentMileage": "Current mileage",
+    "confirmDelete": "Are you sure you want to delete this vehicle?",
+    "deleteFailed": "Failed to delete vehicle"
   },
   "home": {
     "title": "HOME",
@@ -165,5 +173,18 @@
     "detailTitleServices": "CAR DETAIL - SERVICES",
     "addService": "Add Service",
     "noServices": "No service records yet"
-  }
+  },
+  "quickAdd": {
+  "title": "QUICK ADD",
+  "addFuel": "Add Fuel",
+  "addFuelSubtitle": "Record a fuel fill-up",
+  "addService": "Add Service",
+  "addServiceSubtitle": "Add a service or maintenance",
+  "addExpense": "Add Expense",
+  "addExpenseSubtitle": "Add another expense",
+  "addDocument": "Add Document",
+  "addDocumentSubtitle": "Upload a document",
+  "addCar": "Add Car",
+  "addCarSubtitle": "Register a new car"
+}
 }

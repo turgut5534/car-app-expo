@@ -71,7 +71,11 @@
     "error": "Błąd",
     "somethingWentWrong": "Wystąpił błąd.",
     "retry": "Spróbuj ponownie",
-    "viewAll": "Zobacz wszystkie"
+    "viewAll": "Zobacz wszystkie",
+    "edit": "Edytuj",
+    "delete": "Usuń",
+    "cancel": "Anuluj",
+    "viewDetails": "Zobacz szczegóły"
   },
   "vehicles": {
     "title": "MOJE SAMOCHODY",
@@ -147,21 +151,34 @@
     "profile": "Profil"
   },
   "cars": {
-  "detailTitle": "SZCZEGÓŁY POJAZDU - OGÓLNE",
-  "overview": "Przegląd",
-  "services": "Serwisy",
-  "fuel": "Paliwo",
-  "expenses": "Wydatki",
-  "documents": "Dokumenty",
-  "thisMonthExpenses": "Wydatki w tym miesiącu",
-  "totalExpenses": "Łączne wydatki",
-  "vsLastMonth": "w porównaniu z poprzednim miesiącem",
-  "allTime": "Cały okres",
-  "lastService": "Ostatni serwis",
-  "lastFuel": "Ostatnie tankowanie",
-  "averageFuelConsumption": "Średnie zużycie paliwa",
-  "costPerKm": "Koszt za kilometr",
-  "tabComingSoon": "Ta sekcja będzie dostępna wkrótce.",
-  "detailLoadFailed": "Nie udało się załadować szczegółów pojazdu."
+    "detailTitle": "SZCZEGÓŁY POJAZDU - OGÓLNE",
+    "overview": "Przegląd",
+    "services": "Serwisy",
+    "fuel": "Paliwo",
+    "expenses": "Wydatki",
+    "documents": "Dokumenty",
+    "thisMonthExpenses": "Wydatki w tym miesiącu",
+    "totalExpenses": "Łączne wydatki",
+    "vsLastMonth": "w porównaniu z poprzednim miesiącem",
+    "allTime": "Cały okres",
+    "lastService": "Ostatni serwis",
+    "lastFuel": "Ostatnie tankowanie",
+    "averageFuelConsumption": "Średnie zużycie paliwa",
+    "costPerKm": "Koszt za kilometr",
+    "tabComingSoon": "Ta sekcja będzie dostępna wkrótce.",
+    "detailLoadFailed": "Nie udało się załadować szczegółów pojazdu."
+  },
+  "quickAdd": {
+  "title": "SZYBKIE DODAWANIE",
+  "addFuel": "Dodaj paliwo",
+  "addFuelSubtitle": "Zapisz tankowanie",
+  "addService": "Dodaj serwis",
+  "addServiceSubtitle": "Dodaj serwis lub przegląd",
+  "addExpense": "Dodaj wydatek",
+  "addExpenseSubtitle": "Dodaj kolejny wydatek",
+  "addDocument": "Dodaj dokument",
+  "addDocumentSubtitle": "Prześlij dokument",
+  "addCar": "Dodaj auto",
+  "addCarSubtitle": "Zarejestruj nowe auto"
 }
 }

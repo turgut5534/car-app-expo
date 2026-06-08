@@ -7,6 +7,9 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Image,
+  Modal,
+  Pressable,
+  TextInput,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -17,10 +20,16 @@ import { useAppTheme } from "../../context/ThemeContext";
 
 type Vehicle = {
   id: string;
-  name: string;
+  name?: string;
+  brand?: string;
+  model?: string;
   plate: string;
-  mileage: string;
+  mileage?: string;
+  currentKm?: number;
   imageUrl?: string;
+  owner?: {
+    distanceUnit?: "km" | "mi";
+  };
 };
 
 const API_URL = "http://192.168.0.10:3000/cars";
@@ -32,6 +41,18 @@ export default function VehiclesScreen() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+  const [actionModalVisible, setActionModalVisible] = useState(false);
+
+  const [confirmDeleteVisible, setConfirmDeleteVisible] = useState(false);
+  const [passwordModalVisible, setPasswordModalVisible] = useState(false);
+  const [password, setPassword] = useState("");
+  const [deleting, setDeleting] = useState(false);
+
+  const closeActionModal = () => {
+    setActionModalVisible(false);
+    setSelectedVehicle(null);
+  };
 
   const fetchVehicles = async () => {
     try {
@@ -75,6 +96,42 @@ export default function VehiclesScreen() {
   useEffect(() => {
     fetchVehicles();
   }, []);
+
+  const deleteVehicle = async () => {
+    if (!selectedVehicle) return;
+
+    try {
+      setDeleting(true);
+
+      const token = await AsyncStorage.getItem("token");
+
+      const response = await fetch(`${API_URL}/${selectedVehicle.id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Delete failed");
+      }
+
+      setPasswordModalVisible(false);
+      setPassword("");
+
+      fetchVehicles();
+    } catch (error: any) {
+      Alert.alert("Error", error.message);
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -152,12 +209,10 @@ export default function VehiclesScreen() {
               icon="speedometer-outline"
               text={t("vehicles.trackMileage")}
             />
-
             <EmptyFeature
               icon="construct-outline"
               text={t("vehicles.trackMaintenance")}
             />
-
             <EmptyFeature
               icon="cash-outline"
               text={t("vehicles.trackExpenses")}
@@ -251,19 +306,203 @@ export default function VehiclesScreen() {
                 ]}
               >
                 <Text style={[styles.kmText, { color: theme.primary }]}>
-                  {vehicle.owner.distanceUnit === "mi"
-                    ? `${Math.round(vehicle.currentKm * 0.621371)} mi`
-                    : `${vehicle.currentKm} km`}
+                  {vehicle.owner?.distanceUnit === "mi"
+                    ? `${Math.round((vehicle.currentKm ?? 0) * 0.621371)} mi`
+                    : `${vehicle.currentKm ?? 0} km`}
                 </Text>
               </View>
             </View>
 
-            <TouchableOpacity style={styles.moreButton}>
+            <TouchableOpacity
+              style={styles.moreButton}
+              onPress={(event) => {
+                event.stopPropagation();
+                setSelectedVehicle(vehicle);
+                setActionModalVisible(true);
+              }}
+            >
               <Ionicons name="ellipsis-vertical" size={20} color={theme.text} />
             </TouchableOpacity>
           </TouchableOpacity>
         ))}
       </ScrollView>
+
+      <Modal
+        visible={actionModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={closeActionModal}
+      >
+        <Pressable style={styles.modalOverlay} onPress={closeActionModal}>
+          <Pressable
+            style={[styles.actionSheet, { backgroundColor: theme.card }]}
+            onPress={(event) => event.stopPropagation()}
+          >
+            <Text style={[styles.actionTitle, { color: theme.text }]}>
+              {selectedVehicle?.name ||
+                `${selectedVehicle?.brand ?? ""} ${selectedVehicle?.model ?? ""}`}
+            </Text>
+
+            <TouchableOpacity
+              style={[styles.actionItem, { borderBottomColor: theme.border }]}
+              onPress={() => {
+                closeActionModal();
+                router.push(`/vehicles/${selectedVehicle?.id}/edit`);
+              }}
+            >
+              <Ionicons name="create-outline" size={22} color={theme.text} />
+              <Text style={[styles.actionText, { color: theme.text }]}>
+                {t("common.edit")}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.actionItem, { borderBottomColor: theme.border }]}
+              onPress={() => {
+                closeActionModal();
+                router.push(`/vehicles/${selectedVehicle?.id}`);
+              }}
+            >
+              <Ionicons name="eye-outline" size={22} color={theme.text} />
+              <Text style={[styles.actionText, { color: theme.text }]}>
+                {t("common.viewDetails")}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.actionItem}
+              onPress={() => {
+                closeActionModal();
+                setConfirmDeleteVisible(true);
+              }}
+            >
+              <Ionicons name="trash-outline" size={22} color="#DC2626" />
+              <Text style={[styles.actionText, { color: "#DC2626" }]}>
+                {t("common.delete")}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.cancelButton}
+              onPress={closeActionModal}
+            >
+              <Text style={[styles.cancelText, { color: theme.mutedText }]}>
+                {t("common.cancel")}
+              </Text>
+            </TouchableOpacity>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
+      <Modal visible={confirmDeleteVisible} transparent animationType="fade">
+        <Pressable
+          style={styles.modalOverlayCenter}
+          onPress={() => setConfirmDeleteVisible(false)}
+        >
+          <Pressable
+            style={[styles.confirmBox, { backgroundColor: theme.card }]}
+            onPress={(e) => e.stopPropagation()}
+          >
+            <Text
+              style={{
+                color: theme.text,
+                fontSize: 18,
+                fontWeight: "700",
+                marginBottom: 12,
+              }}
+            >
+              {t("vehicles.confirmDelete")}
+            </Text>
+
+            <View style={styles.confirmButtons}>
+              <TouchableOpacity onPress={() => setConfirmDeleteVisible(false)}>
+                <Text style={{ color: theme.text }}>{t("common.no")}</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => {
+                  setConfirmDeleteVisible(false);
+                  setPasswordModalVisible(true);
+                }}
+              >
+                <Text
+                  style={{
+                    color: "#DC2626",
+                    fontWeight: "700",
+                  }}
+                >
+                  {t("common.yes")}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
+      <Modal visible={passwordModalVisible} transparent animationType="fade">
+        <Pressable
+          style={styles.modalOverlayCenter}
+          onPress={() => setPasswordModalVisible(false)}
+        >
+          <Pressable
+            style={[styles.confirmBox, { backgroundColor: theme.card }]}
+            onPress={(e) => e.stopPropagation()}
+          >
+            <Text
+              style={{
+                color: theme.text,
+                fontSize: 18,
+                fontWeight: "700",
+                marginBottom: 15,
+              }}
+            >
+              {t("auth.passwordPlaceholder")}
+            </Text>
+
+            <TextInput
+              secureTextEntry
+              value={password}
+              onChangeText={setPassword}
+              placeholder={t("auth.password")}
+              placeholderTextColor={theme.mutedText}
+              style={{
+                borderWidth: 1,
+                borderColor: theme.border,
+                borderRadius: 10,
+                paddingHorizontal: 12,
+                height: 50,
+                color: theme.text,
+                marginBottom: 15,
+              }}
+            />
+
+            <TouchableOpacity
+              disabled={deleting}
+              onPress={deleteVehicle}
+              style={{
+                backgroundColor: "#DC2626",
+                height: 50,
+                borderRadius: 10,
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              {deleting ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text
+                  style={{
+                    color: "#fff",
+                    fontWeight: "700",
+                  }}
+                >
+                  {t("common.delete")}
+                </Text>
+              )}
+            </TouchableOpacity>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -453,5 +692,61 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "800",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.35)",
+    justifyContent: "flex-end",
+  },
+  actionSheet: {
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+    paddingBottom: 34,
+  },
+  actionTitle: {
+    fontSize: 18,
+    fontWeight: "900",
+    marginBottom: 18,
+  },
+  actionItem: {
+    height: 56,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    borderBottomWidth: 1,
+  },
+  actionText: {
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  cancelButton: {
+    height: 52,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 12,
+  },
+  cancelText: {
+    fontSize: 15,
+    fontWeight: "700",
+  },
+  modalOverlayCenter: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  confirmBox: {
+    width: "85%",
+    borderRadius: 18,
+    padding: 20,
+  },
+
+  confirmButtons: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    gap: 25,
+    marginTop: 10,
   },
 });

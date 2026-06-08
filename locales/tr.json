@@ -71,7 +71,13 @@
     "error": "Hata",
     "somethingWentWrong": "Bir hata oluştu.",
     "retry": "Tekrar Dene",
-    "viewAll": "Tümünü Gör"
+    "viewAll": "Tümünü Gör",
+    "edit": "Düzenle",
+    "delete": "Sil",
+    "cancel": "İptal",
+    "viewDetails": "Detayları Gör",
+    "yes": "Evet",
+    "no": "Hayır"
   },
   "vehicles": {
     "title": "ARAÇLARIM",
@@ -97,7 +103,9 @@
     "createVehicle": "Aracımı Ekle",
     "fillAllFields": "Lütfen tüm alanları doldurun.",
     "createFailed": "Araç oluşturulamadı.",
-    "currentMileage": "Güncel Kilometre"
+    "currentMileage": "Güncel Kilometre",
+    "confirmDelete": "Aracı silmek istediğinize emin misiniz?",
+    "deleteFailed": "Araç silinemedi"
   },
   "home": {
     "title": "ANA SAYFA",
@@ -147,21 +155,34 @@
     "profile": "Profil"
   },
   "cars": {
-  "detailTitle": "ARAÇ DETAYI - GENEL",
-  "overview": "Genel Bakış",
-  "services": "Servisler",
-  "fuel": "Yakıt",
-  "expenses": "Giderler",
-  "documents": "Belgeler",
-  "thisMonthExpenses": "Bu Ayki Giderler",
-  "totalExpenses": "Toplam Giderler",
-  "vsLastMonth": "geçen aya göre",
-  "allTime": "Tüm zamanlar",
-  "lastService": "Son Servis",
-  "lastFuel": "Son Yakıt",
-  "averageFuelConsumption": "Ortalama Yakıt Tüketimi",
-  "costPerKm": "Kilometre Başına Maliyet",
-  "tabComingSoon": "Bu bölüm yakında kullanılabilir olacak.",
-  "detailLoadFailed": "Araç detayları yüklenemedi."
+    "detailTitle": "ARAÇ DETAYI - GENEL",
+    "overview": "Genel Bakış",
+    "services": "Servisler",
+    "fuel": "Yakıt",
+    "expenses": "Giderler",
+    "documents": "Belgeler",
+    "thisMonthExpenses": "Bu Ayki Giderler",
+    "totalExpenses": "Toplam Giderler",
+    "vsLastMonth": "geçen aya göre",
+    "allTime": "Tüm zamanlar",
+    "lastService": "Son Servis",
+    "lastFuel": "Son Yakıt",
+    "averageFuelConsumption": "Ortalama Yakıt Tüketimi",
+    "costPerKm": "Kilometre Başına Maliyet",
+    "tabComingSoon": "Bu bölüm yakında kullanılabilir olacak.",
+    "detailLoadFailed": "Araç detayları yüklenemedi."
+  },
+  "quickAdd": {
+  "title": "HIZLI EKLE",
+  "addFuel": "Yakıt Ekle",
+  "addFuelSubtitle": "Yakıt alımını kaydet",
+  "addService": "Servis Ekle",
+  "addServiceSubtitle": "Servis veya bakım ekle",
+  "addExpense": "Gider Ekle",
+  "addExpenseSubtitle": "Başka bir gider ekle",
+  "addDocument": "Belge Ekle",
+  "addDocumentSubtitle": "Bir belge yükle",
+  "addCar": "Araç Ekle",
+  "addCarSubtitle": "Yeni bir araç kaydet"
 }
 }

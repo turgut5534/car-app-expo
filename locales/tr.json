@@ -77,7 +77,26 @@
     "title": "ARAÇLARIM",
     "addCar": "Araç Ekle",
     "loading": "Araçlar yükleniyor...",
-    "fetchFailed": "Araçlar yüklenemedi."
+    "fetchFailed": "Araçlar yüklenemedi.",
+    "trackMileage": "Kilometre takibi yap",
+    "trackMaintenance": "Bakım hatırlatmalarını yönet",
+    "trackExpenses": "Araç masraflarını takip et",
+    "noVehicles": "Henüz araç eklemediniz",
+    "addFirstVehicle": "İlk Aracını Ekle",
+    "noVehiclesDescription": "Bakım, yakıt ve diğer araç giderlerini takip etmeye başlamak için ilk aracını ekle.",
+    "createTitle": "Hemen başlayalım!",
+    "createSubtitle": "Aracınızı ekleyerek deneyiminizi kişiselleştirin.",
+    "plate": "Plaka",
+    "platePlaceholder": "34 ABC 123",
+    "brand": "Marka",
+    "brandPlaceholder": "Marka seçin",
+    "model": "Model",
+    "modelPlaceholder": "Model girin",
+    "year": "Yıl",
+    "yearPlaceholder": "Yıl seçin",
+    "createVehicle": "Aracımı Ekle",
+    "fillAllFields": "Lütfen tüm alanları doldurun.",
+    "createFailed": "Araç oluşturulamadı."
   },
   "home": {
     "title": "ANA SAYFA",
@@ -114,5 +133,10 @@
     "privacySecurity": "Gizlilik ve Güvenlik",
     "logout": "Çıkış Yap",
     "loadFailed": "Profil bilgileri yüklenemedi."
+  },
+  "theme": {
+    "light": "Açık",
+    "dark": "Koyu",
+    "system": "Sistem"
   }
 }

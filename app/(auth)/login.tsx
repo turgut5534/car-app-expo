@@ -8,7 +8,7 @@ import {
 import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function LoginScreen() {
@@ -18,6 +18,16 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const fetchProfile = async () => {
+    const token = await AsyncStorage.getItem("token");
+
+    console.log(token);
+  };
+
+  useEffect(() => {
+    fetchProfile();
+  }, []);
 
   const login = async () => {
     try {
@@ -42,7 +52,6 @@ export default function LoginScreen() {
         return;
       }
 
-      // JWT varsa burada sakla
       await AsyncStorage.setItem("token", data.accessToken);
 
       router.replace("/home");

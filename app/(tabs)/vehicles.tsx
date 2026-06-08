@@ -22,7 +22,7 @@ type Vehicle = {
   imageUrl?: string;
 };
 
-const API_URL = "http://192.168.0.10:3000/vehicles";
+const API_URL = "http://192.168.0.10:3000/cars";
 
 export default function VehiclesScreen() {
   const { t } = useTranslation();
@@ -63,7 +63,7 @@ export default function VehiclesScreen() {
       setVehicles(data);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : t("common.somethingWentWrong")
+        err instanceof Error ? err.message : t("common.somethingWentWrong"),
       );
     } finally {
       setLoading(false);
@@ -97,55 +97,56 @@ export default function VehiclesScreen() {
     );
   }
 
-  return (
-    <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <Text style={styles.title}>{t("vehicles.title")}</Text>
+  if (vehicles.length === 0) {
+    return (
+      <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
+        <View style={styles.emptyWrapper}>
+          <View style={styles.emptyIconCircle}>
+            <Ionicons name="car-sport" size={64} color="#0057E7" />
+          </View>
 
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={() => router.push("/vehicles/create")}
-        >
-          <Ionicons name="add" size={22} color="#FFFFFF" />
-          <Text style={styles.addButtonText}>{t("vehicles.addCar")}</Text>
-        </TouchableOpacity>
+          <Text style={styles.emptyTitle}>{t("vehicles.noVehicles")}</Text>
 
-        {vehicles.map((vehicle) => (
-          <TouchableOpacity
-            key={vehicle.id}
-            style={styles.vehicleCard}
-            activeOpacity={0.85}
-            onPress={() => router.push(`/vehicles/${vehicle.id}`)}
-          >
-            {vehicle.imageUrl ? (
-              <Image
-                source={{ uri: vehicle.imageUrl }}
-                style={styles.vehicleImage}
-                resizeMode="contain"
-              />
-            ) : (
-              <View style={styles.imagePlaceholder}>
-                <Ionicons name="car-sport" size={48} color="#94A3B8" />
-              </View>
-            )}
+          <Text style={styles.emptyDescription}>
+            {t("vehicles.noVehiclesDescription")}
+          </Text>
 
-            <View style={styles.vehicleInfo}>
-              <Text style={styles.vehicleName}>{vehicle.name}</Text>
-              <Text style={styles.vehiclePlate}>{vehicle.plate}</Text>
-
-              <View style={styles.kmBadge}>
-                <Text style={styles.kmText}>{vehicle.mileage}</Text>
-              </View>
+          <View style={styles.emptyCard}>
+            <View style={styles.emptyCardRow}>
+              <Ionicons name="speedometer-outline" size={22} color="#0057E7" />
+              <Text style={styles.emptyCardText}>
+                {t("vehicles.trackMileage")}
+              </Text>
             </View>
 
-            <TouchableOpacity style={styles.moreButton}>
-              <Ionicons name="ellipsis-vertical" size={20} color="#111827" />
-            </TouchableOpacity>
+            <View style={styles.emptyCardRow}>
+              <Ionicons name="construct-outline" size={22} color="#0057E7" />
+              <Text style={styles.emptyCardText}>
+                {t("vehicles.trackMaintenance")}
+              </Text>
+            </View>
+
+            <View style={styles.emptyCardRow}>
+              <Ionicons name="cash-outline" size={22} color="#0057E7" />
+              <Text style={styles.emptyCardText}>
+                {t("vehicles.trackExpenses")}
+              </Text>
+            </View>
+          </View>
+
+          <TouchableOpacity
+            style={styles.primaryEmptyButton}
+            onPress={() => router.push("/vehicles/create")}
+          >
+            <Ionicons name="add" size={22} color="#FFFFFF" />
+            <Text style={styles.primaryEmptyButtonText}>
+              {t("vehicles.addFirstVehicle")}
+            </Text>
           </TouchableOpacity>
-        ))}
-      </ScrollView>
-    </SafeAreaView>
-  );
+        </View>
+      </SafeAreaView>
+    );
+  }
 }
 
 const styles = StyleSheet.create({
@@ -272,5 +273,77 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontWeight: "700",
   },
-});
+  emptyWrapper: {
+  flex: 1,
+  justifyContent: "center",
+  alignItems: "center",
+  paddingHorizontal: 6,
+},
 
+emptyIconCircle: {
+  width: 132,
+  height: 132,
+  borderRadius: 66,
+  backgroundColor: "#EEF4FF",
+  justifyContent: "center",
+  alignItems: "center",
+  marginBottom: 24,
+},
+
+emptyTitle: {
+  fontSize: 24,
+  fontWeight: "900",
+  color: "#081331",
+  textAlign: "center",
+},
+
+emptyDescription: {
+  fontSize: 15,
+  color: "#64748B",
+  textAlign: "center",
+  lineHeight: 22,
+  marginTop: 10,
+  marginBottom: 26,
+  paddingHorizontal: 10,
+},
+
+emptyCard: {
+  width: "100%",
+  backgroundColor: "#F8FAFC",
+  borderRadius: 18,
+  padding: 18,
+  marginBottom: 26,
+  borderWidth: 1,
+  borderColor: "#E2E8F0",
+},
+
+emptyCardRow: {
+  flexDirection: "row",
+  alignItems: "center",
+  gap: 12,
+  paddingVertical: 10,
+},
+
+emptyCardText: {
+  color: "#081331",
+  fontSize: 15,
+  fontWeight: "700",
+},
+
+primaryEmptyButton: {
+  width: "100%",
+  height: 56,
+  borderRadius: 16,
+  backgroundColor: "#0057E7",
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: 8,
+},
+
+primaryEmptyButtonText: {
+  color: "#FFFFFF",
+  fontSize: 16,
+  fontWeight: "800",
+},
+});

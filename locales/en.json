@@ -76,7 +76,26 @@
     "title": "MY CARS",
     "addCar": "Add Car",
     "loading": "Loading vehicles...",
-    "fetchFailed": "Vehicles could not be loaded."
+    "fetchFailed": "Vehicles could not be loaded.",
+    "trackMileage": "Track mileage",
+    "trackMaintenance": "Manage maintenance reminders",
+    "trackExpenses": "Monitor vehicle expenses",
+    "noVehicles": "No vehicles yet",
+    "addFirstVehicle": "Add Your First Vehicle",
+    "noVehiclesDescription": "Add your first vehicle to start tracking maintenance, fuel costs and expenses.",
+    "createTitle": "Let's get started!",
+    "createSubtitle": "Personalize your experience by adding your vehicle.",
+    "plate": "License Plate",
+    "platePlaceholder": "34 ABC 123",
+    "brand": "Brand",
+    "brandPlaceholder": "Select brand",
+    "model": "Model",
+    "modelPlaceholder": "Enter model",
+    "year": "Year",
+    "yearPlaceholder": "Select year",
+    "createVehicle": "Add My Vehicle",
+    "fillAllFields": "Please fill in all fields.",
+    "createFailed": "Failed to create vehicle."
   },
   "home": {
     "title": "HOME",
@@ -113,5 +132,10 @@
     "privacySecurity": "Privacy & Security",
     "logout": "Log Out",
     "loadFailed": "Profile could not be loaded."
-  }
+  },
+  "theme": {
+  "light": "Light",
+  "dark": "Dark",
+  "system": "System"
+}
 }

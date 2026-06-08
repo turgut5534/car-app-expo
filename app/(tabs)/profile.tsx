@@ -13,6 +13,14 @@ import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
+import { Modal } from "react-native";
+import i18n from "../../i18n";
+
+const languageMap: Record<string, string> = {
+  tr: "Türkçe",
+  en: "English",
+  pl: "Polski",
+};
 
 type User = {
   firstName?: string;
@@ -23,11 +31,30 @@ type User = {
 };
 
 export default function ProfileScreen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const [selectedLanguage, setSelectedLanguage] = useState(i18n.language);
+
+  const [themeModalVisible, setThemeModalVisible] = useState(false);
+  const [selectedTheme, setSelectedTheme] = useState("light");
+
+  const currentLanguage =
+    languageMap[(selectedLanguage ?? "en").split("-")[0]] ?? "English";
 
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [languageModalVisible, setLanguageModalVisible] = useState(false);
 
+  useEffect(() => {
+    const loadTheme = async () => {
+      const savedTheme = await AsyncStorage.getItem("theme");
+      if (savedTheme) {
+        setSelectedTheme(savedTheme);
+      }
+    };
+
+    loadTheme();
+  }, []);
+  
   const fetchProfile = async () => {
     try {
       const token = await AsyncStorage.getItem("token");
@@ -48,7 +75,7 @@ export default function ProfileScreen() {
     } catch (error) {
       Alert.alert(
         t("common.error"),
-        error instanceof Error ? error.message : t("profile.loadFailed")
+        error instanceof Error ? error.message : t("profile.loadFailed"),
       );
     } finally {
       setLoading(false);
@@ -56,7 +83,7 @@ export default function ProfileScreen() {
   };
 
   const logout = async () => {
-    await AsyncStorage.removeItem("accessToken");
+    await AsyncStorage.removeItem("token");
     router.replace("/(auth)/login");
   };
 
@@ -139,20 +166,112 @@ export default function ProfileScreen() {
           <MenuItem
             icon="moon-outline"
             title={t("profile.theme")}
-            rightText={t("profile.light")}
-            onPress={() => {}}
+            rightText={t(`theme.${selectedTheme}`)}
+            onPress={() => setThemeModalVisible(true)}
           />
+
+          <Modal
+            visible={themeModalVisible}
+            transparent
+            animationType="slide"
+            onRequestClose={() => setThemeModalVisible(false)}
+          >
+            <View style={styles.modalOverlay}>
+              <View style={styles.languageSheet}>
+                <Text style={styles.sheetTitle}>{t("profile.theme")}</Text>
+
+                {[
+                  {
+                    code: "light",
+                    label: t("theme.light"),
+                    icon: "sunny-outline",
+                  },
+                  {
+                    code: "dark",
+                    label: t("theme.dark"),
+                    icon: "moon-outline",
+                  },
+                  {
+                    code: "system",
+                    label: t("theme.system"),
+                    icon: "phone-portrait-outline",
+                  },
+                ].map((theme) => (
+                  <TouchableOpacity
+                    key={theme.code}
+                    style={styles.languageOption}
+                    onPress={async () => {
+                      await AsyncStorage.setItem("theme", theme.code);
+                      setSelectedTheme(theme.code);
+                      setThemeModalVisible(false);
+                    }}
+                  >
+                    <View style={styles.menuLeft}>
+                      <Ionicons
+                        name={theme.icon as keyof typeof Ionicons.glyphMap}
+                        size={22}
+                        color="#081331"
+                      />
+                      <Text style={styles.languageLabel}>{theme.label}</Text>
+                    </View>
+
+                    {selectedTheme === theme.code ? (
+                      <Ionicons name="checkmark" size={22} color="#0057E7" />
+                    ) : null}
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          </Modal>
+
           <MenuItem
             icon="globe-outline"
             title={t("profile.language")}
-            rightText={t("profile.languageValue")}
-            onPress={() => {}}
+            rightText={currentLanguage}
+            onPress={() => setLanguageModalVisible(true)}
           />
+
           <MenuItem
             icon="shield-checkmark-outline"
             title={t("profile.privacySecurity")}
             onPress={() => {}}
           />
+
+          <Modal
+            visible={languageModalVisible}
+            transparent
+            animationType="slide"
+            onRequestClose={() => setLanguageModalVisible(false)}
+          >
+            <View style={styles.modalOverlay}>
+              <View style={styles.languageSheet}>
+                <Text style={styles.sheetTitle}>{t("profile.language")}</Text>
+
+                {[
+                  { code: "en", label: "English" },
+                  { code: "tr", label: "Türkçe" },
+                  { code: "pl", label: "Polski" },
+                ].map((lang) => (
+                  <TouchableOpacity
+                    key={lang.code}
+                    style={styles.languageOption}
+                    onPress={async () => {
+                      await AsyncStorage.setItem("systemLanguage", lang.code);
+                      await i18n.changeLanguage(lang.code);
+                      setSelectedLanguage(lang.code);
+                      setLanguageModalVisible(false);
+                    }}
+                  >
+                    <Text style={styles.languageLabel}>{lang.label}</Text>
+
+                    {selectedLanguage === lang.code ? (
+                      <Ionicons name="checkmark" size={22} color="#0057E7" />
+                    ) : null}
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          </Modal>
         </View>
 
         <TouchableOpacity style={styles.logoutButton} onPress={logout}>
@@ -300,5 +419,40 @@ const styles = StyleSheet.create({
     color: "#EF4444",
     fontWeight: "800",
     fontSize: 16,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.35)",
+    justifyContent: "flex-end",
+  },
+
+  languageSheet: {
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+    paddingBottom: 36,
+  },
+
+  sheetTitle: {
+    fontSize: 20,
+    fontWeight: "800",
+    color: "#081331",
+    marginBottom: 18,
+  },
+
+  languageOption: {
+    height: 56,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderBottomWidth: 1,
+    borderBottomColor: "#EEF2F7",
+  },
+
+  languageLabel: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#081331",
   },
 });

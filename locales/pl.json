@@ -77,7 +77,26 @@
     "title": "MOJE SAMOCHODY",
     "addCar": "Dodaj samochód",
     "loading": "Ładowanie pojazdów...",
-    "fetchFailed": "Nie udało się załadować pojazdów."
+    "fetchFailed": "Nie udało się załadować pojazdów.",
+    "trackMileage": "Śledź przebieg",
+    "trackMaintenance": "Zarządzaj przypomnieniami o serwisie",
+    "trackExpenses": "Monitoruj wydatki pojazdu",
+    "noVehicles": "Nie dodano jeszcze żadnych pojazdów",
+    "addFirstVehicle": "Dodaj swój pierwszy pojazd",
+    "noVehiclesDescription": "Dodaj swój pierwszy pojazd, aby śledzić przeglądy, koszty paliwa i wydatki.",
+    "createTitle": "Zaczynajmy!",
+    "createSubtitle": "Spersonalizuj swoje doświadczenie, dodając swój pojazd.",
+    "plate": "Numer rejestracyjny",
+    "platePlaceholder": "34 ABC 123",
+    "brand": "Marka",
+    "brandPlaceholder": "Wybierz markę",
+    "model": "Model",
+    "modelPlaceholder": "Wprowadź model",
+    "year": "Rok",
+    "yearPlaceholder": "Wybierz rok",
+    "createVehicle": "Dodaj mój pojazd",
+    "fillAllFields": "Proszę wypełnić wszystkie pola.",
+    "createFailed": "Nie udało się utworzyć pojazdu."
   },
   "home": {
     "title": "STRONA GŁÓWNA",
@@ -114,5 +133,10 @@
     "privacySecurity": "Prywatność i Bezpieczeństwo",
     "logout": "Wyloguj się",
     "loadFailed": "Nie udało się załadować profilu."
-  }
+  },
+  "theme": {
+  "light": "Jasny",
+  "dark": "Ciemny",
+  "system": "Systemowy"
+}
 }

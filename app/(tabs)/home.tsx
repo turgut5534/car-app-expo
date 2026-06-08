@@ -81,7 +81,7 @@ export default function HomeScreen() {
       setData(result);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : t("common.somethingWentWrong")
+        err instanceof Error ? err.message : t("common.somethingWentWrong"),
       );
     } finally {
       setLoading(false);
@@ -206,9 +206,14 @@ export default function HomeScreen() {
             <Text style={[styles.cardLabel, { color: theme.mutedText }]}>
               {t("home.totalCars")}
             </Text>
+
             <Text style={[styles.cardValue, { color: theme.primary }]}>
-              {data.totalCars ?? 0}
+              {data.ownedCars.length ?? 0}
             </Text>
+
+            <View style={styles.cardIcon}>
+              <Ionicons name="car-sport" size={24} color={theme.primary} />
+            </View>
           </View>
 
           <View
@@ -223,7 +228,9 @@ export default function HomeScreen() {
             <Text style={[styles.cardLabel, { color: theme.mutedText }]}>
               {t("home.thisMonthExpenses")}
             </Text>
-            <Text style={styles.greenText}>{data.thisMonthExpenses ?? 0}</Text>
+            <Text style={styles.greenText}>
+              {data.thisMonthExpenses ?? 0} {data.currency}
+            </Text>
             <Text style={styles.subText}>
               ↑ {data.expenseChange} {t("home.vsLastMonth")}
             </Text>
@@ -241,7 +248,20 @@ export default function HomeScreen() {
             <Text style={[styles.cardLabel, { color: theme.mutedText }]}>
               {t("home.upcomingReminders")}
             </Text>
-            <Text style={styles.purpleText}>{data.upcomingReminders ?? 0 }</Text>
+
+            <Text style={styles.purpleText}>{data.upcomingReminders ?? 0}</Text>
+
+            <View
+              style={[
+                styles.cardIcon,
+                {
+                  backgroundColor:
+                    theme.activeMode === "dark" ? "#3B0764" : "#F3E8FF",
+                },
+              ]}
+            >
+              <Ionicons name="notifications" size={22} color="#9333EA" />
+            </View>
           </View>
         </View>
 
@@ -258,9 +278,11 @@ export default function HomeScreen() {
         </View>
 
         {data.ownedCars.length > 0 ? (
-          data.ownedCars.map((car) => (
-            <View
+          data.ownedCars.slice(0, 3).map((car) => (
+            <TouchableOpacity
               key={car.id}
+              activeOpacity={0.85}
+              onPress={() => router.push(`/vehicles/${car.id}`)}
               style={[
                 styles.carItem,
                 {
@@ -287,7 +309,7 @@ export default function HomeScreen() {
 
               <View style={{ flex: 1 }}>
                 <Text style={[styles.carName, { color: theme.text }]}>
-                  {car.name}
+                  {car.brand} {car.model}
                 </Text>
                 <Text style={[styles.carPlate, { color: theme.mutedText }]}>
                   {car.plate}
@@ -299,10 +321,10 @@ export default function HomeScreen() {
                   {t("home.thisMonth")}
                 </Text>
                 <Text style={[styles.expenseValue, { color: theme.primary }]}>
-                  {car.expense}
+                  {car.expense ?? 0} {data.currency}
                 </Text>
               </View>
-            </View>
+            </TouchableOpacity>
           ))
         ) : (
           <EmptyCard
@@ -628,5 +650,28 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginTop: 6,
     lineHeight: 20,
+  },
+  card: {
+    flex: 1,
+    minHeight: 120,
+    borderRadius: 18,
+    padding: 18,
+    borderWidth: 1,
+    position: "relative",
+  },
+
+  cardIcon: {
+    position: "absolute",
+    right: 14,
+    bottom: 14,
+
+    width: 42,
+    height: 42,
+    borderRadius: 12,
+
+    backgroundColor: "#EEF4FF",
+
+    justifyContent: "center",
+    alignItems: "center",
   },
 });

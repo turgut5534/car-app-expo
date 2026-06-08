@@ -156,11 +156,11 @@ export default function CarDetailScreen() {
         </View>
 
         <ImageBackground
-          source={{
-            uri:
-              car.imageUrl ||
-              "https://images.unsplash.com/photo-1555215695-3004980ad54e",
-          }}
+          source={
+            car?.imageUrl
+              ? { uri: car.imageUrl }
+              : require("../../assets/images/image.png")
+          }
           style={styles.hero}
           imageStyle={styles.heroImage}
         >

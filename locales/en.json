@@ -140,7 +140,9 @@
     "languageValue": "English",
     "privacySecurity": "Privacy & Security",
     "logout": "Log Out",
-    "loadFailed": "Profile could not be loaded."
+    "loadFailed": "Profile could not be loaded.",
+    "logoutTitle": "Log Out",
+    "logoutMessage": "Are you sure you want to log out?"
   },
   "theme": {
     "light": "Light",
@@ -175,16 +177,28 @@
     "noServices": "No service records yet"
   },
   "quickAdd": {
-  "title": "QUICK ADD",
-  "addFuel": "Add Fuel",
-  "addFuelSubtitle": "Record a fuel fill-up",
-  "addService": "Add Service",
-  "addServiceSubtitle": "Add a service or maintenance",
-  "addExpense": "Add Expense",
-  "addExpenseSubtitle": "Add another expense",
-  "addDocument": "Add Document",
-  "addDocumentSubtitle": "Upload a document",
-  "addCar": "Add Car",
-  "addCarSubtitle": "Register a new car"
-}
+    "title": "QUICK ADD",
+    "addFuel": "Add Fuel",
+    "addFuelSubtitle": "Record a fuel fill-up",
+    "addService": "Add Service",
+    "addServiceSubtitle": "Add a service or maintenance",
+    "addExpense": "Add Expense",
+    "addExpenseSubtitle": "Add another expense",
+    "addDocument": "Add Document",
+    "addDocumentSubtitle": "Upload a document",
+    "addCar": "Add Car",
+    "addCarSubtitle": "Register a new car"
+  },
+  "services": {
+    "createTitle": "Add Service",
+    "createSubtitle": "Add a maintenance or service record for your vehicle.",
+    "serviceName": "Service Name",
+    "serviceNamePlaceholder": "Oil Change",
+    "mileageKm": "Mileage",
+    "date": "Date",
+    "cost": "Cost",
+    "saveService": "Save Service",
+    "fillAllFields": "Please fill in all fields.",
+    "createFailed": "Service could not be created."
+  }
 }

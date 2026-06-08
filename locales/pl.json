@@ -137,7 +137,9 @@
     "languageValue": "Polski",
     "privacySecurity": "Prywatność i Bezpieczeństwo",
     "logout": "Wyloguj się",
-    "loadFailed": "Nie udało się załadować profilu."
+    "loadFailed": "Nie udało się załadować profilu.",
+    "logoutTitle": "Wyloguj się",
+    "logoutMessage": "Czy na pewno chcesz się wylogować?"
   },
   "theme": {
     "light": "Jasny",
@@ -169,16 +171,16 @@
     "detailLoadFailed": "Nie udało się załadować szczegółów pojazdu."
   },
   "quickAdd": {
-  "title": "SZYBKIE DODAWANIE",
-  "addFuel": "Dodaj paliwo",
-  "addFuelSubtitle": "Zapisz tankowanie",
-  "addService": "Dodaj serwis",
-  "addServiceSubtitle": "Dodaj serwis lub przegląd",
-  "addExpense": "Dodaj wydatek",
-  "addExpenseSubtitle": "Dodaj kolejny wydatek",
-  "addDocument": "Dodaj dokument",
-  "addDocumentSubtitle": "Prześlij dokument",
-  "addCar": "Dodaj auto",
-  "addCarSubtitle": "Zarejestruj nowe auto"
-}
+    "title": "SZYBKIE DODAWANIE",
+    "addFuel": "Dodaj paliwo",
+    "addFuelSubtitle": "Zapisz tankowanie",
+    "addService": "Dodaj serwis",
+    "addServiceSubtitle": "Dodaj serwis lub przegląd",
+    "addExpense": "Dodaj wydatek",
+    "addExpenseSubtitle": "Dodaj kolejny wydatek",
+    "addDocument": "Dodaj dokument",
+    "addDocumentSubtitle": "Prześlij dokument",
+    "addCar": "Dodaj auto",
+    "addCarSubtitle": "Zarejestruj nowe auto"
+  }
 }

@@ -85,7 +85,7 @@ export default function ProfileScreen() {
     } catch (error) {
       Alert.alert(
         t("common.error"),
-        error instanceof Error ? error.message : t("profile.loadFailed")
+        error instanceof Error ? error.message : t("profile.loadFailed"),
       );
     } finally {
       setLoading(false);
@@ -93,8 +93,20 @@ export default function ProfileScreen() {
   };
 
   const logout = async () => {
-    await AsyncStorage.removeItem("token");
-    router.replace("/(auth)/login");
+    Alert.alert(t("profile.logoutTitle"), t("profile.logoutMessage"), [
+      {
+        text: t("common.cancel"),
+        style: "cancel",
+      },
+      {
+        text: t("profile.logout"),
+        style: "destructive",
+        onPress: async () => {
+          await AsyncStorage.removeItem("token");
+          router.replace("/(auth)/login");
+        },
+      },
+    ]);
   };
 
   useEffect(() => {

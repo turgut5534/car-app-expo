@@ -141,7 +141,9 @@
     "languageValue": "Türkçe",
     "privacySecurity": "Gizlilik ve Güvenlik",
     "logout": "Çıkış Yap",
-    "loadFailed": "Profil bilgileri yüklenemedi."
+    "loadFailed": "Profil bilgileri yüklenemedi.",
+    "logoutTitle": "Çıkış Yap",
+    "logoutMessage": "Çıkış yapmak istediğinizden emin misiniz?"
   },
   "theme": {
     "light": "Açık",
@@ -173,16 +175,16 @@
     "detailLoadFailed": "Araç detayları yüklenemedi."
   },
   "quickAdd": {
-  "title": "HIZLI EKLE",
-  "addFuel": "Yakıt Ekle",
-  "addFuelSubtitle": "Yakıt alımını kaydet",
-  "addService": "Servis Ekle",
-  "addServiceSubtitle": "Servis veya bakım ekle",
-  "addExpense": "Gider Ekle",
-  "addExpenseSubtitle": "Başka bir gider ekle",
-  "addDocument": "Belge Ekle",
-  "addDocumentSubtitle": "Bir belge yükle",
-  "addCar": "Araç Ekle",
-  "addCarSubtitle": "Yeni bir araç kaydet"
-}
+    "title": "HIZLI EKLE",
+    "addFuel": "Yakıt Ekle",
+    "addFuelSubtitle": "Yakıt alımını kaydet",
+    "addService": "Servis Ekle",
+    "addServiceSubtitle": "Servis veya bakım ekle",
+    "addExpense": "Gider Ekle",
+    "addExpenseSubtitle": "Başka bir gider ekle",
+    "addDocument": "Belge Ekle",
+    "addDocumentSubtitle": "Bir belge yükle",
+    "addCar": "Araç Ekle",
+    "addCarSubtitle": "Yeni bir araç kaydet"
+  }
 }

@@ -22,6 +22,7 @@ type Service = {
   mileageKm: number;
   cost: string;
   type?: "oil" | "brake" | "filter" | "spark" | "coolant";
+  currency: string;
 };
 
 type CarDetail = {
@@ -269,14 +270,16 @@ export default function CarDetailScreen() {
               onPress={() => router.push(`/vehicles/${id}/services/create`)}
             >
               <Ionicons name="add" size={20} color="#fff" />
-              <Text style={styles.addButtonText}>
-                {t("cars.addService")}
-              </Text>
+              <Text style={styles.addButtonText}>{t("cars.addService")}</Text>
             </TouchableOpacity>
 
             {car.services.length > 0 ? (
               car.services.map((service) => (
-                <ServiceItem key={service.id} service={service} />
+                <ServiceItem
+                  key={service.id}
+                  service={service}
+                  currency={car.owner.currency}
+                />
               ))
             ) : (
               <View
@@ -380,7 +383,13 @@ function InfoCard({
   );
 }
 
-function ServiceItem({ service }: { service: Service }) {
+function ServiceItem({
+  service,
+  currency,
+}: {
+  service: Service;
+  currency: string;
+}) {
   const { theme } = useAppTheme();
 
   const iconMap = {
@@ -419,13 +428,14 @@ function ServiceItem({ service }: { service: Service }) {
           </Text>
 
           <Text style={[styles.serviceMeta, { color: theme.mutedText }]}>
-            {service.date} · {service.mileageKm.toLocaleString()} km
+            {new Date(service.serviceDate).toLocaleDateString("tr-TR")} ·{" "}
+            {service.km.toLocaleString()} km
           </Text>
         </View>
       </View>
 
       <Text style={[styles.serviceCost, { color: theme.text }]}>
-        {service.cost}
+        {service.amount} {currency}
       </Text>
     </View>
   );

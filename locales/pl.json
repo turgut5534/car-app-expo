@@ -96,7 +96,8 @@
     "yearPlaceholder": "Wybierz rok",
     "createVehicle": "Dodaj mój pojazd",
     "fillAllFields": "Proszę wypełnić wszystkie pola.",
-    "createFailed": "Nie udało się utworzyć pojazdu."
+    "createFailed": "Nie udało się utworzyć pojazdu.",
+    "currentMileage": "Aktualny Przebieg"
   },
   "home": {
     "title": "STRONA GŁÓWNA",
@@ -144,5 +145,23 @@
     "myCars": "Moje auta",
     "reports": "Raporty",
     "profile": "Profil"
-  }
+  },
+  "cars": {
+  "detailTitle": "SZCZEGÓŁY POJAZDU - OGÓLNE",
+  "overview": "Przegląd",
+  "services": "Serwisy",
+  "fuel": "Paliwo",
+  "expenses": "Wydatki",
+  "documents": "Dokumenty",
+  "thisMonthExpenses": "Wydatki w tym miesiącu",
+  "totalExpenses": "Łączne wydatki",
+  "vsLastMonth": "w porównaniu z poprzednim miesiącem",
+  "allTime": "Cały okres",
+  "lastService": "Ostatni serwis",
+  "lastFuel": "Ostatnie tankowanie",
+  "averageFuelConsumption": "Średnie zużycie paliwa",
+  "costPerKm": "Koszt za kilometr",
+  "tabComingSoon": "Ta sekcja będzie dostępna wkrótce.",
+  "detailLoadFailed": "Nie udało się załadować szczegółów pojazdu."
+}
 }

@@ -14,7 +14,7 @@ export default function OnboardingScreen() {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const token = await AsyncStorage.getItem("accessToken");
+      const token = await AsyncStorage.getItem("token");
 
       if (token) {
         router.replace("/home");

@@ -68,7 +68,7 @@ export default function HomeScreen() {
       });
 
       if (response.status === 401) {
-        await AsyncStorage.removeItem("accessToken");
+        await AsyncStorage.removeItem("token");
         router.replace("/(auth)/login");
         return;
       }
@@ -207,7 +207,7 @@ export default function HomeScreen() {
               {t("home.totalCars")}
             </Text>
             <Text style={[styles.cardValue, { color: theme.primary }]}>
-              {data.totalCars}
+              {data.totalCars ?? 0}
             </Text>
           </View>
 
@@ -223,7 +223,7 @@ export default function HomeScreen() {
             <Text style={[styles.cardLabel, { color: theme.mutedText }]}>
               {t("home.thisMonthExpenses")}
             </Text>
-            <Text style={styles.greenText}>{data.thisMonthExpenses}</Text>
+            <Text style={styles.greenText}>{data.thisMonthExpenses ?? 0}</Text>
             <Text style={styles.subText}>
               ↑ {data.expenseChange} {t("home.vsLastMonth")}
             </Text>
@@ -241,7 +241,7 @@ export default function HomeScreen() {
             <Text style={[styles.cardLabel, { color: theme.mutedText }]}>
               {t("home.upcomingReminders")}
             </Text>
-            <Text style={styles.purpleText}>{data.upcomingReminders}</Text>
+            <Text style={styles.purpleText}>{data.upcomingReminders ?? 0 }</Text>
           </View>
         </View>
 

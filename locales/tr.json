@@ -96,7 +96,8 @@
     "yearPlaceholder": "Yıl seçin",
     "createVehicle": "Aracımı Ekle",
     "fillAllFields": "Lütfen tüm alanları doldurun.",
-    "createFailed": "Araç oluşturulamadı."
+    "createFailed": "Araç oluşturulamadı.",
+    "currentMileage": "Güncel Kilometre"
   },
   "home": {
     "title": "ANA SAYFA",
@@ -144,5 +145,23 @@
     "myCars": "Araçlarım",
     "reports": "Raporlar",
     "profile": "Profil"
-  }
+  },
+  "cars": {
+  "detailTitle": "ARAÇ DETAYI - GENEL",
+  "overview": "Genel Bakış",
+  "services": "Servisler",
+  "fuel": "Yakıt",
+  "expenses": "Giderler",
+  "documents": "Belgeler",
+  "thisMonthExpenses": "Bu Ayki Giderler",
+  "totalExpenses": "Toplam Giderler",
+  "vsLastMonth": "geçen aya göre",
+  "allTime": "Tüm zamanlar",
+  "lastService": "Son Servis",
+  "lastFuel": "Son Yakıt",
+  "averageFuelConsumption": "Ortalama Yakıt Tüketimi",
+  "costPerKm": "Kilometre Başına Maliyet",
+  "tabComingSoon": "Bu bölüm yakında kullanılabilir olacak.",
+  "detailLoadFailed": "Araç detayları yüklenemedi."
+}
 }

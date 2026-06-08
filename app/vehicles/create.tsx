@@ -8,6 +8,8 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -16,7 +18,7 @@ import { useTranslation } from "react-i18next";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAppTheme } from "../../context/ThemeContext";
 
-const API_URL = "http://192.168.0.10:3000/vehicles";
+const API_URL = "http://192.168.0.10:3000/cars";
 
 const carBrands = [
   "Audi",
@@ -41,7 +43,7 @@ const carBrands = [
 ];
 
 const years = Array.from({ length: 46 }, (_, i) =>
-  String(new Date().getFullYear() - i)
+  String(new Date().getFullYear() - i),
 );
 
 export default function CreateVehicleScreen() {
@@ -50,6 +52,7 @@ export default function CreateVehicleScreen() {
 
   const [plate, setPlate] = useState("");
   const [model, setModel] = useState("");
+  const [mileage, setMileage] = useState("");
   const [selectedBrand, setSelectedBrand] = useState("");
   const [selectedYear, setSelectedYear] = useState("");
   const [showBrands, setShowBrands] = useState(false);
@@ -82,7 +85,8 @@ export default function CreateVehicleScreen() {
           plate: plate.trim().toUpperCase(),
           brand: selectedBrand,
           model: model.trim(),
-          year: selectedYear,
+          year: parseInt(selectedYear),
+          currentKm: parseInt(mileage)
         }),
       });
 
@@ -96,7 +100,7 @@ export default function CreateVehicleScreen() {
     } catch (error) {
       Alert.alert(
         t("common.error"),
-        error instanceof Error ? error.message : t("vehicles.createFailed")
+        error instanceof Error ? error.message : t("vehicles.createFailed"),
       );
     } finally {
       setLoading(false);
@@ -108,6 +112,11 @@ export default function CreateVehicleScreen() {
       style={[styles.container, { backgroundColor: theme.background }]}
       edges={["top", "bottom"]}
     >
+      
+        <KeyboardAvoidingView
+    style={{ flex: 1 }}
+    behavior={Platform.OS === "ios" ? "padding" : "height"}
+  >
       <ScrollView showsVerticalScrollIndicator={false}>
         <TouchableOpacity
           style={styles.backButton}
@@ -201,11 +210,7 @@ export default function CreateVehicleScreen() {
               {selectedBrand || t("vehicles.brandPlaceholder")}
             </Text>
 
-            <Ionicons
-              name="chevron-down"
-              size={18}
-              color={theme.mutedText}
-            />
+            <Ionicons name="chevron-down" size={18} color={theme.mutedText} />
           </TouchableOpacity>
 
           {showBrands && (
@@ -285,11 +290,7 @@ export default function CreateVehicleScreen() {
               {selectedYear || t("vehicles.yearPlaceholder")}
             </Text>
 
-            <Ionicons
-              name="chevron-down"
-              size={18}
-              color={theme.mutedText}
-            />
+            <Ionicons name="chevron-down" size={18} color={theme.mutedText} />
           </TouchableOpacity>
 
           {showYears && (
@@ -321,6 +322,27 @@ export default function CreateVehicleScreen() {
               ))}
             </View>
           )}
+
+          <Text style={[styles.label, { color: theme.text }]}>
+            {t("vehicles.currentMileage")}
+          </Text>
+
+          <TextInput
+            style={[
+              styles.input,
+              {
+                backgroundColor: theme.card,
+                borderColor: theme.border,
+                color: theme.text,
+              },
+            ]}
+            value={mileage}
+            onChangeText={(text) => {
+              const numeric = text.replace(/[^0-9]/g, "");
+              setMileage(numeric);
+            }}
+            keyboardType="numeric"
+          />
         </View>
 
         <TouchableOpacity
@@ -339,6 +361,7 @@ export default function CreateVehicleScreen() {
           )}
         </TouchableOpacity>
       </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

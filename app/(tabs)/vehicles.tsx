@@ -52,7 +52,7 @@ export default function VehiclesScreen() {
       });
 
       if (response.status === 401) {
-        await AsyncStorage.removeItem("accessToken");
+        await AsyncStorage.removeItem("token");
         router.replace("/(auth)/login");
         return;
       }
@@ -65,7 +65,7 @@ export default function VehiclesScreen() {
       setVehicles(data);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : t("common.somethingWentWrong")
+        err instanceof Error ? err.message : t("common.somethingWentWrong"),
       );
     } finally {
       setLoading(false);
@@ -122,7 +122,10 @@ export default function VehiclesScreen() {
           <View
             style={[
               styles.emptyIconCircle,
-              { backgroundColor: theme.activeMode === "dark" ? "#172554" : "#EEF4FF" },
+              {
+                backgroundColor:
+                  theme.activeMode === "dark" ? "#172554" : "#EEF4FF",
+              },
             ]}
           >
             <Ionicons name="car-sport" size={64} color={theme.primary} />
@@ -225,17 +228,13 @@ export default function VehiclesScreen() {
                   },
                 ]}
               >
-                <Ionicons
-                  name="car-sport"
-                  size={48}
-                  color={theme.mutedText}
-                />
+                <Ionicons name="car-sport" size={48} color={theme.mutedText} />
               </View>
             )}
 
             <View style={styles.vehicleInfo}>
               <Text style={[styles.vehicleName, { color: theme.text }]}>
-                {vehicle.name}
+                {vehicle.brand} {vehicle.model}
               </Text>
 
               <Text style={[styles.vehiclePlate, { color: theme.text }]}>
@@ -252,17 +251,15 @@ export default function VehiclesScreen() {
                 ]}
               >
                 <Text style={[styles.kmText, { color: theme.primary }]}>
-                  {vehicle.mileage}
+                  {vehicle.owner.distanceUnit === "mi"
+                    ? `${Math.round(vehicle.currentKm * 0.621371)} mi`
+                    : `${vehicle.currentKm} km`}
                 </Text>
               </View>
             </View>
 
             <TouchableOpacity style={styles.moreButton}>
-              <Ionicons
-                name="ellipsis-vertical"
-                size={20}
-                color={theme.text}
-              />
+              <Ionicons name="ellipsis-vertical" size={20} color={theme.text} />
             </TouchableOpacity>
           </TouchableOpacity>
         ))}

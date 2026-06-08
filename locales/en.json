@@ -95,7 +95,8 @@
     "yearPlaceholder": "Select year",
     "createVehicle": "Add My Vehicle",
     "fillAllFields": "Please fill in all fields.",
-    "createFailed": "Failed to create vehicle."
+    "createFailed": "Failed to create vehicle.",
+    "currentMileage": "Current mileage"
   },
   "home": {
     "title": "HOME",
@@ -143,5 +144,26 @@
     "myCars": "My Cars",
     "reports": "Reports",
     "profile": "Profile"
+  },
+  "cars": {
+    "detailTitle": "CAR DETAIL - GENERAL",
+    "overview": "Overview",
+    "services": "Services",
+    "fuel": "Fuel",
+    "expenses": "Expenses",
+    "documents": "Documents",
+    "thisMonthExpenses": "This Month Expenses",
+    "totalExpenses": "Total Expenses",
+    "vsLastMonth": "vs last month",
+    "allTime": "All time",
+    "lastService": "Last Service",
+    "lastFuel": "Last Fuel",
+    "averageFuelConsumption": "Average Fuel Consumption",
+    "costPerKm": "Cost per Kilometer",
+    "tabComingSoon": "This section will be available soon.",
+    "detailLoadFailed": "Car details could not be loaded.",
+    "detailTitleServices": "CAR DETAIL - SERVICES",
+    "addService": "Add Service",
+    "noServices": "No service records yet"
   }
 }

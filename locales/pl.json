@@ -68,6 +68,51 @@
   "common": {
     "loading": "Ładowanie...",
     "continue": "Kontynuuj",
-    "error": "Błąd"
+    "error": "Błąd",
+    "somethingWentWrong": "Wystąpił błąd.",
+    "retry": "Spróbuj ponownie",
+    "viewAll": "Zobacz wszystkie"
+  },
+  "vehicles": {
+    "title": "MOJE SAMOCHODY",
+    "addCar": "Dodaj samochód",
+    "loading": "Ładowanie pojazdów...",
+    "fetchFailed": "Nie udało się załadować pojazdów."
+  },
+  "home": {
+    "title": "STRONA GŁÓWNA",
+    "greeting": "Witaj,",
+    "loadingDescription": "Przygotowywanie informacji o pojazdach",
+    "fetchFailed": "Nie udało się załadować danych.",
+    "totalCars": "Liczba pojazdów",
+    "thisMonthExpenses": "Wydatki w tym miesiącu",
+    "upcomingReminders": "Nadchodzące przypomnienia",
+    "vsLastMonth": "w porównaniu z poprzednim miesiącem",
+    "myCars": "Moje pojazdy",
+    "thisMonth": "Ten miesiąc",
+    "upcomingRemindersTitle": "Nadchodzące przypomnienia",
+    "noCarsTitle": "Brak pojazdów",
+    "noCarsDescription": "Dodaj pierwszy pojazd, aby śledzić wydatki i przypomnienia.",
+    "noRemindersTitle": "Brak przypomnień",
+    "noRemindersDescription": "Wszystko jest aktualne. Nie masz żadnych nadchodzących przypomnień."
+  },
+  "profile": {
+    "title": "PROFIL",
+    "guestUser": "Użytkownik Gość",
+    "premium": "Członek Premium",
+    "account": "Konto",
+    "profileInformation": "Informacje o Profilu",
+    "myCars": "Moje Samochody",
+    "notifications": "Powiadomienia",
+    "backupSync": "Kopia Zapasowa i Synchronizacja",
+    "settings": "Ustawienia",
+    "unitsCurrency": "Jednostki i Waluta",
+    "theme": "Motyw",
+    "light": "Jasny",
+    "language": "Język",
+    "languageValue": "Polski",
+    "privacySecurity": "Prywatność i Bezpieczeństwo",
+    "logout": "Wyloguj się",
+    "loadFailed": "Nie udało się załadować profilu."
   }
 }

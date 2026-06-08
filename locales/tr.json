@@ -68,6 +68,51 @@
   "common": {
     "loading": "Yükleniyor...",
     "continue": "Devam Et",
-    "error": "Hata"
+    "error": "Hata",
+    "somethingWentWrong": "Bir hata oluştu.",
+    "retry": "Tekrar Dene",
+    "viewAll": "Tümünü Gör"
+  },
+  "vehicles": {
+    "title": "ARAÇLARIM",
+    "addCar": "Araç Ekle",
+    "loading": "Araçlar yükleniyor...",
+    "fetchFailed": "Araçlar yüklenemedi."
+  },
+  "home": {
+    "title": "ANA SAYFA",
+    "greeting": "Merhaba,",
+    "loadingDescription": "Araç bilgileriniz hazırlanıyor",
+    "fetchFailed": "Veriler yüklenemedi.",
+    "totalCars": "Toplam Araç",
+    "thisMonthExpenses": "Bu Ayki Giderler",
+    "upcomingReminders": "Yaklaşan Hatırlatmalar",
+    "vsLastMonth": "geçen aya göre",
+    "myCars": "Araçlarım",
+    "thisMonth": "Bu Ay",
+    "upcomingRemindersTitle": "Yaklaşan Hatırlatmalar",
+    "noCarsTitle": "Henüz araç yok",
+    "noCarsDescription": "Giderleri ve hatırlatmaları takip etmek için ilk aracınızı ekleyin.",
+    "noRemindersTitle": "Hatırlatma yok",
+    "noRemindersDescription": "Her şey güncel. Yaklaşan bir hatırlatma bulunmuyor."
+  },
+  "profile": {
+    "title": "PROFİL",
+    "guestUser": "Misafir Kullanıcı",
+    "premium": "Premium Üye",
+    "account": "Hesap",
+    "profileInformation": "Profil Bilgileri",
+    "myCars": "Araçlarım",
+    "notifications": "Bildirimler",
+    "backupSync": "Yedekleme ve Senkronizasyon",
+    "settings": "Ayarlar",
+    "unitsCurrency": "Birimler ve Para Birimi",
+    "theme": "Tema",
+    "light": "Açık",
+    "language": "Dil",
+    "languageValue": "Türkçe",
+    "privacySecurity": "Gizlilik ve Güvenlik",
+    "logout": "Çıkış Yap",
+    "loadFailed": "Profil bilgileri yüklenemedi."
   }
 }

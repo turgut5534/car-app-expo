@@ -1,22 +1,34 @@
 import { useEffect, useState } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Dimensions,
-} from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
-
-const START_ROUTE = "/(tabs)";
-const LOGIN_ROUTE = "/(auth)/login";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function OnboardingScreen() {
   const { t } = useTranslation();
 
-  useEffect(() => {}, []);
+  const [checkingAuth, setCheckingAuth] = useState(true);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const token = await AsyncStorage.getItem("token");
+
+      console.log(token)
+      if (token) {
+        router.replace("/home");
+        return;
+      }
+
+      setCheckingAuth(false);
+    };
+
+    checkAuth();
+  }, []);
+
+  if (checkingAuth) {
+    return null;
+  }
 
   return (
     <SafeAreaView style={styles.container} edges={["top", "bottom"]}>

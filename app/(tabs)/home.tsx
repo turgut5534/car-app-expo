@@ -11,6 +11,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
+import { useTranslation } from "react-i18next";
 
 type Car = {
   id: string;
@@ -31,14 +32,16 @@ type HomeData = {
   totalCars: number;
   thisMonthExpenses: string;
   expenseChange: string;
-  upcomingReminders: number;
-  cars: Car[];
+  upcomingReminders: number;cars
+  ownedCars: Car[];
   reminders: Reminder[];
 };
 
 const API_URL = "http://192.168.0.10:3000/dashboard/home";
 
 export default function HomeScreen() {
+  const { t } = useTranslation();
+
   const [data, setData] = useState<HomeData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -69,13 +72,15 @@ export default function HomeScreen() {
       }
 
       if (!response.ok) {
-        throw new Error("Veriler alınamadı.");
+        throw new Error(t("home.fetchFailed"));
       }
 
       const result: HomeData = await response.json();
       setData(result);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Bir hata oluştu.");
+      setError(
+        err instanceof Error ? err.message : t("common.somethingWentWrong"),
+      );
     } finally {
       setLoading(false);
     }
@@ -90,10 +95,10 @@ export default function HomeScreen() {
       <SafeAreaView style={styles.loadingContainer}>
         <View style={styles.loadingCard}>
           <ActivityIndicator size="large" color="#2563EB" />
-          <Text style={styles.loadingTitle}>Yükleniyor...</Text>
-          <Text style={styles.loadingText}>
-            Araç bilgilerin hazırlanıyor
-          </Text>
+
+          <Text style={styles.loadingTitle}>{t("common.loading")}</Text>
+
+          <Text style={styles.loadingText}>{t("home.loadingDescription")}</Text>
         </View>
       </SafeAreaView>
     );
@@ -104,13 +109,13 @@ export default function HomeScreen() {
       <SafeAreaView style={styles.loadingContainer}>
         <View style={styles.errorCard}>
           <Ionicons name="warning-outline" size={42} color="#DC2626" />
-          <Text style={styles.errorTitle}>Bir sorun oluştu</Text>
-          <Text style={styles.errorText}>
-            {error || "Veriler alınamadı."}
-          </Text>
+
+          <Text style={styles.errorTitle}>{t("common.error")}</Text>
+
+          <Text style={styles.errorText}>{error || t("home.fetchFailed")}</Text>
 
           <TouchableOpacity style={styles.retryButton} onPress={fetchHomeData}>
-            <Text style={styles.retryButtonText}>Tekrar Dene</Text>
+            <Text style={styles.retryButtonText}>{t("common.retry")}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -122,8 +127,8 @@ export default function HomeScreen() {
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <View>
-            <Text style={styles.smallTitle}>HOME</Text>
-            <Text style={styles.greeting}>Hello,</Text>
+            <Text style={styles.smallTitle}>{t("home.title")}</Text>
+            <Text style={styles.greeting}>{t("home.greeting")}</Text>
             <Text style={styles.name}>{data.userName} 👋</Text>
           </View>
 
@@ -134,61 +139,89 @@ export default function HomeScreen() {
 
         <View style={styles.statsRow}>
           <View style={styles.card}>
-            <Text style={styles.cardLabel}>Total Cars</Text>
+            <Text style={styles.cardLabel}>{t("home.totalCars")}</Text>
             <Text style={styles.cardValue}>{data.totalCars}</Text>
           </View>
 
           <View style={styles.card}>
-            <Text style={styles.cardLabel}>This Month Expenses</Text>
+            <Text style={styles.cardLabel}>{t("home.thisMonthExpenses")}</Text>
             <Text style={styles.greenText}>{data.thisMonthExpenses}</Text>
             <Text style={styles.subText}>
-              ↑ {data.expenseChange} vs last month
+              ↑ {data.expenseChange} {t("home.vsLastMonth")}
             </Text>
           </View>
 
           <View style={styles.card}>
-            <Text style={styles.cardLabel}>Upcoming Reminders</Text>
+            <Text style={styles.cardLabel}>{t("home.upcomingReminders")}</Text>
             <Text style={styles.purpleText}>{data.upcomingReminders}</Text>
           </View>
         </View>
 
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>My Cars</Text>
+          <Text style={styles.sectionTitle}>{t("home.myCars")}</Text>
+
           <TouchableOpacity>
-            <Text style={styles.link}>View All</Text>
+            <Text style={styles.link}>{t("common.viewAll")}</Text>
           </TouchableOpacity>
         </View>
 
-        {data.cars.map((car) => (
-          <View key={car.id} style={styles.carItem}>
-            <View style={styles.carImagePlaceholder} />
+        {data.ownedCars.length > 0 ? (
+          data.cars.map((car) => (
+            <View key={car.id} style={styles.carItem}>
+              <View style={styles.carImagePlaceholder} />
 
-            <View style={{ flex: 1 }}>
-              <Text style={styles.carName}>{car.name}</Text>
-              <Text style={styles.carPlate}>{car.plate}</Text>
-            </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.carName}>{car.name}</Text>
+                <Text style={styles.carPlate}>{car.plate}</Text>
+              </View>
 
-            <View>
-              <Text style={styles.expenseLabel}>This Month</Text>
-              <Text style={styles.expenseValue}>{car.expense}</Text>
+              <View>
+                <Text style={styles.expenseLabel}>{t("home.thisMonth")}</Text>
+                <Text style={styles.expenseValue}>{car.expense}</Text>
+              </View>
             </View>
+          ))
+        ) : (
+          <View style={styles.emptyCard}>
+            <Ionicons name="car-sport-outline" size={42} color="#94A3B8" />
+
+            <Text style={styles.emptyTitle}>{t("home.noCarsTitle")}</Text>
+
+            <Text style={styles.emptyText}>{t("home.noCarsDescription")}</Text>
           </View>
-        ))}
+        )}
 
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Upcoming Reminders</Text>
+          <Text style={styles.sectionTitle}>
+            {t("home.upcomingRemindersTitle")}
+          </Text>
+
           <TouchableOpacity>
-            <Text style={styles.link}>View All</Text>
+            <Text style={styles.link}>{t("common.viewAll")}</Text>
           </TouchableOpacity>
         </View>
 
-        {data.reminders.map((reminder) => (
-          <View key={reminder.id} style={styles.reminderCard}>
-            <Text style={styles.reminderTitle}>{reminder.title}</Text>
-            <Text style={styles.reminderCar}>{reminder.car}</Text>
-            <Text style={styles.reminderDate}>{reminder.date}</Text>
+        {data.reminders.length > 0 ? (
+          data.reminders.map((reminder) => (
+            <View key={reminder.id} style={styles.reminderCard}>
+              <Text style={styles.reminderTitle}>{reminder.title}</Text>
+
+              <Text style={styles.reminderCar}>{reminder.car}</Text>
+
+              <Text style={styles.reminderDate}>{reminder.date}</Text>
+            </View>
+          ))
+        ) : (
+          <View style={styles.emptyCard}>
+            <Ionicons name="notifications-outline" size={42} color="#94A3B8" />
+
+            <Text style={styles.emptyTitle}>{t("home.noRemindersTitle")}</Text>
+
+            <Text style={styles.emptyText}>
+              {t("home.noRemindersDescription")}
+            </Text>
           </View>
-        ))}
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -417,5 +450,26 @@ const styles = StyleSheet.create({
     color: "#DC2626",
     marginTop: 8,
     fontWeight: "600",
+  },
+  emptyCard: {
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 24,
+    alignItems: "center",
+    marginBottom: 12,
+  },
+
+  emptyTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#081331",
+    marginTop: 12,
+  },
+
+  emptyText: {
+    color: "#64748B",
+    textAlign: "center",
+    marginTop: 6,
+    lineHeight: 20,
   },
 });

@@ -67,6 +67,51 @@
   "common": {
     "loading": "Loading...",
     "continue": "Continue",
-    "error": "Error"
+    "error": "Error",
+    "somethingWentWrong": "Something went wrong.",
+    "retry": "Try Again",
+    "viewAll": "See All"
+  },
+  "vehicles": {
+    "title": "MY CARS",
+    "addCar": "Add Car",
+    "loading": "Loading vehicles...",
+    "fetchFailed": "Vehicles could not be loaded."
+  },
+  "home": {
+    "title": "HOME",
+    "greeting": "Hello,",
+    "loadingDescription": "Preparing your vehicle information",
+    "fetchFailed": "Data could not be loaded.",
+    "totalCars": "Total Cars",
+    "thisMonthExpenses": "This Month Expenses",
+    "upcomingReminders": "Upcoming Reminders",
+    "vsLastMonth": "vs last month",
+    "myCars": "My Cars",
+    "thisMonth": "This Month",
+    "upcomingRemindersTitle": "Upcoming Reminders",
+    "noCarsTitle": "No vehicles yet",
+    "noCarsDescription": "Add your first vehicle to start tracking expenses and reminders.",
+    "noRemindersTitle": "No reminders",
+    "noRemindersDescription": "You're all caught up. There are no upcoming reminders."
+  },
+  "profile": {
+    "title": "PROFILE",
+    "guestUser": "Guest User",
+    "premium": "Premium Member",
+    "account": "Account",
+    "profileInformation": "Profile Information",
+    "myCars": "My Cars",
+    "notifications": "Notifications",
+    "backupSync": "Backup & Sync",
+    "settings": "Settings",
+    "unitsCurrency": "Units & Currency",
+    "theme": "Theme",
+    "light": "Light",
+    "language": "Language",
+    "languageValue": "English",
+    "privacySecurity": "Privacy & Security",
+    "logout": "Log Out",
+    "loadFailed": "Profile could not be loaded."
   }
 }

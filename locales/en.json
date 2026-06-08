@@ -134,8 +134,14 @@
     "loadFailed": "Profile could not be loaded."
   },
   "theme": {
-  "light": "Light",
-  "dark": "Dark",
-  "system": "System"
-}
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "tabs": {
+    "home": "Home",
+    "myCars": "My Cars",
+    "reports": "Reports",
+    "profile": "Profile"
+  }
 }

@@ -4,30 +4,23 @@ import {
   StyleSheet,
   TextInput,
   TouchableOpacity,
+  ActivityIndicator,
 } from "react-native";
 import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useAppTheme } from "../../context/ThemeContext";
 
 export default function LoginScreen() {
   const { t } = useTranslation();
+  const { theme } = useAppTheme();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-
-  const fetchProfile = async () => {
-    const token = await AsyncStorage.getItem("token");
-
-    console.log(token);
-  };
-
-  useEffect(() => {
-    fetchProfile();
-  }, []);
 
   const login = async () => {
     try {
@@ -63,34 +56,61 @@ export default function LoginScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: theme.background }]}
+      edges={["top", "bottom"]}
+    >
       <View style={styles.content}>
-        <View style={styles.logo}>
+        <View style={[styles.logo, { backgroundColor: theme.primary }]}>
           <Text style={styles.logoText}>🚗</Text>
         </View>
 
-        <Text style={styles.title}>{t("auth.welcome")}</Text>
+        <Text style={[styles.title, { color: theme.text }]}>
+          {t("auth.welcome")}
+        </Text>
 
-        <Text style={styles.subtitle}>{t("auth.loginSubtitle")}</Text>
+        <Text style={[styles.subtitle, { color: theme.mutedText }]}>
+          {t("auth.loginSubtitle")}
+        </Text>
 
-        <Text style={styles.label}>{t("auth.email")}</Text>
+        <Text style={[styles.label, { color: theme.text }]}>
+          {t("auth.email")}
+        </Text>
 
         <TextInput
-          style={styles.input}
+          style={[
+            styles.input,
+            {
+              backgroundColor: theme.card,
+              borderColor: theme.border,
+              color: theme.text,
+            },
+          ]}
           value={email}
           onChangeText={setEmail}
           placeholder={t("auth.emailPlaceholder")}
+          placeholderTextColor={theme.mutedText}
           keyboardType="email-address"
           autoCapitalize="none"
         />
 
-        <Text style={styles.label}>{t("auth.password")}</Text>
+        <Text style={[styles.label, { color: theme.text }]}>
+          {t("auth.password")}
+        </Text>
 
         <TextInput
-          style={styles.input}
+          style={[
+            styles.input,
+            {
+              backgroundColor: theme.card,
+              borderColor: theme.border,
+              color: theme.text,
+            },
+          ]}
           value={password}
           onChangeText={setPassword}
           placeholder={t("auth.passwordPlaceholder")}
+          placeholderTextColor={theme.mutedText}
           secureTextEntry
         />
 
@@ -99,23 +119,33 @@ export default function LoginScreen() {
         <TouchableOpacity
           onPress={() => router.push("/(auth)/forgot-password")}
         >
-          <Text style={styles.forgot}>{t("auth.forgotPassword")}</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.button}
-          onPress={login}
-          disabled={loading}
-        >
-          <Text style={styles.buttonText}>
-            {loading ? t("common.loading") : t("auth.login")}
+          <Text style={[styles.forgot, { color: theme.primary }]}>
+            {t("auth.forgotPassword")}
           </Text>
         </TouchableOpacity>
 
+        <TouchableOpacity
+          style={[
+            styles.button,
+            { backgroundColor: theme.primary },
+            loading && styles.disabledButton,
+          ]}
+          onPress={login}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#FFFFFF" />
+          ) : (
+            <Text style={styles.buttonText}>{t("auth.login")}</Text>
+          )}
+        </TouchableOpacity>
+
         <TouchableOpacity onPress={() => router.push("/(auth)/register")}>
-          <Text style={styles.register}>
+          <Text style={[styles.register, { color: theme.mutedText }]}>
             {t("auth.noAccount")}{" "}
-            <Text style={styles.link}>{t("auth.register")}</Text>
+            <Text style={[styles.link, { color: theme.primary }]}>
+              {t("auth.register")}
+            </Text>
           </Text>
         </TouchableOpacity>
       </View>
@@ -126,7 +156,6 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
     padding: 24,
   },
   content: {
@@ -137,7 +166,6 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 20,
-    backgroundColor: "#0057E7",
     justifyContent: "center",
     alignItems: "center",
     alignSelf: "center",
@@ -150,11 +178,9 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: "800",
     textAlign: "center",
-    color: "#081331",
   },
   subtitle: {
     textAlign: "center",
-    color: "#637083",
     marginTop: 8,
     marginBottom: 32,
   },
@@ -162,27 +188,27 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     marginTop: 16,
     fontWeight: "600",
-    color: "#081331",
   },
   input: {
     height: 52,
     borderWidth: 1,
-    borderColor: "#D6DCE8",
     borderRadius: 12,
     paddingHorizontal: 16,
   },
   forgot: {
-    color: "#0057E7",
     textAlign: "right",
     marginTop: 12,
+    fontWeight: "600",
   },
   button: {
     height: 56,
-    backgroundColor: "#0057E7",
     borderRadius: 12,
     justifyContent: "center",
     alignItems: "center",
     marginTop: 24,
+  },
+  disabledButton: {
+    opacity: 0.65,
   },
   buttonText: {
     color: "#fff",
@@ -192,10 +218,8 @@ const styles = StyleSheet.create({
   register: {
     textAlign: "center",
     marginTop: 24,
-    color: "#637083",
   },
   link: {
-    color: "#0057E7",
     fontWeight: "700",
   },
   errorText: {

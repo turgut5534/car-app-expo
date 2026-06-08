@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Stack } from "expo-router";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { initI18n } from "../i18n";
+import { AppThemeProvider } from "../context/ThemeContext";
 
 export default function RootLayout() {
   const [ready, setReady] = useState(false);
@@ -21,7 +22,9 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <Stack screenOptions={{ headerShown: false }} />
+      <AppThemeProvider>
+        <Stack screenOptions={{ headerShown: false }} />
+      </AppThemeProvider>
     </SafeAreaProvider>
   );
 }

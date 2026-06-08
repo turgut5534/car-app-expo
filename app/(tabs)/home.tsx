@@ -12,6 +12,7 @@ import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
+import { useAppTheme } from "../../context/ThemeContext";
 
 type Car = {
   id: string;
@@ -32,7 +33,7 @@ type HomeData = {
   totalCars: number;
   thisMonthExpenses: string;
   expenseChange: string;
-  upcomingReminders: number;cars
+  upcomingReminders: number;
   ownedCars: Car[];
   reminders: Reminder[];
 };
@@ -41,6 +42,7 @@ const API_URL = "http://192.168.0.10:3000/dashboard/home";
 
 export default function HomeScreen() {
   const { t } = useTranslation();
+  const { theme } = useAppTheme();
 
   const [data, setData] = useState<HomeData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -66,7 +68,7 @@ export default function HomeScreen() {
       });
 
       if (response.status === 401) {
-        await AsyncStorage.removeItem("token");
+        await AsyncStorage.removeItem("accessToken");
         router.replace("/(auth)/login");
         return;
       }
@@ -79,7 +81,7 @@ export default function HomeScreen() {
       setData(result);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : t("common.somethingWentWrong"),
+        err instanceof Error ? err.message : t("common.somethingWentWrong")
       );
     } finally {
       setLoading(false);
@@ -92,13 +94,27 @@ export default function HomeScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.loadingContainer}>
-        <View style={styles.loadingCard}>
-          <ActivityIndicator size="large" color="#2563EB" />
+      <SafeAreaView
+        style={[styles.loadingContainer, { backgroundColor: theme.background }]}
+      >
+        <View
+          style={[
+            styles.loadingCard,
+            {
+              backgroundColor: theme.card,
+              borderColor: theme.border,
+            },
+          ]}
+        >
+          <ActivityIndicator size="large" color={theme.primary} />
 
-          <Text style={styles.loadingTitle}>{t("common.loading")}</Text>
+          <Text style={[styles.loadingTitle, { color: theme.text }]}>
+            {t("common.loading")}
+          </Text>
 
-          <Text style={styles.loadingText}>{t("home.loadingDescription")}</Text>
+          <Text style={[styles.loadingText, { color: theme.mutedText }]}>
+            {t("home.loadingDescription")}
+          </Text>
         </View>
       </SafeAreaView>
     );
@@ -106,15 +122,32 @@ export default function HomeScreen() {
 
   if (error || !data) {
     return (
-      <SafeAreaView style={styles.loadingContainer}>
-        <View style={styles.errorCard}>
+      <SafeAreaView
+        style={[styles.loadingContainer, { backgroundColor: theme.background }]}
+      >
+        <View
+          style={[
+            styles.errorCard,
+            {
+              backgroundColor: theme.card,
+              borderColor: theme.border,
+            },
+          ]}
+        >
           <Ionicons name="warning-outline" size={42} color="#DC2626" />
 
-          <Text style={styles.errorTitle}>{t("common.error")}</Text>
+          <Text style={[styles.errorTitle, { color: theme.text }]}>
+            {t("common.error")}
+          </Text>
 
-          <Text style={styles.errorText}>{error || t("home.fetchFailed")}</Text>
+          <Text style={[styles.errorText, { color: theme.mutedText }]}>
+            {error || t("home.fetchFailed")}
+          </Text>
 
-          <TouchableOpacity style={styles.retryButton} onPress={fetchHomeData}>
+          <TouchableOpacity
+            style={[styles.retryButton, { backgroundColor: theme.primary }]}
+            onPress={fetchHomeData}
+          >
             <Text style={styles.retryButtonText}>{t("common.retry")}</Text>
           </TouchableOpacity>
         </View>
@@ -123,120 +156,249 @@ export default function HomeScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: theme.background }]}
+      edges={["top", "bottom"]}
+    >
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <View>
-            <Text style={styles.smallTitle}>{t("home.title")}</Text>
-            <Text style={styles.greeting}>{t("home.greeting")}</Text>
-            <Text style={styles.name}>{data.userName} 👋</Text>
+            <Text style={[styles.smallTitle, { color: theme.mutedText }]}>
+              {t("home.title")}
+            </Text>
+
+            <Text style={[styles.greeting, { color: theme.mutedText }]}>
+              {t("home.greeting")}
+            </Text>
+
+            <Text style={[styles.name, { color: theme.text }]}>
+              {data.userName} 👋
+            </Text>
           </View>
 
-          <TouchableOpacity>
-            <Ionicons name="notifications-outline" size={24} color="#111" />
+          <TouchableOpacity
+            style={[
+              styles.notificationButton,
+              {
+                backgroundColor: theme.card,
+                borderColor: theme.border,
+              },
+            ]}
+          >
+            <Ionicons
+              name="notifications-outline"
+              size={24}
+              color={theme.text}
+            />
           </TouchableOpacity>
         </View>
 
         <View style={styles.statsRow}>
-          <View style={styles.card}>
-            <Text style={styles.cardLabel}>{t("home.totalCars")}</Text>
-            <Text style={styles.cardValue}>{data.totalCars}</Text>
+          <View
+            style={[
+              styles.card,
+              {
+                backgroundColor: theme.card,
+                borderColor: theme.border,
+              },
+            ]}
+          >
+            <Text style={[styles.cardLabel, { color: theme.mutedText }]}>
+              {t("home.totalCars")}
+            </Text>
+            <Text style={[styles.cardValue, { color: theme.primary }]}>
+              {data.totalCars}
+            </Text>
           </View>
 
-          <View style={styles.card}>
-            <Text style={styles.cardLabel}>{t("home.thisMonthExpenses")}</Text>
+          <View
+            style={[
+              styles.card,
+              {
+                backgroundColor: theme.card,
+                borderColor: theme.border,
+              },
+            ]}
+          >
+            <Text style={[styles.cardLabel, { color: theme.mutedText }]}>
+              {t("home.thisMonthExpenses")}
+            </Text>
             <Text style={styles.greenText}>{data.thisMonthExpenses}</Text>
             <Text style={styles.subText}>
               ↑ {data.expenseChange} {t("home.vsLastMonth")}
             </Text>
           </View>
 
-          <View style={styles.card}>
-            <Text style={styles.cardLabel}>{t("home.upcomingReminders")}</Text>
+          <View
+            style={[
+              styles.card,
+              {
+                backgroundColor: theme.card,
+                borderColor: theme.border,
+              },
+            ]}
+          >
+            <Text style={[styles.cardLabel, { color: theme.mutedText }]}>
+              {t("home.upcomingReminders")}
+            </Text>
             <Text style={styles.purpleText}>{data.upcomingReminders}</Text>
           </View>
         </View>
 
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>{t("home.myCars")}</Text>
+          <Text style={[styles.sectionTitle, { color: theme.text }]}>
+            {t("home.myCars")}
+          </Text>
 
-          <TouchableOpacity>
-            <Text style={styles.link}>{t("common.viewAll")}</Text>
+          <TouchableOpacity onPress={() => router.push("/vehicles")}>
+            <Text style={[styles.link, { color: theme.primary }]}>
+              {t("common.viewAll")}
+            </Text>
           </TouchableOpacity>
         </View>
 
         {data.ownedCars.length > 0 ? (
-          data.cars.map((car) => (
-            <View key={car.id} style={styles.carItem}>
-              <View style={styles.carImagePlaceholder} />
+          data.ownedCars.map((car) => (
+            <View
+              key={car.id}
+              style={[
+                styles.carItem,
+                {
+                  backgroundColor: theme.card,
+                  borderColor: theme.border,
+                },
+              ]}
+            >
+              <View
+                style={[
+                  styles.carImagePlaceholder,
+                  {
+                    backgroundColor:
+                      theme.activeMode === "dark" ? "#1E293B" : "#E2E8F0",
+                  },
+                ]}
+              >
+                <Ionicons
+                  name="car-sport-outline"
+                  size={32}
+                  color={theme.mutedText}
+                />
+              </View>
 
               <View style={{ flex: 1 }}>
-                <Text style={styles.carName}>{car.name}</Text>
-                <Text style={styles.carPlate}>{car.plate}</Text>
+                <Text style={[styles.carName, { color: theme.text }]}>
+                  {car.name}
+                </Text>
+                <Text style={[styles.carPlate, { color: theme.mutedText }]}>
+                  {car.plate}
+                </Text>
               </View>
 
               <View>
-                <Text style={styles.expenseLabel}>{t("home.thisMonth")}</Text>
-                <Text style={styles.expenseValue}>{car.expense}</Text>
+                <Text style={[styles.expenseLabel, { color: theme.mutedText }]}>
+                  {t("home.thisMonth")}
+                </Text>
+                <Text style={[styles.expenseValue, { color: theme.primary }]}>
+                  {car.expense}
+                </Text>
               </View>
             </View>
           ))
         ) : (
-          <View style={styles.emptyCard}>
-            <Ionicons name="car-sport-outline" size={42} color="#94A3B8" />
-
-            <Text style={styles.emptyTitle}>{t("home.noCarsTitle")}</Text>
-
-            <Text style={styles.emptyText}>{t("home.noCarsDescription")}</Text>
-          </View>
+          <EmptyCard
+            icon="car-sport-outline"
+            title={t("home.noCarsTitle")}
+            description={t("home.noCarsDescription")}
+          />
         )}
 
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>
+          <Text style={[styles.sectionTitle, { color: theme.text }]}>
             {t("home.upcomingRemindersTitle")}
           </Text>
 
           <TouchableOpacity>
-            <Text style={styles.link}>{t("common.viewAll")}</Text>
+            <Text style={[styles.link, { color: theme.primary }]}>
+              {t("common.viewAll")}
+            </Text>
           </TouchableOpacity>
         </View>
 
         {data.reminders.length > 0 ? (
           data.reminders.map((reminder) => (
-            <View key={reminder.id} style={styles.reminderCard}>
-              <Text style={styles.reminderTitle}>{reminder.title}</Text>
+            <View
+              key={reminder.id}
+              style={[
+                styles.reminderCard,
+                {
+                  backgroundColor: theme.card,
+                  borderColor: theme.border,
+                },
+              ]}
+            >
+              <Text style={[styles.reminderTitle, { color: theme.text }]}>
+                {reminder.title}
+              </Text>
 
-              <Text style={styles.reminderCar}>{reminder.car}</Text>
+              <Text style={[styles.reminderCar, { color: theme.mutedText }]}>
+                {reminder.car}
+              </Text>
 
               <Text style={styles.reminderDate}>{reminder.date}</Text>
             </View>
           ))
         ) : (
-          <View style={styles.emptyCard}>
-            <Ionicons name="notifications-outline" size={42} color="#94A3B8" />
-
-            <Text style={styles.emptyTitle}>{t("home.noRemindersTitle")}</Text>
-
-            <Text style={styles.emptyText}>
-              {t("home.noRemindersDescription")}
-            </Text>
-          </View>
+          <EmptyCard
+            icon="notifications-outline"
+            title={t("home.noRemindersTitle")}
+            description={t("home.noRemindersDescription")}
+          />
         )}
       </ScrollView>
     </SafeAreaView>
   );
 }
 
+function EmptyCard({
+  icon,
+  title,
+  description,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  title: string;
+  description: string;
+}) {
+  const { theme } = useAppTheme();
+
+  return (
+    <View
+      style={[
+        styles.emptyCard,
+        {
+          backgroundColor: theme.card,
+          borderColor: theme.border,
+        },
+      ]}
+    >
+      <Ionicons name={icon} size={42} color={theme.mutedText} />
+
+      <Text style={[styles.emptyTitle, { color: theme.text }]}>{title}</Text>
+
+      <Text style={[styles.emptyText, { color: theme.mutedText }]}>
+        {description}
+      </Text>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F8FAFC",
     paddingHorizontal: 20,
   },
 
   loadingContainer: {
     flex: 1,
-    backgroundColor: "#F8FAFC",
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 24,
@@ -244,11 +406,11 @@ const styles = StyleSheet.create({
 
   loadingCard: {
     width: "100%",
-    backgroundColor: "#FFFFFF",
     borderRadius: 24,
     paddingVertical: 36,
     paddingHorizontal: 24,
     alignItems: "center",
+    borderWidth: 1,
     shadowColor: "#000",
     shadowOpacity: 0.06,
     shadowRadius: 14,
@@ -259,39 +421,34 @@ const styles = StyleSheet.create({
     marginTop: 18,
     fontSize: 18,
     fontWeight: "700",
-    color: "#081331",
   },
 
   loadingText: {
     marginTop: 6,
-    color: "#64748B",
     textAlign: "center",
   },
 
   errorCard: {
     width: "100%",
-    backgroundColor: "#FFFFFF",
     borderRadius: 24,
     padding: 28,
     alignItems: "center",
+    borderWidth: 1,
   },
 
   errorTitle: {
     marginTop: 14,
     fontSize: 18,
     fontWeight: "700",
-    color: "#081331",
   },
 
   errorText: {
     marginTop: 8,
-    color: "#64748B",
     textAlign: "center",
   },
 
   retryButton: {
     marginTop: 22,
-    backgroundColor: "#2563EB",
     paddingHorizontal: 24,
     paddingVertical: 13,
     borderRadius: 12,
@@ -312,19 +469,26 @@ const styles = StyleSheet.create({
 
   smallTitle: {
     fontSize: 12,
-    color: "#94A3B8",
     fontWeight: "600",
   },
 
   greeting: {
     fontSize: 16,
-    color: "#64748B",
   },
 
   name: {
     fontSize: 24,
     fontWeight: "700",
     marginTop: 4,
+  },
+
+  notificationButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1,
   },
 
   statsRow: {
@@ -334,9 +498,9 @@ const styles = StyleSheet.create({
 
   card: {
     flex: 1,
-    backgroundColor: "#fff",
     borderRadius: 16,
     padding: 14,
+    borderWidth: 1,
     shadowColor: "#000",
     shadowOpacity: 0.05,
     shadowRadius: 10,
@@ -345,13 +509,11 @@ const styles = StyleSheet.create({
 
   cardLabel: {
     fontSize: 12,
-    color: "#64748B",
   },
 
   cardValue: {
     fontSize: 24,
     fontWeight: "700",
-    color: "#2563EB",
     marginTop: 8,
   },
 
@@ -388,25 +550,25 @@ const styles = StyleSheet.create({
   },
 
   link: {
-    color: "#2563EB",
     fontWeight: "600",
   },
 
   carItem: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#fff",
     padding: 14,
     borderRadius: 16,
     marginBottom: 12,
+    borderWidth: 1,
   },
 
   carImagePlaceholder: {
     width: 70,
     height: 40,
-    backgroundColor: "#E2E8F0",
     borderRadius: 8,
     marginRight: 12,
+    justifyContent: "center",
+    alignItems: "center",
   },
 
   carName: {
@@ -415,26 +577,23 @@ const styles = StyleSheet.create({
   },
 
   carPlate: {
-    color: "#64748B",
     marginTop: 4,
   },
 
   expenseLabel: {
     fontSize: 11,
-    color: "#64748B",
   },
 
   expenseValue: {
-    color: "#2563EB",
     fontWeight: "700",
     marginTop: 4,
   },
 
   reminderCard: {
-    backgroundColor: "#fff",
     padding: 16,
     borderRadius: 16,
     marginBottom: 12,
+    borderWidth: 1,
   },
 
   reminderTitle: {
@@ -442,7 +601,6 @@ const styles = StyleSheet.create({
   },
 
   reminderCar: {
-    color: "#64748B",
     marginTop: 4,
   },
 
@@ -451,23 +609,22 @@ const styles = StyleSheet.create({
     marginTop: 8,
     fontWeight: "600",
   },
+
   emptyCard: {
-    backgroundColor: "#fff",
     borderRadius: 16,
     padding: 24,
     alignItems: "center",
     marginBottom: 12,
+    borderWidth: 1,
   },
 
   emptyTitle: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#081331",
     marginTop: 12,
   },
 
   emptyText: {
-    color: "#64748B",
     textAlign: "center",
     marginTop: 6,
     lineHeight: 20,

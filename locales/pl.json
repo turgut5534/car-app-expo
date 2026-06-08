@@ -135,8 +135,14 @@
     "loadFailed": "Nie udało się załadować profilu."
   },
   "theme": {
-  "light": "Jasny",
-  "dark": "Ciemny",
-  "system": "Systemowy"
-}
+    "light": "Jasny",
+    "dark": "Ciemny",
+    "system": "Systemowy"
+  },
+  "tabs": {
+    "home": "Strona główna",
+    "myCars": "Moje auta",
+    "reports": "Raporty",
+    "profile": "Profil"
+  }
 }

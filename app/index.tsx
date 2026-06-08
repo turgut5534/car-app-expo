@@ -4,17 +4,18 @@ import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useAppTheme } from "../context/ThemeContext";
 
 export default function OnboardingScreen() {
   const { t } = useTranslation();
+  const { theme } = useAppTheme();
 
   const [checkingAuth, setCheckingAuth] = useState(true);
 
   useEffect(() => {
     const checkAuth = async () => {
-      const token = await AsyncStorage.getItem("token");
+      const token = await AsyncStorage.getItem("accessToken");
 
-      console.log(token)
       if (token) {
         router.replace("/home");
         return;
@@ -31,50 +32,115 @@ export default function OnboardingScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: theme.background }]}
+      edges={["top", "bottom"]}
+    >
       <View style={styles.header}>
-        <View style={styles.logoBox}>
+        <View
+          style={[
+            styles.logoBox,
+            {
+              backgroundColor:
+                theme.activeMode === "dark" ? "#172554" : "#EAF2FF",
+            },
+          ]}
+        >
           <Text style={styles.logoIcon}>🚗</Text>
         </View>
-        <Text style={styles.logoText}>{t("welcome.appName")}</Text>
+
+        <Text style={[styles.logoText, { color: theme.text }]}>
+          {t("welcome.appName")}
+        </Text>
       </View>
 
       <View style={styles.content}>
-        <Text style={styles.title}>
+        <Text style={[styles.title, { color: theme.text }]}>
           {t("welcome.titleLine1")}{" "}
-          <Text style={styles.titleBlue}>{t("welcome.titleHighlight")}</Text>{" "}
+          <Text style={{ color: theme.primary }}>
+            {t("welcome.titleHighlight")}
+          </Text>{" "}
           {t("welcome.titleLine2")}
         </Text>
 
-        <Text style={styles.desc}>{t("welcome.description")}</Text>
+        <Text style={[styles.desc, { color: theme.mutedText }]}>
+          {t("welcome.description")}
+        </Text>
 
         <View style={styles.visualArea}>
-          <View style={[styles.card, styles.cardTop]}>
+          <View
+            style={[
+              styles.card,
+              styles.cardTop,
+              {
+                backgroundColor: theme.card,
+                borderColor: theme.border,
+              },
+            ]}
+          >
             <Text style={styles.cardIcon}>🔧</Text>
             <View>
-              <Text style={styles.cardTitle}>{t("welcome.cardOil")}</Text>
-              <Text style={styles.cardDesc}>15.000 km</Text>
+              <Text style={[styles.cardTitle, { color: theme.text }]}>
+                {t("welcome.cardOil")}
+              </Text>
+              <Text style={[styles.cardDesc, { color: theme.mutedText }]}>
+                15.000 km
+              </Text>
             </View>
             <Text style={styles.check}>✓</Text>
           </View>
 
-          <View style={[styles.card, styles.cardLeft]}>
+          <View
+            style={[
+              styles.card,
+              styles.cardLeft,
+              {
+                backgroundColor: theme.card,
+                borderColor: theme.border,
+              },
+            ]}
+          >
             <Text style={styles.cardIcon}>🛞</Text>
             <View>
-              <Text style={styles.cardTitle}>{t("welcome.cardTire")}</Text>
-              <Text style={styles.cardDesc}>15.04.2024</Text>
+              <Text style={[styles.cardTitle, { color: theme.text }]}>
+                {t("welcome.cardTire")}
+              </Text>
+              <Text style={[styles.cardDesc, { color: theme.mutedText }]}>
+                15.04.2024
+              </Text>
             </View>
           </View>
 
-          <View style={[styles.card, styles.cardRight]}>
+          <View
+            style={[
+              styles.card,
+              styles.cardRight,
+              {
+                backgroundColor: theme.card,
+                borderColor: theme.border,
+              },
+            ]}
+          >
             <Text style={styles.cardIcon}>🧰</Text>
             <View>
-              <Text style={styles.cardTitle}>{t("welcome.cardGeneral")}</Text>
-              <Text style={styles.cardDesc}>20.000 km</Text>
+              <Text style={[styles.cardTitle, { color: theme.text }]}>
+                {t("welcome.cardGeneral")}
+              </Text>
+              <Text style={[styles.cardDesc, { color: theme.mutedText }]}>
+                20.000 km
+              </Text>
             </View>
           </View>
 
-          <View style={styles.carCircle}>
+          <View
+            style={[
+              styles.carCircle,
+              {
+                backgroundColor:
+                  theme.activeMode === "dark" ? "#172554" : "#EAF4FF",
+              },
+            ]}
+          >
             <Text style={styles.carEmoji}>🚘</Text>
           </View>
         </View>
@@ -82,7 +148,7 @@ export default function OnboardingScreen() {
 
       <View style={styles.footer}>
         <TouchableOpacity
-          style={styles.primaryButton}
+          style={[styles.primaryButton, { backgroundColor: theme.primary }]}
           onPress={() => router.push("/(auth)/register")}
           activeOpacity={0.85}
         >
@@ -90,14 +156,24 @@ export default function OnboardingScreen() {
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={styles.secondaryButton}
+          style={[
+            styles.secondaryButton,
+            {
+              borderColor: theme.primary,
+              backgroundColor: theme.card,
+            },
+          ]}
           onPress={() => router.push("/(auth)/login")}
           activeOpacity={0.85}
         >
-          <Text style={styles.secondaryButtonText}>{t("welcome.login")}</Text>
+          <Text style={[styles.secondaryButtonText, { color: theme.primary }]}>
+            {t("welcome.login")}
+          </Text>
         </TouchableOpacity>
 
-        <Text style={styles.footerText}>{t("welcome.footerText")}</Text>
+        <Text style={[styles.footerText, { color: theme.mutedText }]}>
+          {t("welcome.footerText")}
+        </Text>
       </View>
     </SafeAreaView>
   );
@@ -106,7 +182,6 @@ export default function OnboardingScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F8FBFF",
   },
   header: {
     alignItems: "center",
@@ -116,7 +191,6 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 24,
-    backgroundColor: "#EAF2FF",
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 8,
@@ -127,7 +201,6 @@ const styles = StyleSheet.create({
   logoText: {
     fontSize: 22,
     fontWeight: "800",
-    color: "#081331",
   },
   content: {
     flex: 1,
@@ -138,17 +211,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 36,
     fontWeight: "900",
-    color: "#081331",
     textAlign: "center",
     lineHeight: 44,
-  },
-  titleBlue: {
-    color: "#2563EB",
   },
   desc: {
     marginTop: 16,
     fontSize: 16,
-    color: "#637083",
     textAlign: "center",
     lineHeight: 24,
   },
@@ -163,7 +231,6 @@ const styles = StyleSheet.create({
     width: 220,
     height: 220,
     borderRadius: 110,
-    backgroundColor: "#EAF4FF",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -176,12 +243,12 @@ const styles = StyleSheet.create({
     minWidth: 145,
     minHeight: 64,
     borderRadius: 18,
-    backgroundColor: "#FFFFFF",
     paddingHorizontal: 14,
     paddingVertical: 10,
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
+    borderWidth: 1,
     shadowColor: "#0F172A",
     shadowOpacity: 0.08,
     shadowRadius: 16,
@@ -205,11 +272,9 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 13,
     fontWeight: "800",
-    color: "#081331",
   },
   cardDesc: {
     fontSize: 12,
-    color: "#637083",
     marginTop: 2,
   },
   check: {
@@ -224,7 +289,6 @@ const styles = StyleSheet.create({
   primaryButton: {
     height: 58,
     borderRadius: 18,
-    backgroundColor: "#2563EB",
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 14,
@@ -238,20 +302,16 @@ const styles = StyleSheet.create({
     height: 58,
     borderRadius: 18,
     borderWidth: 1.5,
-    borderColor: "#2563EB",
-    backgroundColor: "#FFFFFF",
     justifyContent: "center",
     alignItems: "center",
   },
   secondaryButtonText: {
-    color: "#2563EB",
     fontSize: 17,
     fontWeight: "800",
   },
   footerText: {
     marginTop: 16,
     textAlign: "center",
-    color: "#7B8794",
     fontSize: 13,
   },
 });

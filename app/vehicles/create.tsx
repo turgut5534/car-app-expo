@@ -7,12 +7,14 @@ import {
   TouchableOpacity,
   ScrollView,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useAppTheme } from "../../context/ThemeContext";
 
 const API_URL = "http://192.168.0.10:3000/vehicles";
 
@@ -44,6 +46,7 @@ const years = Array.from({ length: 46 }, (_, i) =>
 
 export default function CreateVehicleScreen() {
   const { t } = useTranslation();
+  const { theme } = useAppTheme();
 
   const [plate, setPlate] = useState("");
   const [model, setModel] = useState("");
@@ -62,7 +65,12 @@ export default function CreateVehicleScreen() {
     try {
       setLoading(true);
 
-      const token = await AsyncStorage.getItem("accessToken");
+      const token = await AsyncStorage.getItem("token");
+
+      if (!token) {
+        router.replace("/(auth)/login");
+        return;
+      }
 
       const response = await fetch(API_URL, {
         method: "POST",
@@ -71,9 +79,9 @@ export default function CreateVehicleScreen() {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          plate,
+          plate: plate.trim().toUpperCase(),
           brand: selectedBrand,
-          model,
+          model: model.trim(),
           year: selectedYear,
         }),
       });
@@ -96,100 +104,219 @@ export default function CreateVehicleScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: theme.background }]}
+      edges={["top", "bottom"]}
+    >
       <ScrollView showsVerticalScrollIndicator={false}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color="#081331" />
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => router.back()}
+        >
+          <Ionicons name="arrow-back" size={24} color={theme.text} />
         </TouchableOpacity>
 
-        <Text style={styles.title}>{t("vehicles.createTitle")}</Text>
-        <Text style={styles.subtitle}>{t("vehicles.createSubtitle")}</Text>
+        <Text style={[styles.title, { color: theme.text }]}>
+          {t("vehicles.createTitle")}
+        </Text>
 
-        <View style={styles.carCircle}>
-          <Ionicons name="car-sport" size={64} color="#0057E7" />
+        <Text style={[styles.subtitle, { color: theme.mutedText }]}>
+          {t("vehicles.createSubtitle")}
+        </Text>
 
-          <View style={styles.plusCircle}>
+        <View
+          style={[
+            styles.carCircle,
+            {
+              backgroundColor:
+                theme.activeMode === "dark" ? "#172554" : "#EEF4FF",
+            },
+          ]}
+        >
+          <Ionicons name="car-sport" size={64} color={theme.primary} />
+
+          <View style={[styles.plusCircle, { backgroundColor: theme.primary }]}>
             <Ionicons name="add" size={24} color="#fff" />
           </View>
         </View>
 
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>{t("vehicles.addFirstVehicle")}</Text>
+        <View
+          style={[
+            styles.card,
+            {
+              backgroundColor: theme.card,
+              borderColor: theme.border,
+            },
+          ]}
+        >
+          <Text style={[styles.cardTitle, { color: theme.text }]}>
+            {t("vehicles.addFirstVehicle")}
+          </Text>
 
-          <Text style={styles.label}>{t("vehicles.plate")}</Text>
+          <Text style={[styles.label, { color: theme.text }]}>
+            {t("vehicles.plate")}
+          </Text>
+
           <TextInput
-            style={styles.input}
+            style={[
+              styles.input,
+              {
+                backgroundColor: theme.card,
+                borderColor: theme.border,
+                color: theme.text,
+              },
+            ]}
             value={plate}
             onChangeText={setPlate}
             placeholder={t("vehicles.platePlaceholder")}
+            placeholderTextColor={theme.mutedText}
             autoCapitalize="characters"
           />
 
-          <Text style={styles.label}>{t("vehicles.brand")}</Text>
+          <Text style={[styles.label, { color: theme.text }]}>
+            {t("vehicles.brand")}
+          </Text>
+
           <TouchableOpacity
-            style={styles.input}
+            style={[
+              styles.input,
+              {
+                backgroundColor: theme.card,
+                borderColor: theme.border,
+              },
+            ]}
             onPress={() => {
               setShowBrands(!showBrands);
               setShowYears(false);
             }}
           >
-            <Text style={selectedBrand ? styles.inputText : styles.placeholderText}>
+            <Text
+              style={[
+                selectedBrand ? styles.inputText : styles.placeholderText,
+                {
+                  color: selectedBrand ? theme.text : theme.mutedText,
+                },
+              ]}
+            >
               {selectedBrand || t("vehicles.brandPlaceholder")}
             </Text>
-            <Ionicons name="chevron-down" size={18} color="#64748B" />
+
+            <Ionicons
+              name="chevron-down"
+              size={18}
+              color={theme.mutedText}
+            />
           </TouchableOpacity>
 
           {showBrands && (
-            <View style={styles.dropdown}>
+            <View
+              style={[
+                styles.dropdown,
+                {
+                  backgroundColor: theme.card,
+                  borderColor: theme.border,
+                },
+              ]}
+            >
               {carBrands.map((brand) => (
                 <TouchableOpacity
                   key={brand}
-                  style={styles.dropdownItem}
+                  style={[
+                    styles.dropdownItem,
+                    { borderBottomColor: theme.border },
+                  ]}
                   onPress={() => {
                     setSelectedBrand(brand);
                     setShowBrands(false);
                   }}
                 >
-                  <Text style={styles.dropdownText}>{brand}</Text>
+                  <Text style={[styles.dropdownText, { color: theme.text }]}>
+                    {brand}
+                  </Text>
                 </TouchableOpacity>
               ))}
             </View>
           )}
 
-          <Text style={styles.label}>{t("vehicles.model")}</Text>
+          <Text style={[styles.label, { color: theme.text }]}>
+            {t("vehicles.model")}
+          </Text>
+
           <TextInput
-            style={styles.input}
+            style={[
+              styles.input,
+              {
+                backgroundColor: theme.card,
+                borderColor: theme.border,
+                color: theme.text,
+              },
+            ]}
             value={model}
             onChangeText={setModel}
             placeholder={t("vehicles.modelPlaceholder")}
+            placeholderTextColor={theme.mutedText}
           />
 
-          <Text style={styles.label}>{t("vehicles.year")}</Text>
+          <Text style={[styles.label, { color: theme.text }]}>
+            {t("vehicles.year")}
+          </Text>
+
           <TouchableOpacity
-            style={styles.input}
+            style={[
+              styles.input,
+              {
+                backgroundColor: theme.card,
+                borderColor: theme.border,
+              },
+            ]}
             onPress={() => {
               setShowYears(!showYears);
               setShowBrands(false);
             }}
           >
-            <Text style={selectedYear ? styles.inputText : styles.placeholderText}>
+            <Text
+              style={[
+                selectedYear ? styles.inputText : styles.placeholderText,
+                {
+                  color: selectedYear ? theme.text : theme.mutedText,
+                },
+              ]}
+            >
               {selectedYear || t("vehicles.yearPlaceholder")}
             </Text>
-            <Ionicons name="chevron-down" size={18} color="#64748B" />
+
+            <Ionicons
+              name="chevron-down"
+              size={18}
+              color={theme.mutedText}
+            />
           </TouchableOpacity>
 
           {showYears && (
-            <View style={styles.dropdown}>
+            <View
+              style={[
+                styles.dropdown,
+                {
+                  backgroundColor: theme.card,
+                  borderColor: theme.border,
+                },
+              ]}
+            >
               {years.map((year) => (
                 <TouchableOpacity
                   key={year}
-                  style={styles.dropdownItem}
+                  style={[
+                    styles.dropdownItem,
+                    { borderBottomColor: theme.border },
+                  ]}
                   onPress={() => {
                     setSelectedYear(year);
                     setShowYears(false);
                   }}
                 >
-                  <Text style={styles.dropdownText}>{year}</Text>
+                  <Text style={[styles.dropdownText, { color: theme.text }]}>
+                    {year}
+                  </Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -197,13 +324,19 @@ export default function CreateVehicleScreen() {
         </View>
 
         <TouchableOpacity
-          style={[styles.button, loading && styles.disabledButton]}
+          style={[
+            styles.button,
+            { backgroundColor: theme.primary },
+            loading && styles.disabledButton,
+          ]}
           onPress={createVehicle}
           disabled={loading}
         >
-          <Text style={styles.buttonText}>
-            {loading ? t("common.loading") : t("vehicles.createVehicle")}
-          </Text>
+          {loading ? (
+            <ActivityIndicator color="#FFFFFF" />
+          ) : (
+            <Text style={styles.buttonText}>{t("vehicles.createVehicle")}</Text>
+          )}
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
@@ -213,7 +346,6 @@ export default function CreateVehicleScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
     paddingHorizontal: 24,
   },
   backButton: {
@@ -223,11 +355,9 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: "900",
-    color: "#081331",
     marginBottom: 8,
   },
   subtitle: {
-    color: "#64748B",
     lineHeight: 22,
     marginBottom: 22,
   },
@@ -235,7 +365,6 @@ const styles = StyleSheet.create({
     width: 132,
     height: 132,
     borderRadius: 66,
-    backgroundColor: "#EEF4FF",
     justifyContent: "center",
     alignItems: "center",
     alignSelf: "center",
@@ -248,69 +377,54 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: "#0057E7",
     justifyContent: "center",
     alignItems: "center",
   },
   card: {
     borderWidth: 1,
-    borderColor: "#E2E8F0",
     borderRadius: 18,
     padding: 18,
-    backgroundColor: "#fff",
   },
   cardTitle: {
     fontSize: 16,
     fontWeight: "900",
-    color: "#081331",
     marginBottom: 10,
   },
   label: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#081331",
     marginTop: 12,
     marginBottom: 7,
   },
   input: {
     minHeight: 50,
     borderWidth: 1,
-    borderColor: "#D6DCE8",
     borderRadius: 12,
     paddingHorizontal: 14,
-    backgroundColor: "#fff",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
   },
   inputText: {
-    color: "#081331",
     fontWeight: "600",
   },
-  placeholderText: {
-    color: "#94A3B8",
-  },
+  placeholderText: {},
   dropdown: {
     borderWidth: 1,
-    borderColor: "#D6DCE8",
     borderRadius: 12,
     marginTop: 6,
-    backgroundColor: "#fff",
     overflow: "hidden",
   },
   dropdownItem: {
     paddingVertical: 13,
     paddingHorizontal: 14,
     borderBottomWidth: 1,
-    borderBottomColor: "#EEF2F7",
   },
   dropdownText: {
-    color: "#081331",
     fontWeight: "600",
   },
   button: {
     height: 56,
-    backgroundColor: "#0057E7",
     borderRadius: 14,
     justifyContent: "center",
     alignItems: "center",

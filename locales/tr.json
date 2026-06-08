@@ -138,5 +138,11 @@
     "light": "Açık",
     "dark": "Koyu",
     "system": "Sistem"
+  },
+  "tabs": {
+    "home": "Ana Sayfa",
+    "myCars": "Araçlarım",
+    "reports": "Raporlar",
+    "profile": "Profil"
   }
 }

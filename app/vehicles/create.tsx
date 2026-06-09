@@ -44,6 +44,11 @@ const carBrands = [
   "Volvo",
 ];
 
+type CarModel = {
+  Model_ID: number;
+  Model_Name: string;
+};
+
 const years = Array.from({ length: 46 }, (_, i) =>
   String(new Date().getFullYear() - i),
 );
@@ -61,6 +66,31 @@ export default function CreateVehicleScreen() {
   const [showYears, setShowYears] = useState(false);
   const [loading, setLoading] = useState(false);
   const [imageUri, setImageUri] = useState<string | null>(null);
+
+  const [models, setModels] = useState<CarModel[]>([]);
+  const [showModels, setShowModels] = useState(false);
+  const [modelsLoading, setModelsLoading] = useState(false);
+
+  const fetchModelsByBrand = async (brand: string) => {
+    try {
+      setModelsLoading(true);
+      setModel("");
+      setModels([]);
+
+      const url = `https://vpic.nhtsa.dot.gov/api/vehicles/GetModelsForMake/${encodeURIComponent(
+        brand,
+      )}?format=json`;
+
+      const response = await fetch(url);
+      const data = await response.json();
+
+      setModels(data.Results || []);
+    } catch {
+      Alert.alert(t("common.error"), "Could not fetch car models");
+    } finally {
+      setModelsLoading(false);
+    }
+  };
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -230,6 +260,7 @@ export default function CreateVehicleScreen() {
               onPress={() => {
                 setShowBrands(!showBrands);
                 setShowYears(false);
+                setShowModels(false);
               }}
             >
               <Text
@@ -266,6 +297,7 @@ export default function CreateVehicleScreen() {
                     onPress={() => {
                       setSelectedBrand(brand);
                       setShowBrands(false);
+                      fetchModelsByBrand(brand);
                     }}
                   >
                     <Text style={[styles.dropdownText, { color: theme.text }]}>
@@ -279,21 +311,64 @@ export default function CreateVehicleScreen() {
             <Text style={[styles.label, { color: theme.text }]}>
               {t("vehicles.model")}
             </Text>
-
-            <TextInput
+            <TouchableOpacity
               style={[
                 styles.input,
                 {
                   backgroundColor: theme.card,
                   borderColor: theme.border,
-                  color: theme.text,
                 },
               ]}
-              value={model}
-              onChangeText={setModel}
-              placeholder={t("vehicles.modelPlaceholder")}
-              placeholderTextColor={theme.mutedText}
-            />
+              disabled={!selectedBrand || modelsLoading}
+              onPress={() => {
+                setShowModels(!showModels);
+                setShowBrands(false);
+                setShowYears(false);
+              }}
+            >
+              <Text
+                style={[
+                  model ? styles.inputText : styles.placeholderText,
+                  { color: model ? theme.text : theme.mutedText },
+                ]}
+              >
+                {modelsLoading
+                  ? "Loading models..."
+                  : model || t("vehicles.modelPlaceholder")}
+              </Text>
+
+              <Ionicons name="chevron-down" size={18} color={theme.mutedText} />
+            </TouchableOpacity>
+
+            {showModels && (
+              <View
+                style={[
+                  styles.dropdown,
+                  {
+                    backgroundColor: theme.card,
+                    borderColor: theme.border,
+                  },
+                ]}
+              >
+                {models.map((item) => (
+                  <TouchableOpacity
+                    key={item.Model_ID}
+                    style={[
+                      styles.dropdownItem,
+                      { borderBottomColor: theme.border },
+                    ]}
+                    onPress={() => {
+                      setModel(item.Model_Name);
+                      setShowModels(false);
+                    }}
+                  >
+                    <Text style={[styles.dropdownText, { color: theme.text }]}>
+                      {item.Model_Name}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
 
             <Text style={[styles.label, { color: theme.text }]}>
               {t("vehicles.year")}
@@ -346,6 +421,7 @@ export default function CreateVehicleScreen() {
                     onPress={() => {
                       setSelectedYear(year);
                       setShowYears(false);
+                      setShowModels(false);
                     }}
                   >
                     <Text style={[styles.dropdownText, { color: theme.text }]}>

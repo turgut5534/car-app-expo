@@ -62,7 +62,8 @@
     "passwordsNotMatch": "Passwords do not match.",
     "registerFailed": "Account creation failed.",
     "invalidEmail": "Please enter a valid email address.",
-    "emailAlreadyExists": "An account with this email already exists."
+    "emailAlreadyExists": "An account with this email already exists.",
+    "emailRequired" : "Email is required"
   },
   "common": {
     "loading": "Loading...",

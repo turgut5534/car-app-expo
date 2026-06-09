@@ -6,10 +6,12 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
+  ActivityIndicator,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
+import { useAppTheme } from "../../context/ThemeContext";
 
 type Errors = {
   email?: string;
@@ -20,6 +22,7 @@ type Errors = {
 
 export default function CreatePasswordScreen() {
   const { t } = useTranslation();
+  const { theme } = useAppTheme();
   const { email } = useLocalSearchParams<{ email?: string }>();
 
   const [password, setPassword] = useState("");
@@ -86,51 +89,71 @@ export default function CreatePasswordScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: theme.background }]}
+      edges={["top", "bottom"]}
+    >
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
       >
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()}>
-            <Text style={styles.back}>‹</Text>
+            <Text style={[styles.back, { color: theme.text }]}>‹</Text>
           </TouchableOpacity>
         </View>
 
-        <View style={styles.logo}>
+        <View style={[styles.logo, { backgroundColor: theme.primary }]}>
           <Text style={styles.logoText}>🔐</Text>
         </View>
 
-        <Text style={styles.title}>
+        <Text style={[styles.title, { color: theme.text }]}>
           {t("register.createPasswordTitle")}
         </Text>
 
-        <Text style={styles.subtitle}>
+        <Text style={[styles.subtitle, { color: theme.mutedText }]}>
           {t("register.createPasswordSubtitle")}
         </Text>
 
-        <Text style={styles.label}>{t("auth.email")}</Text>
+        <Text style={[styles.label, { color: theme.text }]}>
+          {t("auth.email")}
+        </Text>
 
         <TextInput
           style={[
             styles.input,
-            styles.disabledInput,
-            errors.email && styles.inputError,
+            {
+              backgroundColor:
+                theme.activeMode === "dark" ? "#1E293B" : "#F4F7FD",
+              borderColor: errors.email ? "#EF4444" : theme.border,
+              color: theme.mutedText,
+            },
           ]}
           value={email ?? ""}
           editable={false}
+          placeholderTextColor={theme.mutedText}
         />
 
-        {errors.email && (
+        {errors.email ? (
           <Text style={styles.errorText}>{errors.email}</Text>
-        )}
+        ) : null}
 
-        <Text style={styles.label}>{t("auth.password")}</Text>
+        <Text style={[styles.label, { color: theme.text }]}>
+          {t("auth.password")}
+        </Text>
 
         <TextInput
           style={[
             styles.input,
-            errors.password && styles.inputError,
+            {
+              backgroundColor:
+                errors.password && theme.activeMode !== "dark"
+                  ? "#FFF7F7"
+                  : theme.card,
+              borderColor: errors.password ? "#EF4444" : theme.border,
+              color: theme.text,
+            },
           ]}
           value={password}
           onChangeText={(text) => {
@@ -142,21 +165,29 @@ export default function CreatePasswordScreen() {
             }));
           }}
           placeholder={t("register.passwordPlaceholder")}
+          placeholderTextColor={theme.mutedText}
           secureTextEntry
         />
 
-        {errors.password && (
+        {errors.password ? (
           <Text style={styles.errorText}>{errors.password}</Text>
-        )}
+        ) : null}
 
-        <Text style={styles.label}>
+        <Text style={[styles.label, { color: theme.text }]}>
           {t("register.passwordAgain")}
         </Text>
 
         <TextInput
           style={[
             styles.input,
-            errors.passwordAgain && styles.inputError,
+            {
+              backgroundColor:
+                errors.passwordAgain && theme.activeMode !== "dark"
+                  ? "#FFF7F7"
+                  : theme.card,
+              borderColor: errors.passwordAgain ? "#EF4444" : theme.border,
+              color: theme.text,
+            },
           ]}
           value={passwordAgain}
           onChangeText={(text) => {
@@ -168,44 +199,52 @@ export default function CreatePasswordScreen() {
             }));
           }}
           placeholder={t("register.passwordAgainPlaceholder")}
+          placeholderTextColor={theme.mutedText}
           secureTextEntry
         />
 
-        {errors.passwordAgain && (
-          <Text style={styles.errorText}>
-            {errors.passwordAgain}
-          </Text>
-        )}
+        {errors.passwordAgain ? (
+          <Text style={styles.errorText}>{errors.passwordAgain}</Text>
+        ) : null}
 
-        {errors.general && (
-          <View style={styles.errorBox}>
-            <Text style={styles.errorBoxText}>
-              {errors.general}
-            </Text>
+        {errors.general ? (
+          <View
+            style={[
+              styles.errorBox,
+              {
+                backgroundColor:
+                  theme.activeMode === "dark" ? "#450A0A" : "#FEF2F2",
+                borderColor:
+                  theme.activeMode === "dark" ? "#7F1D1D" : "#FECACA",
+              },
+            ]}
+          >
+            <Text style={styles.errorBoxText}>{errors.general}</Text>
           </View>
-        )}
+        ) : null}
 
         <TouchableOpacity
           style={[
             styles.button,
+            { backgroundColor: theme.primary },
             loading && styles.disabledButton,
           ]}
           onPress={createAccount}
           disabled={loading}
         >
-          <Text style={styles.buttonText}>
-            {loading
-              ? t("common.loading")
-              : t("register.createAccount")}
-          </Text>
+          {loading ? (
+            <ActivityIndicator color="#FFFFFF" />
+          ) : (
+            <Text style={styles.buttonText}>
+              {t("register.createAccount")}
+            </Text>
+          )}
         </TouchableOpacity>
 
-        <TouchableOpacity
-          onPress={() => router.push("/(auth)/login")}
-        >
-          <Text style={styles.bottomText}>
+        <TouchableOpacity onPress={() => router.push("/(auth)/login")}>
+          <Text style={[styles.bottomText, { color: theme.mutedText }]}>
             {t("register.haveAccount")}{" "}
-            <Text style={styles.link}>
+            <Text style={[styles.link, { color: theme.primary }]}>
               {t("auth.login")}
             </Text>
           </Text>
@@ -218,7 +257,6 @@ export default function CreatePasswordScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
     paddingHorizontal: 24,
   },
   content: {
@@ -230,13 +268,11 @@ const styles = StyleSheet.create({
   },
   back: {
     fontSize: 34,
-    color: "#081331",
   },
   logo: {
     width: 76,
     height: 76,
     borderRadius: 20,
-    backgroundColor: "#0057E7",
     justifyContent: "center",
     alignItems: "center",
     alignSelf: "center",
@@ -248,12 +284,10 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: "800",
-    color: "#081331",
     textAlign: "center",
     marginBottom: 8,
   },
   subtitle: {
-    color: "#637083",
     lineHeight: 21,
     textAlign: "center",
     marginBottom: 26,
@@ -261,25 +295,14 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 13,
     fontWeight: "600",
-    color: "#081331",
     marginBottom: 7,
     marginTop: 12,
   },
   input: {
     height: 50,
     borderWidth: 1,
-    borderColor: "#D6DCE8",
     borderRadius: 12,
     paddingHorizontal: 14,
-    backgroundColor: "#FFFFFF",
-  },
-  disabledInput: {
-    backgroundColor: "#F4F7FD",
-    color: "#637083",
-  },
-  inputError: {
-    borderColor: "#EF4444",
-    backgroundColor: "#FFF7F7",
   },
   errorText: {
     color: "#EF4444",
@@ -289,22 +312,19 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   errorBox: {
-    backgroundColor: "#FEF2F2",
     borderWidth: 1,
-    borderColor: "#FECACA",
     borderRadius: 12,
     padding: 12,
     marginTop: 18,
   },
   errorBoxText: {
-    color: "#B91C1C",
+    color: "#EF4444",
     fontSize: 13,
     fontWeight: "600",
     textAlign: "center",
   },
   button: {
     height: 56,
-    backgroundColor: "#0057E7",
     borderRadius: 12,
     justifyContent: "center",
     alignItems: "center",
@@ -321,10 +341,8 @@ const styles = StyleSheet.create({
   bottomText: {
     textAlign: "center",
     marginTop: 22,
-    color: "#637083",
   },
   link: {
-    color: "#0057E7",
     fontWeight: "700",
   },
 });

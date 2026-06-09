@@ -48,6 +48,7 @@ export default function LoginScreen() {
       await AsyncStorage.setItem("token", data.accessToken);
 
       router.replace("/home");
+      
     } catch (e) {
       setError("Server connection error");
     } finally {

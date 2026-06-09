@@ -17,9 +17,10 @@ import { useFocusEffect } from "@react-navigation/native";
 
 type Car = {
   id: string;
-  name: string;
-  plate: string;
-  expense: string;
+  brand?: string;
+  model?: string;
+  plate?: string;
+  thisMonthServiceTotal: number;
 };
 
 type Reminder = {
@@ -323,9 +324,17 @@ export default function HomeScreen() {
                 <Text style={[styles.expenseLabel, { color: theme.mutedText }]}>
                   {t("home.thisMonth")}
                 </Text>
-                <Text style={[styles.expenseValue, { color: theme.primary }]}>
-                  {car.expense ?? 0} {data.currency}
-                </Text>
+                <View>
+                  <Text
+                    style={[styles.expenseLabel, { color: theme.mutedText }]}
+                  >
+                    {t("home.thisMonth")}
+                  </Text>
+
+                  <Text style={[styles.expenseValue, { color: theme.primary }]}>
+                    {car.thisMonthServiceTotal ?? 0} {data.currency}
+                  </Text>
+                </View>
               </View>
             </TouchableOpacity>
           ))

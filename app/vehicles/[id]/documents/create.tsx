@@ -275,7 +275,7 @@ export default function CreateDocumentScreen() {
                   {selectedCar?.imageUrl || selectedCar?.image ? (
                     <Image
                       source={{
-                        uri: selectedCar.imageUrl || selectedCar.image,
+                        uri: `${API_URL}/../uploads/cars/${selectedCar.imageUrl}`,
                       }}
                       style={styles.carImage}
                     />
@@ -344,7 +344,7 @@ export default function CreateDocumentScreen() {
                     {car.imageUrl || car.image ? (
                       <Image
                         source={{
-                          uri: car.imageUrl || car.image,
+                          uri: `${API_URL}/../uploads/cars/${car.imageUrl}` ,
                         }}
                         style={styles.carImage}
                       />

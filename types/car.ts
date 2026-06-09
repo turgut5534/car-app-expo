@@ -57,11 +57,10 @@ export type CarDetail = {
 export type FuelRecord = {
   id: string;
   fuelDate: string;
-  liter: number;
+  liters: number;
   pricePerLiter: string;
-  totalCost: string;
+  totalAmount: string;
   km: number;
-  currency?: string;
 };
 
 export type CarTabKey =

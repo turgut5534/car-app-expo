@@ -64,7 +64,7 @@ export function FuelTab({ car }: Props) {
         </View>
       </View>
 
-      {car.fuelRecords.length > 0 ? (
+      {car.fuels.length > 0 ? (
         <View
           style={[
             styles.listCard,
@@ -74,7 +74,7 @@ export function FuelTab({ car }: Props) {
             },
           ]}
         >
-          {car.fuelRecords.map((fuel, index) => (
+          {car.fuels.map((fuel, index) => (
             <FuelItem
               key={fuel.id}
               fuel={fuel}
@@ -152,7 +152,7 @@ function FuelItem({
           </Text>
 
           <Text style={[styles.fuelMeta, { color: theme.mutedText }]}>
-            {fuel.liter} L · {fuel.pricePerLiter}
+            {fuel.liters} L · {fuel.pricePerLiter} {fuel.currency || currency}
           </Text>
         </View>
       </View>
@@ -164,7 +164,7 @@ function FuelItem({
       </View>
 
       <Text style={[styles.fuelTotal, { color: theme.text }]}>
-        {fuel.totalCost} {fuel.currency || currency}
+        {fuel.totalAmount} {fuel.currency || currency}
       </Text>
     </View>
   );

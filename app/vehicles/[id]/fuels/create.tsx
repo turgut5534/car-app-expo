@@ -30,6 +30,8 @@ type CarInfo = {
   plate?: string;
   imageUrl?: string;
   image?: string;
+  lastFuelPricePerLiter?: number | string | null;
+  currentKm: string
 };
 
 export default function CreateFuelScreen() {
@@ -43,7 +45,6 @@ export default function CreateFuelScreen() {
   const [pricePerLiter, setPricePerLiter] = useState("");
   const [totalCost, setTotalCost] = useState("");
   const [mileageKm, setMileageKm] = useState("");
-  const [date, setDate] = useState(today);
   const [loading, setLoading] = useState(false);
 
   const [cars, setCars] = useState<CarInfo[]>([]);
@@ -52,6 +53,22 @@ export default function CreateFuelScreen() {
   const [carsLoading, setCarsLoading] = useState(false);
 
   const selectedCar = cars.find((car) => car.id === selectedCarId);
+
+  const applyCarLastFuelPrice = (car?: CarInfo) => {
+    if (!car?.lastFuelPricePerLiter) {
+      setPricePerLiter("0.00");
+      return;
+    }
+
+    setMileageKm(car.currentKm.toString())
+    setPricePerLiter(Number(car.lastFuelPricePerLiter).toFixed(2));
+  };
+
+  const applyCurrentKm = (car?: CarInfo) => {
+
+    setMileageKm(car.currentKm.toString())
+
+  };
 
   const priceIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const priceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -85,9 +102,18 @@ export default function CreateFuelScreen() {
 
       setCars(carList);
 
-      if (!selectedCarId && carList.length > 0) {
-        setSelectedCarId(carList[0].id);
+      const initialCarId = selectedCarId || carList[0]?.id;
+      const initialCar = carList.find(
+        (car: CarInfo) => car.id === initialCarId,
+      );
+
+      if (initialCarId) {
+        setSelectedCarId(initialCarId);
       }
+
+      applyCarLastFuelPrice(initialCar);
+      applyCurrentKm(initialCar)
+
     } catch (error) {
       Alert.alert(
         t("common.error"),
@@ -154,11 +180,9 @@ export default function CreateFuelScreen() {
 
   const createFuel = async () => {
     if (
-      !liter.trim() ||
       !pricePerLiter.trim() ||
       !totalCost.trim() ||
-      !mileageKm.trim() ||
-      !date.trim()
+      !mileageKm.trim() 
     ) {
       Alert.alert(t("common.error"), t("fuel.fillAllFields"));
       return;
@@ -179,7 +203,7 @@ export default function CreateFuelScreen() {
         return;
       }
 
-      const response = await fetch(`${API_URL}/${selectedCarId}/fuel`, {
+      const response = await fetch(`${API_URL}/${selectedCarId}/fuels`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -188,7 +212,7 @@ export default function CreateFuelScreen() {
         body: JSON.stringify({
           liter: Number(liter),
           pricePerLiter: Number(pricePerLiter),
-          totalCost: Number(totalCost),
+          totalAmount: Number(totalCost),
           km: Number(mileageKm),
           fuelDate: date,
         }),
@@ -210,7 +234,6 @@ export default function CreateFuelScreen() {
       setLoading(false);
     }
   };
-
 
   if (loading) {
     return (
@@ -371,6 +394,8 @@ export default function CreateFuelScreen() {
                     ]}
                     onPress={() => {
                       setSelectedCarId(item.id);
+                      applyCarLastFuelPrice(item);
+                      applyCurrentKm(item)
                       setShowCars(false);
                     }}
                   >
@@ -451,7 +476,7 @@ export default function CreateFuelScreen() {
                 </Text>
 
                 <Text style={[styles.priceStepperValue, { color: theme.text }]}>
-                  {pricePerLiter || "0.00"}
+                  {pricePerLiter || "2.50"}
                 </Text>
               </View>
 

@@ -61,6 +61,7 @@ export type FuelRecord = {
   pricePerLiter: string;
   totalAmount: string;
   km: number;
+  consumption: number
 };
 
 export type CarTabKey =

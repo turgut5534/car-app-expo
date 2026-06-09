@@ -186,7 +186,13 @@
     "noFuelRecords": "No fuel records",
     "noFuelRecordsDescription": "No fuel records have been added for this car yet.",
     "vehicle": "Vehicle",
-    "selectVehicle": "Select vehicle"
+    "selectVehicle": "Select vehicle",
+    "fuelHistory": "Fuel History",
+    "total": "Total",
+    "litersPurchased": "Liters",
+    "pricePerLiter": "Price / L",
+    "consumption": "Consumption",
+    "staticConsumptionExample": "6.8 L / 100 km"
   },
   "quickAdd": {
     "title": "QUICK ADD",

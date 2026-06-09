@@ -239,7 +239,7 @@ export default function CreateVehicleScreen() {
                 },
               ]}
               value={plate}
-              onChangeText={setPlate}
+             onChangeText={(text) => setPlate(text.toUpperCase())}
               placeholder={t("vehicles.platePlaceholder")}
               placeholderTextColor={theme.mutedText}
               autoCapitalize="characters"

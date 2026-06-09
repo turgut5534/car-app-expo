@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  Image,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -43,6 +44,15 @@ const documentTypes: DocumentType[] = [
   "OTHER",
 ];
 
+type Car = {
+  id: string;
+  brand?: string;
+  model?: string;
+  plate?: string;
+  imageUrl?: string;
+  image?: string;
+};
+
 export default function CreateDocumentScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { t } = useTranslation();
@@ -50,13 +60,62 @@ export default function CreateDocumentScreen() {
 
   const [title, setTitle] = useState("");
   const [type, setType] = useState<DocumentType>("REGISTRATION");
-  const [expiresAt, setExpiresAt] = useState<Date>(new Date());
+  const [expiresAt, setExpiresAt] = useState<Date | null>(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTypes, setShowTypes] = useState(false);
   const [file, setFile] = useState<DocumentPicker.DocumentPickerAsset | null>(
     null,
   );
   const [loading, setLoading] = useState(false);
+  const [cars, setCars] = useState<Car[]>([]);
+  const [selectedCarId, setSelectedCarId] = useState(id);
+  const [showCars, setShowCars] = useState(false);
+  const [carsLoading, setCarsLoading] = useState(false);
+  const selectedCar = cars.find((car) => car.id === selectedCarId);
+
+  useEffect(() => {
+    const fetchCars = async () => {
+      try {
+        setCarsLoading(true);
+
+        const token = await AsyncStorage.getItem("token");
+
+        if (!token) {
+          router.replace("/(auth)/login");
+          return;
+        }
+
+        const response = await fetch(API_URL, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data?.message || "Araçlar yüklenemedi");
+        }
+
+        const carList = Array.isArray(data) ? data : data?.cars || [];
+
+        setCars(carList);
+
+        if (!selectedCarId && carList.length > 0) {
+          setSelectedCarId(carList[0].id);
+        }
+      } catch (error) {
+        Alert.alert(
+          t("common.error"),
+          error instanceof Error ? error.message : "Araçlar yüklenemedi",
+        );
+      } finally {
+        setCarsLoading(false);
+      }
+    };
+
+    fetchCars();
+  }, []);
 
   const formatDate = (date: Date | null) => {
     if (!date) return t("documents.noExpirationDate");
@@ -99,7 +158,7 @@ export default function CreateDocumentScreen() {
 
       formData.append("title", title.trim());
       formData.append("type", type);
-      formData.append("carId", id);
+      formData.append("carId", selectedCarId);
 
       if (expiresAt) {
         formData.append("expiresAt", formatDateForApi(expiresAt));
@@ -113,7 +172,7 @@ export default function CreateDocumentScreen() {
         } as any);
       }
 
-      const response = await fetch(`${API_URL}/${id}/documents`, {
+      const response = await fetch(`${API_URL}/${selectedCarId}/documents`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -135,7 +194,7 @@ export default function CreateDocumentScreen() {
         throw new Error(data?.message || t("documents.createFailed"));
       }
 
-      router.back();
+      router.replace(`/vehicles/${selectedCarId}`);
     } catch (error) {
       Alert.alert(
         t("common.error"),
@@ -186,6 +245,146 @@ export default function CreateDocumentScreen() {
           <Text style={[styles.subtitle, { color: theme.mutedText }]}>
             {t("documents.createSubtitle")}
           </Text>
+
+          <View
+            style={[
+              styles.carSelectorWrapper,
+              {
+                backgroundColor: theme.card,
+                borderColor: theme.border,
+              },
+            ]}
+          >
+            <Text style={[styles.label, { color: theme.text }]}>Araç</Text>
+
+            <TouchableOpacity
+              style={[
+                styles.carSelector,
+                {
+                  backgroundColor: theme.card,
+                  borderColor: theme.border,
+                },
+              ]}
+              onPress={() => setShowCars(!showCars)}
+              disabled={carsLoading}
+            >
+              {carsLoading ? (
+                <ActivityIndicator color={theme.primary} />
+              ) : (
+                <>
+                  {selectedCar?.imageUrl || selectedCar?.image ? (
+                    <Image
+                      source={{
+                        uri: selectedCar.imageUrl || selectedCar.image,
+                      }}
+                      style={styles.carImage}
+                    />
+                  ) : (
+                    <View
+                      style={[
+                        styles.carImagePlaceholder,
+                        { backgroundColor: theme.background },
+                      ]}
+                    >
+                      <Ionicons
+                        name="car-outline"
+                        size={22}
+                        color={theme.mutedText}
+                      />
+                    </View>
+                  )}
+
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.carTitle, { color: theme.text }]}>
+                      {selectedCar
+                        ? `${selectedCar.brand || ""} ${selectedCar.model || ""}`.trim()
+                        : "Araç seç"}
+                    </Text>
+
+                    {selectedCar?.plate ? (
+                      <Text
+                        style={[styles.carSubtitle, { color: theme.mutedText }]}
+                      >
+                        {selectedCar.plate}
+                      </Text>
+                    ) : null}
+                  </View>
+
+                  <Ionicons
+                    name={showCars ? "chevron-up" : "chevron-down"}
+                    size={18}
+                    color={theme.mutedText}
+                  />
+                </>
+              )}
+            </TouchableOpacity>
+
+            {showCars && (
+              <View
+                style={[
+                  styles.dropdown,
+                  {
+                    backgroundColor: theme.card,
+                    borderColor: theme.border,
+                  },
+                ]}
+              >
+                {cars.map((car) => (
+                  <TouchableOpacity
+                    key={car.id}
+                    style={[
+                      styles.carDropdownItem,
+                      { borderBottomColor: theme.border },
+                    ]}
+                    onPress={() => {
+                      setSelectedCarId(car.id);
+                      setShowCars(false);
+                    }}
+                  >
+                    {car.imageUrl || car.image ? (
+                      <Image
+                        source={{
+                          uri: car.imageUrl || car.image,
+                        }}
+                        style={styles.carImage}
+                      />
+                    ) : (
+                      <View
+                        style={[
+                          styles.carImagePlaceholder,
+                          { backgroundColor: theme.background },
+                        ]}
+                      >
+                        <Ionicons
+                          name="car-outline"
+                          size={22}
+                          color={theme.mutedText}
+                        />
+                      </View>
+                    )}
+
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.carTitle, { color: theme.text }]}>
+                        {`${car.brand || ""} ${car.model || ""}`.trim() ||
+                          "Araç"}
+                      </Text>
+
+                      {car.plate ? (
+                        <Text
+                          style={[
+                            styles.carSubtitle,
+                            { color: theme.mutedText },
+                          ]}
+                        >
+                          {car.plate}
+                        </Text>
+                      ) : null}
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+          </View>
 
           <View
             style={[
@@ -487,5 +686,55 @@ const styles = StyleSheet.create({
   clearDateText: {
     fontSize: 13,
     fontWeight: "700",
+  },
+  carSelectorWrapper: {
+    borderWidth: 1,
+    borderRadius: 18,
+    padding: 14,
+    marginBottom: 18,
+  },
+
+  carSelector: {
+    minHeight: 64,
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+
+  carDropdownItem: {
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderBottomWidth: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+
+  carImage: {
+    width: 44,
+    height: 44,
+    borderRadius: 10,
+  },
+
+  carImagePlaceholder: {
+    width: 44,
+    height: 44,
+    borderRadius: 10,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  carTitle: {
+    fontSize: 15,
+    fontWeight: "800",
+  },
+
+  carSubtitle: {
+    marginTop: 3,
+    fontSize: 12,
+    fontWeight: "600",
   },
 });

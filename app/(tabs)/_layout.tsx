@@ -117,7 +117,7 @@ export default function TabsLayout() {
               subtitle={t("quickAdd.addFuelSubtitle")}
               onPress={() => {
                 setQuickAddVisible(false);
-                router.push("/fuel/create");
+                router.push("/vehicles/fuels/create");
               }}
             />
 

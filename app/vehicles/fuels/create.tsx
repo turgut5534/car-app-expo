@@ -18,7 +18,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useAppTheme } from "../../../../context/ThemeContext";
+import { useAppTheme } from "../../../context/ThemeContext";
 
 const API_ORIGIN = "http://192.168.0.10:3000";
 const API_URL = `${API_ORIGIN}/cars`;

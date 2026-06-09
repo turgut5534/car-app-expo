@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -304,11 +305,21 @@ export default function HomeScreen() {
                   },
                 ]}
               >
-                <Ionicons
-                  name="car-sport-outline"
-                  size={32}
-                  color={theme.mutedText}
-                />
+                {car.imageUrl ? (
+                  <Image
+                    source={{
+                      uri: `http://192.168.0.10:3000/uploads/cars/${car.imageUrl}`,
+                    }}
+                    style={styles.carImage}
+                    resizeMode="cover"
+                  />
+                ) : (
+                  <Ionicons
+                    name="car-sport-outline"
+                    size={32}
+                    color={theme.mutedText}
+                  />
+                )}
               </View>
 
               <View style={{ flex: 1 }}>
@@ -325,12 +336,6 @@ export default function HomeScreen() {
                   {t("home.thisMonth")}
                 </Text>
                 <View>
-                  <Text
-                    style={[styles.expenseLabel, { color: theme.mutedText }]}
-                  >
-                    {t("home.thisMonth")}
-                  </Text>
-
                   <Text style={[styles.expenseValue, { color: theme.primary }]}>
                     {car.thisMonthServiceTotal ?? 0} {data.currency}
                   </Text>
@@ -685,5 +690,10 @@ const styles = StyleSheet.create({
 
     justifyContent: "center",
     alignItems: "center",
+  },
+
+  carImage: {
+    width: "100%",
+    height: "100%",
   },
 });

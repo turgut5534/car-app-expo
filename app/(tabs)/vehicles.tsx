@@ -9,7 +9,7 @@ import {
   Image,
   Modal,
   Pressable,
-  TextInput,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -43,10 +43,7 @@ export default function VehiclesScreen() {
   const [error, setError] = useState("");
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [actionModalVisible, setActionModalVisible] = useState(false);
-
   const [confirmDeleteVisible, setConfirmDeleteVisible] = useState(false);
-  const [passwordModalVisible, setPasswordModalVisible] = useState(false);
-  const [password, setPassword] = useState("");
   const [deleting, setDeleting] = useState(false);
 
   const closeActionModal = () => {
@@ -111,9 +108,6 @@ export default function VehiclesScreen() {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          password,
-        }),
       });
 
       const data = await response.json();
@@ -122,9 +116,7 @@ export default function VehiclesScreen() {
         throw new Error(data.message || "Delete failed");
       }
 
-      setPasswordModalVisible(false);
-      setPassword("");
-
+      setSelectedVehicle(null);
       fetchVehicles();
     } catch (error: any) {
       Alert.alert("Error", error.message);
@@ -135,9 +127,7 @@ export default function VehiclesScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView
-        style={[styles.center, { backgroundColor: theme.background }]}
-      >
+      <SafeAreaView style={[styles.center, { backgroundColor: theme.background }]}>
         <ActivityIndicator size="large" color={theme.primary} />
         <Text style={[styles.loadingText, { color: theme.mutedText }]}>
           {t("vehicles.loading")}
@@ -148,9 +138,7 @@ export default function VehiclesScreen() {
 
   if (error) {
     return (
-      <SafeAreaView
-        style={[styles.center, { backgroundColor: theme.background }]}
-      >
+      <SafeAreaView style={[styles.center, { backgroundColor: theme.background }]}>
         <Ionicons name="warning-outline" size={42} color="#DC2626" />
         <Text style={[styles.error, { color: theme.text }]}>
           {t("common.error")}
@@ -165,73 +153,6 @@ export default function VehiclesScreen() {
         >
           <Text style={styles.retryText}>{t("common.retry")}</Text>
         </TouchableOpacity>
-      </SafeAreaView>
-    );
-  }
-
-  if (vehicles.length === 0) {
-    return (
-      <SafeAreaView
-        style={[styles.container, { backgroundColor: theme.background }]}
-        edges={["top", "bottom"]}
-      >
-        <View style={styles.emptyWrapper}>
-          <View
-            style={[
-              styles.emptyIconCircle,
-              {
-                backgroundColor:
-                  theme.activeMode === "dark" ? "#172554" : "#EEF4FF",
-              },
-            ]}
-          >
-            <Ionicons name="car-sport" size={64} color={theme.primary} />
-          </View>
-
-          <Text style={[styles.emptyTitle, { color: theme.text }]}>
-            {t("vehicles.noVehicles")}
-          </Text>
-
-          <Text style={[styles.emptyDescription, { color: theme.mutedText }]}>
-            {t("vehicles.noVehiclesDescription")}
-          </Text>
-
-          <View
-            style={[
-              styles.emptyCard,
-              {
-                backgroundColor: theme.card,
-                borderColor: theme.border,
-              },
-            ]}
-          >
-            <EmptyFeature
-              icon="speedometer-outline"
-              text={t("vehicles.trackMileage")}
-            />
-            <EmptyFeature
-              icon="construct-outline"
-              text={t("vehicles.trackMaintenance")}
-            />
-            <EmptyFeature
-              icon="cash-outline"
-              text={t("vehicles.trackExpenses")}
-            />
-          </View>
-
-          <TouchableOpacity
-            style={[
-              styles.primaryEmptyButton,
-              { backgroundColor: theme.primary },
-            ]}
-            onPress={() => router.push("/vehicles/create")}
-          >
-            <Ionicons name="add" size={22} color="#FFFFFF" />
-            <Text style={styles.primaryEmptyButtonText}>
-              {t("vehicles.addFirstVehicle")}
-            </Text>
-          </TouchableOpacity>
-        </View>
       </SafeAreaView>
     );
   }
@@ -269,7 +190,9 @@ export default function VehiclesScreen() {
           >
             {vehicle.imageUrl ? (
               <Image
-                source={{ uri: vehicle.imageUrl }}
+                source={{
+                  uri: `http://192.168.0.10:3000/uploads/cars/${vehicle.imageUrl}`,
+                }}
                 style={styles.vehicleImage}
                 resizeMode="contain"
               />
@@ -346,8 +269,9 @@ export default function VehiclesScreen() {
             <TouchableOpacity
               style={[styles.actionItem, { borderBottomColor: theme.border }]}
               onPress={() => {
+                const id = selectedVehicle?.id;
                 closeActionModal();
-                router.push(`/vehicles/${selectedVehicle?.id}/edit`);
+                router.push(`/vehicles/${id}/edit`);
               }}
             >
               <Ionicons name="create-outline" size={22} color={theme.text} />
@@ -359,8 +283,9 @@ export default function VehiclesScreen() {
             <TouchableOpacity
               style={[styles.actionItem, { borderBottomColor: theme.border }]}
               onPress={() => {
+                const id = selectedVehicle?.id;
                 closeActionModal();
-                router.push(`/vehicles/${selectedVehicle?.id}`);
+                router.push(`/vehicles/${id}`);
               }}
             >
               <Ionicons name="eye-outline" size={22} color={theme.text} />
@@ -372,7 +297,7 @@ export default function VehiclesScreen() {
             <TouchableOpacity
               style={styles.actionItem}
               onPress={() => {
-                closeActionModal();
+                setActionModalVisible(false);
                 setConfirmDeleteVisible(true);
               }}
             >
@@ -382,10 +307,7 @@ export default function VehiclesScreen() {
               </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.cancelButton}
-              onPress={closeActionModal}
-            >
+            <TouchableOpacity style={styles.cancelButton} onPress={closeActionModal}>
               <Text style={[styles.cancelText, { color: theme.mutedText }]}>
                 {t("common.cancel")}
               </Text>
@@ -420,86 +342,17 @@ export default function VehiclesScreen() {
               </TouchableOpacity>
 
               <TouchableOpacity
+                disabled={deleting}
                 onPress={() => {
                   setConfirmDeleteVisible(false);
-                  setPasswordModalVisible(true);
+                  deleteVehicle();
                 }}
               >
-                <Text
-                  style={{
-                    color: "#DC2626",
-                    fontWeight: "700",
-                  }}
-                >
-                  {t("common.yes")}
+                <Text style={{ color: "#DC2626", fontWeight: "700" }}>
+                  {deleting ? t("common.loading") : t("common.yes")}
                 </Text>
               </TouchableOpacity>
             </View>
-          </Pressable>
-        </Pressable>
-      </Modal>
-
-      <Modal visible={passwordModalVisible} transparent animationType="fade">
-        <Pressable
-          style={styles.modalOverlayCenter}
-          onPress={() => setPasswordModalVisible(false)}
-        >
-          <Pressable
-            style={[styles.confirmBox, { backgroundColor: theme.card }]}
-            onPress={(e) => e.stopPropagation()}
-          >
-            <Text
-              style={{
-                color: theme.text,
-                fontSize: 18,
-                fontWeight: "700",
-                marginBottom: 15,
-              }}
-            >
-              {t("auth.passwordPlaceholder")}
-            </Text>
-
-            <TextInput
-              secureTextEntry
-              value={password}
-              onChangeText={setPassword}
-              placeholder={t("auth.password")}
-              placeholderTextColor={theme.mutedText}
-              style={{
-                borderWidth: 1,
-                borderColor: theme.border,
-                borderRadius: 10,
-                paddingHorizontal: 12,
-                height: 50,
-                color: theme.text,
-                marginBottom: 15,
-              }}
-            />
-
-            <TouchableOpacity
-              disabled={deleting}
-              onPress={deleteVehicle}
-              style={{
-                backgroundColor: "#DC2626",
-                height: 50,
-                borderRadius: 10,
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-            >
-              {deleting ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text
-                  style={{
-                    color: "#fff",
-                    fontWeight: "700",
-                  }}
-                >
-                  {t("common.delete")}
-                </Text>
-              )}
-            </TouchableOpacity>
           </Pressable>
         </Pressable>
       </Modal>
@@ -736,13 +589,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-
   confirmBox: {
     width: "85%",
     borderRadius: 18,
     padding: 20,
   },
-
   confirmButtons: {
     flexDirection: "row",
     justifyContent: "flex-end",

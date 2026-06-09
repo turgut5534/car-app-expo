@@ -145,9 +145,7 @@ export default function CarDetailScreen() {
           </TouchableOpacity>
 
           <Text style={[styles.pageTitle, { color: theme.text }]}>
-            {activeTab === "services"
-              ? t("cars.detailTitleServices")
-              : t("cars.detailTitle")}
+            {car.brand} {car.model}
           </Text>
 
           <TouchableOpacity>
@@ -158,7 +156,7 @@ export default function CarDetailScreen() {
         <ImageBackground
           source={
             car?.imageUrl
-              ? { uri: car.imageUrl }
+              ? { uri: `http://192.168.0.10:3000/uploads/cars/${car.imageUrl}`, }
               : require("../../assets/images/image.png")
           }
           style={styles.hero}
@@ -174,7 +172,7 @@ export default function CarDetailScreen() {
 
             <View style={styles.kmBadge}>
               <Text style={[styles.kmText, { color: theme.primary }]}>
-                {car.currentKm?.toLocaleString() ?? 0} km
+                {car.currentKm?.toLocaleString() ?? 0} km 
               </Text>
             </View>
           </View>

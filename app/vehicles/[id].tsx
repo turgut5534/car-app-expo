@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -7,6 +7,11 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   ImageBackground,
+  Linking,
+  Alert,
+  Modal,
+  Image,
+  Pressable,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -14,15 +19,17 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import { useAppTheme } from "../../context/ThemeContext";
+import { WebView } from "react-native-webview";
+import { useFocusEffect } from "@react-navigation/native";
 
 type Service = {
   id: string;
   title: string;
-  date: string;
-  mileageKm: number;
-  cost: string;
-  type?: "oil" | "brake" | "filter" | "spark" | "coolant";
+  serviceDate: string;
+  km: number;
+  amount: string;
   currency: string;
+  type?: "oil" | "brake" | "filter" | "spark" | "coolant";
 };
 
 type DocumentRecord = {
@@ -41,9 +48,12 @@ type DocumentRecord = {
   expiresAt?: string | null;
   createdAt: string;
 };
+
 type CarDetail = {
   id: string;
   name: string;
+  brand?: string;
+  model?: string;
   plate: string;
   imageUrl?: string;
   currentKm: number;
@@ -51,6 +61,10 @@ type CarDetail = {
   monthlyChangePercent: number;
   totalExpenses: string;
   services: Service[];
+  documents: DocumentRecord[];
+  owner?: {
+    currency: string;
+  };
   lastService?: {
     date: string;
     title: string;
@@ -62,10 +76,10 @@ type CarDetail = {
   };
   averageFuelConsumption?: string;
   costPerKm?: string;
-  documents: DocumentRecord[];
 };
 
-const API_URL = "http://192.168.0.10:3000/cars";
+const API_ORIGIN = "http://192.168.0.10:3000";
+const API_URL = `${API_ORIGIN}/cars`;
 
 export default function CarDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -75,8 +89,10 @@ export default function CarDetailScreen() {
   const [car, setCar] = useState<CarDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
+  const [selectedDocument, setSelectedDocument] =
+    useState<DocumentRecord | null>(null);
 
-  const fetchCar = async () => {
+  const fetchCar = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -117,12 +133,19 @@ export default function CarDetailScreen() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, t]);
 
-  useEffect(() => {
-    fetchCar();
-  }, [id]);
+  useFocusEffect(
+    useCallback(() => {
+      fetchCar();
+    }, [fetchCar]),
+  );
 
+  useFocusEffect(
+    useCallback(() => {
+      fetchCar();
+    }, [id]),
+  );
   if (loading) {
     return (
       <SafeAreaView
@@ -151,123 +174,6 @@ export default function CarDetailScreen() {
     { key: "documents", label: t("cars.documents") },
   ];
 
-  function DocumentItem({ document }: { document: DocumentRecord }) {
-    const { theme } = useAppTheme();
-    const { t } = useTranslation();
-
-    const config = getDocumentConfig(document.type, theme.activeMode);
-
-    const subtitle = document.expiresAt
-      ? `${t("cars.validUntil")} ${formatDate(document.expiresAt)}`
-      : `${t("cars.addedOn")} ${formatDate(document.createdAt)}`;
-
-    return (
-      <TouchableOpacity
-        style={[
-          styles.documentCard,
-          {
-            backgroundColor: theme.card,
-            borderColor: theme.border,
-          },
-        ]}
-        activeOpacity={0.85}
-        onPress={() => {
-          // ileride fileUrl açılır
-          // Linking.openURL(document.fileUrl)
-        }}
-      >
-        <View style={styles.documentLeft}>
-          <View
-            style={[styles.documentIconBox, { backgroundColor: config.bg }]}
-          >
-            <Ionicons name={config.icon} size={24} color={config.color} />
-          </View>
-
-          <View style={{ flex: 1 }}>
-            <Text style={[styles.documentTitle, { color: theme.text }]}>
-              {document.title}
-            </Text>
-
-            <Text style={[styles.documentSubtitle, { color: theme.mutedText }]}>
-              {subtitle}
-            </Text>
-          </View>
-        </View>
-
-        <View style={styles.documentRight}>
-          <Text style={[styles.documentType, { color: theme.text }]}>PDF</Text>
-
-          <TouchableOpacity>
-            <Ionicons
-              name="ellipsis-vertical"
-              size={20}
-              color={theme.mutedText}
-            />
-          </TouchableOpacity>
-        </View>
-      </TouchableOpacity>
-    );
-  }
-
-  function getDocumentConfig(
-    type: DocumentRecord["type"],
-    activeMode: "light" | "dark",
-  ): {
-    icon: keyof typeof Ionicons.glyphMap;
-    color: string;
-    bg: string;
-  } {
-    const isDark = activeMode === "dark";
-
-    const configs = {
-      REGISTRATION: {
-        icon: "document-text-outline",
-        color: "#EF4444",
-        bg: isDark ? "#450A0A" : "#FEE2E2",
-      },
-      INSURANCE: {
-        icon: "shield-checkmark-outline",
-        color: "#2563EB",
-        bg: isDark ? "#172554" : "#DBEAFE",
-      },
-      INSPECTION: {
-        icon: "clipboard-outline",
-        color: "#16A34A",
-        bg: isDark ? "#052E16" : "#DCFCE7",
-      },
-      INVOICE: {
-        icon: "receipt-outline",
-        color: "#F97316",
-        bg: isDark ? "#431407" : "#FFEDD5",
-      },
-      SERVICE_REPORT: {
-        icon: "construct-outline",
-        color: "#0EA5E9",
-        bg: isDark ? "#082F49" : "#E0F2FE",
-      },
-      PURCHASE_INVOICE: {
-        icon: "document-attach-outline",
-        color: "#7C3AED",
-        bg: isDark ? "#2E1065" : "#EDE9FE",
-      },
-      ROADSIDE_ASSISTANCE: {
-        icon: "medkit-outline",
-        color: "#F97316",
-        bg: isDark ? "#431407" : "#FFEDD5",
-      },
-      OTHER: {
-        icon: "document-outline",
-        color: "#64748B",
-        bg: isDark ? "#1E293B" : "#F1F5F9",
-      },
-    } as const;
-
-    return configs[type] ?? configs.OTHER;
-  }
-
-  function formatDate(date: string) {
-    return new Date(date).toLocaleDateString();
-  }
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: theme.background }]}
@@ -280,7 +186,7 @@ export default function CarDetailScreen() {
           </TouchableOpacity>
 
           <Text style={[styles.pageTitle, { color: theme.text }]}>
-            {car.brand} {car.model}
+            {car.brand || ""} {car.model || car.name}
           </Text>
 
           <TouchableOpacity>
@@ -290,8 +196,8 @@ export default function CarDetailScreen() {
 
         <ImageBackground
           source={
-            car?.imageUrl
-              ? { uri: `http://192.168.0.10:3000/uploads/cars/${car.imageUrl}` }
+            car.imageUrl
+              ? { uri: `${API_ORIGIN}/uploads/cars/${car.imageUrl}` }
               : require("../../assets/images/image.png")
           }
           style={styles.hero}
@@ -411,7 +317,7 @@ export default function CarDetailScreen() {
                 <ServiceItem
                   key={service.id}
                   service={service}
-                  currency={car.owner.currency}
+                  currency={car.owner?.currency || service.currency || ""}
                 />
               ))
             ) : (
@@ -444,7 +350,11 @@ export default function CarDetailScreen() {
 
             {car.documents.length > 0 ? (
               car.documents.map((document) => (
-                <DocumentItem key={document.id} document={document} />
+                <DocumentItem
+                  key={document.id}
+                  document={document}
+                  onPress={() => setSelectedDocument(document)}
+                />
               ))
             ) : (
               <View
@@ -482,8 +392,273 @@ export default function CarDetailScreen() {
           </View>
         ) : null}
       </ScrollView>
+
+      <Modal
+        visible={!!selectedDocument}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setSelectedDocument(null)}
+      >
+        <SafeAreaView
+          style={[styles.modalContainer, { backgroundColor: theme.background }]}
+        >
+          <View
+            style={[
+              styles.modalHeader,
+              {
+                backgroundColor: theme.card,
+                borderBottomColor: theme.border,
+              },
+            ]}
+          >
+            <View style={{ flex: 1 }}>
+              <Text
+                numberOfLines={1}
+                style={[styles.modalTitle, { color: theme.text }]}
+              >
+                {selectedDocument?.title}
+              </Text>
+
+              {selectedDocument ? (
+                <Text
+                  numberOfLines={1}
+                  style={[styles.modalSubtitle, { color: theme.mutedText }]}
+                >
+                  {getFileExtension(selectedDocument.fileUrl)}
+                </Text>
+              ) : null}
+            </View>
+
+            <Pressable
+              style={styles.modalCloseButton}
+              onPress={() => setSelectedDocument(null)}
+            >
+              <Ionicons name="close" size={26} color={theme.text} />
+            </Pressable>
+          </View>
+
+          {selectedDocument ? (
+            <DocumentPreview document={selectedDocument} />
+          ) : null}
+        </SafeAreaView>
+      </Modal>
     </SafeAreaView>
   );
+}
+
+function DocumentItem({
+  document,
+  onPress,
+}: {
+  document: DocumentRecord;
+  onPress: () => void;
+}) {
+  const { theme } = useAppTheme();
+  const { t } = useTranslation();
+
+  const config = getDocumentConfig(document.type, theme.activeMode);
+
+  const subtitle = document.expiresAt
+    ? `${t("cars.validUntil")} ${formatDate(document.expiresAt)}`
+    : `${t("cars.addedOn")} ${formatDate(document.createdAt)}`;
+
+  return (
+    <TouchableOpacity
+      style={[
+        styles.documentCard,
+        {
+          backgroundColor: theme.card,
+          borderColor: theme.border,
+        },
+      ]}
+      activeOpacity={0.85}
+      onPress={onPress}
+    >
+      <View style={styles.documentLeft}>
+        <View style={[styles.documentIconBox, { backgroundColor: config.bg }]}>
+          <Ionicons name={config.icon} size={24} color={config.color} />
+        </View>
+
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.documentTitle, { color: theme.text }]}>
+            {document.title}
+          </Text>
+
+          <Text style={[styles.documentSubtitle, { color: theme.mutedText }]}>
+            {subtitle}
+          </Text>
+        </View>
+      </View>
+
+      <View style={styles.documentRight}>
+        <Text style={[styles.documentType, { color: theme.text }]}>
+          {getFileExtension(document.fileUrl)}
+        </Text>
+
+        <TouchableOpacity onPress={(e) => e.stopPropagation()}>
+          <Ionicons
+            name="ellipsis-vertical"
+            size={20}
+            color={theme.mutedText}
+          />
+        </TouchableOpacity>
+      </View>
+    </TouchableOpacity>
+  );
+}
+
+function DocumentPreview({ document }: { document: DocumentRecord }) {
+  const { theme } = useAppTheme();
+
+  const url = getDocumentUrl(document.fileUrl);
+  const extension = getFileExtension(document.fileUrl).toLowerCase();
+
+  const isImage = ["jpg", "jpeg", "png", "webp"].includes(extension);
+  const isPdf = extension === "pdf";
+
+  const openExternal = async () => {
+    try {
+      await Linking.openURL(url);
+    } catch {
+      Alert.alert("Error", "Could not open document.");
+    }
+  };
+
+  if (isImage) {
+    return (
+      <View style={styles.previewContainer}>
+        <Image
+          source={{ uri: url }}
+          style={styles.previewImage}
+          resizeMode="contain"
+        />
+      </View>
+    );
+  }
+
+  if (isPdf) {
+    return (
+      <WebView
+        source={{ uri: url }}
+        style={styles.webView}
+        startInLoadingState
+        renderLoading={() => (
+          <View
+            style={[
+              styles.previewLoading,
+              { backgroundColor: theme.background },
+            ]}
+          >
+            <ActivityIndicator color={theme.primary} size="large" />
+          </View>
+        )}
+      />
+    );
+  }
+
+  return (
+    <View style={styles.unsupportedPreview}>
+      <Ionicons
+        name="document-text-outline"
+        size={56}
+        color={theme.mutedText}
+      />
+
+      <Text style={[styles.unsupportedTitle, { color: theme.text }]}>
+        Bu dosya türü önizlenemiyor.
+      </Text>
+
+      <Text style={[styles.unsupportedText, { color: theme.mutedText }]}>
+        Dosyayı cihazdaki uygun uygulama ile açabilirsin.
+      </Text>
+
+      <Pressable
+        onPress={openExternal}
+        style={[styles.openExternalButton, { backgroundColor: theme.primary }]}
+      >
+        <Text style={styles.openExternalButtonText}>Dosyayı Aç</Text>
+      </Pressable>
+    </View>
+  );
+}
+
+function getDocumentUrl(fileUrl: string) {
+  if (fileUrl.startsWith("http")) {
+    return fileUrl;
+  }
+
+  if (fileUrl.startsWith("/uploads")) {
+    return `${API_ORIGIN}${fileUrl}`;
+  }
+
+  return `${API_ORIGIN}/uploads/documents/${fileUrl}`;
+}
+
+function getFileExtension(fileUrl: string) {
+  const cleanUrl = fileUrl.split("?")[0];
+  const extension = cleanUrl.split(".").pop();
+
+  return extension ? extension.toUpperCase() : "FILE";
+}
+
+function getDocumentConfig(
+  type: DocumentRecord["type"],
+  activeMode: "light" | "dark",
+): {
+  icon: keyof typeof Ionicons.glyphMap;
+  color: string;
+  bg: string;
+} {
+  const isDark = activeMode === "dark";
+
+  const configs = {
+    REGISTRATION: {
+      icon: "document-text-outline",
+      color: "#EF4444",
+      bg: isDark ? "#450A0A" : "#FEE2E2",
+    },
+    INSURANCE: {
+      icon: "shield-checkmark-outline",
+      color: "#2563EB",
+      bg: isDark ? "#172554" : "#DBEAFE",
+    },
+    INSPECTION: {
+      icon: "clipboard-outline",
+      color: "#16A34A",
+      bg: isDark ? "#052E16" : "#DCFCE7",
+    },
+    INVOICE: {
+      icon: "receipt-outline",
+      color: "#F97316",
+      bg: isDark ? "#431407" : "#FFEDD5",
+    },
+    SERVICE_REPORT: {
+      icon: "construct-outline",
+      color: "#0EA5E9",
+      bg: isDark ? "#082F49" : "#E0F2FE",
+    },
+    PURCHASE_INVOICE: {
+      icon: "document-attach-outline",
+      color: "#7C3AED",
+      bg: isDark ? "#2E1065" : "#EDE9FE",
+    },
+    ROADSIDE_ASSISTANCE: {
+      icon: "medkit-outline",
+      color: "#F97316",
+      bg: isDark ? "#431407" : "#FFEDD5",
+    },
+    OTHER: {
+      icon: "document-outline",
+      color: "#64748B",
+      bg: isDark ? "#1E293B" : "#F1F5F9",
+    },
+  } as const;
+
+  return configs[type] ?? configs.OTHER;
+}
+
+function formatDate(date: string) {
+  return new Date(date).toLocaleDateString("tr-TR");
 }
 
 function StatCard({
@@ -596,7 +771,7 @@ function ServiceItem({
 
           <Text style={[styles.serviceMeta, { color: theme.mutedText }]}>
             {new Date(service.serviceDate).toLocaleDateString("tr-TR")} ·{" "}
-            {service.km.toLocaleString()} km
+            {service.km?.toLocaleString()} km
           </Text>
         </View>
       </View>
@@ -773,50 +948,117 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   documentCard: {
-  minHeight: 78,
-  borderRadius: 14,
-  borderWidth: 1,
-  padding: 14,
-  marginBottom: 14,
-  flexDirection: "row",
-  alignItems: "center",
-  justifyContent: "space-between",
-},
-
-documentLeft: {
-  flexDirection: "row",
-  alignItems: "center",
-  gap: 12,
-  flex: 1,
-},
-
-documentIconBox: {
-  width: 42,
-  height: 42,
-  borderRadius: 10,
-  justifyContent: "center",
-  alignItems: "center",
-},
-
-documentTitle: {
-  fontSize: 15,
-  fontWeight: "900",
-},
-
-documentSubtitle: {
-  marginTop: 5,
-  fontSize: 13,
-  fontWeight: "600",
-},
-
-documentRight: {
-  flexDirection: "row",
-  alignItems: "center",
-  gap: 12,
-},
-
-documentType: {
-  fontSize: 13,
-  fontWeight: "900",
-},
+    minHeight: 78,
+    borderRadius: 14,
+    borderWidth: 1,
+    padding: 14,
+    marginBottom: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  documentLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    flex: 1,
+  },
+  documentIconBox: {
+    width: 42,
+    height: 42,
+    borderRadius: 10,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  documentTitle: {
+    fontSize: 15,
+    fontWeight: "900",
+  },
+  documentSubtitle: {
+    marginTop: 5,
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  documentRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  documentType: {
+    fontSize: 13,
+    fontWeight: "900",
+  },
+  modalContainer: {
+    flex: 1,
+  },
+  modalHeader: {
+    minHeight: 64,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  modalTitle: {
+    fontSize: 17,
+    fontWeight: "900",
+  },
+  modalSubtitle: {
+    marginTop: 3,
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  modalCloseButton: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  previewContainer: {
+    flex: 1,
+    backgroundColor: "#000",
+  },
+  previewImage: {
+    flex: 1,
+    width: "100%",
+    height: "100%",
+  },
+  webView: {
+    flex: 1,
+  },
+  previewLoading: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  unsupportedPreview: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 24,
+  },
+  unsupportedTitle: {
+    marginTop: 16,
+    fontSize: 17,
+    fontWeight: "900",
+    textAlign: "center",
+  },
+  unsupportedText: {
+    marginTop: 8,
+    fontSize: 14,
+    fontWeight: "600",
+    textAlign: "center",
+  },
+  openExternalButton: {
+    marginTop: 20,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  openExternalButtonText: {
+    color: "#fff",
+    fontWeight: "900",
+  },
 });

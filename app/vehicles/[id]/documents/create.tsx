@@ -106,8 +106,6 @@ export default function CreateDocumentScreen() {
       formData.append("type", type);
       formData.append("carId", id)
 
-      console.log(file.name)
-
       if (expiresAt) {
         formData.append("expiresAt", formatDateForApi(expiresAt));
       }

@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  Image,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -32,18 +33,27 @@ export default function CreateServiceScreen() {
   const [date, setDate] = useState(today);
   const [cost, setCost] = useState("");
   const [loading, setLoading] = useState(false);
-  
 
   type CarInfo = {
+    id: string;
     brand: string;
     model: string;
     plate: string;
+    imageUrl?: string;
+    image?: string;
   };
 
-  const [car, setCar] = useState<CarInfo | null>(null);
+  const [cars, setCars] = useState<CarInfo[]>([]);
+  const [selectedCarId, setSelectedCarId] = useState(id);
+  const [showCars, setShowCars] = useState(false);
+  const [carsLoading, setCarsLoading] = useState(false);
 
-  const fetchCarDetail = async () => {
+  const selectedCar = cars.find((car) => car.id === selectedCarId);
+
+  const fetchCars = async () => {
     try {
+      setCarsLoading(true);
+
       const token = await AsyncStorage.getItem("token");
 
       if (!token) {
@@ -51,7 +61,7 @@ export default function CreateServiceScreen() {
         return;
       }
 
-      const response = await fetch(`http://192.168.0.10:3000/cars/${id}`, {
+      const response = await fetch(API_URL, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -59,30 +69,30 @@ export default function CreateServiceScreen() {
 
       const data = await response.json();
 
-      console.log(data)
-
       if (!response.ok) {
         throw new Error(data.message || t("profile.loadFailed"));
       }
-      setCar({
-        brand: data.brand,
-        model: data.model,
-        plate: data.plate,
-      });
+
+      const carList = Array.isArray(data) ? data : data?.cars || [];
+
+      setCars(carList);
+
+      if (!selectedCarId && carList.length > 0) {
+        setSelectedCarId(carList[0].id);
+      }
     } catch (error) {
       Alert.alert(
         t("common.error"),
         error instanceof Error ? error.message : t("profile.loadFailed"),
       );
     } finally {
-      setLoading(false);
+      setCarsLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchCarDetail();
+    fetchCars();
   }, []);
-
   const createService = async () => {
     if (!title.trim() || !mileageKm.trim() || !date.trim() || !cost.trim()) {
       Alert.alert(t("common.error"), t("services.fillAllFields"));
@@ -90,7 +100,8 @@ export default function CreateServiceScreen() {
     }
 
     try {
-   
+
+       setLoading(true);
       const token = await AsyncStorage.getItem("token");
 
       if (!token) {
@@ -98,7 +109,7 @@ export default function CreateServiceScreen() {
         return;
       }
 
-      const response = await fetch(`${API_URL}/${id}/services`, {
+      const response = await fetch(`${API_URL}/${selectedCarId}/services`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -107,7 +118,7 @@ export default function CreateServiceScreen() {
         body: JSON.stringify({
           title: title.trim(),
           km: Number(mileageKm),
-          serviceDate : date,
+          serviceDate: date,
           amount: Number(cost),
         }),
       });
@@ -118,7 +129,7 @@ export default function CreateServiceScreen() {
         throw new Error(data.message || t("services.createFailed"));
       }
 
-      router.back();
+      router.replace(`/vehicles/${selectedCarId}` as any);
     } catch (error) {
       Alert.alert(
         t("common.error"),
@@ -130,33 +141,30 @@ export default function CreateServiceScreen() {
   };
 
   if (loading) {
-  return (
-    <SafeAreaView
-      style={[
-        styles.container,
-        {
-          backgroundColor: theme.background,
-          justifyContent: "center",
-          alignItems: "center",
-        },
-      ]}
-    >
-      <ActivityIndicator
-        size="large"
-        color={theme.primary}
-      />
-
-      <Text
-        style={{
-          color: theme.mutedText,
-          marginTop: 12,
-        }}
+    return (
+      <SafeAreaView
+        style={[
+          styles.container,
+          {
+            backgroundColor: theme.background,
+            justifyContent: "center",
+            alignItems: "center",
+          },
+        ]}
       >
-        {t("common.loading")}
-      </Text>
-    </SafeAreaView>
-  );
-}
+        <ActivityIndicator size="large" color={theme.primary} />
+
+        <Text
+          style={{
+            color: theme.mutedText,
+            marginTop: 12,
+          }}
+        >
+          {t("common.loading")}
+        </Text>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView
@@ -198,43 +206,149 @@ export default function CreateServiceScreen() {
             {t("services.createTitle")}
           </Text>
 
-          {car ? (
-            <View
+          <Text style={[styles.subtitle, { color: theme.mutedText }]}>
+            {t("services.createSubtitle")}
+          </Text>
+
+          <View
+            style={[
+              styles.carSelectorWrapper,
+              {
+                backgroundColor: theme.card,
+                borderColor: theme.border,
+              },
+            ]}
+          >
+            <Text style={[styles.label, { color: theme.text }]}>Araç</Text>
+
+            <TouchableOpacity
               style={[
-                styles.carInfoCard,
+                styles.carSelector,
                 {
                   backgroundColor: theme.card,
                   borderColor: theme.border,
                 },
               ]}
+              onPress={() => setShowCars(!showCars)}
+              disabled={carsLoading}
             >
+              {carsLoading ? (
+                <ActivityIndicator color={theme.primary} />
+              ) : (
+                <>
+                  {selectedCar?.imageUrl || selectedCar?.image ? (
+                    <Image
+                      source={{
+                       uri: `${API_URL}/../uploads/cars/${selectedCar.imageUrl}`,
+                      }}
+                      style={styles.carImage}
+                    />
+                  ) : (
+                    <View
+                      style={[
+                        styles.carImagePlaceholder,
+                        { backgroundColor: theme.background },
+                      ]}
+                    >
+                      <Ionicons
+                        name="car-outline"
+                        size={22}
+                        color={theme.mutedText}
+                      />
+                    </View>
+                  )}
+
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.carTitle, { color: theme.text }]}>
+                      {selectedCar
+                        ? `${selectedCar.brand || ""} ${selectedCar.model || ""}`.trim()
+                        : "Araç seç"}
+                    </Text>
+
+                    {selectedCar?.plate ? (
+                      <Text
+                        style={[styles.carSubtitle, { color: theme.mutedText }]}
+                      >
+                        {selectedCar.plate}
+                      </Text>
+                    ) : null}
+                  </View>
+
+                  <Ionicons
+                    name={showCars ? "chevron-up" : "chevron-down"}
+                    size={18}
+                    color={theme.mutedText}
+                  />
+                </>
+              )}
+            </TouchableOpacity>
+
+            {showCars && (
               <View
                 style={[
-                  styles.carInfoIcon,
+                  styles.dropdown,
                   {
-                    backgroundColor:
-                      theme.activeMode === "dark" ? "#172554" : "#EEF4FF",
+                    backgroundColor: theme.card,
+                    borderColor: theme.border,
                   },
                 ]}
               >
-                <Ionicons name="car-sport" size={28} color={theme.primary} />
+                {cars.map((item) => (
+                  <TouchableOpacity
+                    key={item.id}
+                    style={[
+                      styles.carDropdownItem,
+                      { borderBottomColor: theme.border },
+                    ]}
+                    onPress={() => {
+                      setSelectedCarId(item.id);
+                      setShowCars(false);
+                    }}
+                  >
+                    {item.imageUrl || item.image ? (
+                      <Image
+                        source={{
+                         uri: `${API_URL}/../uploads/cars/${item.imageUrl}`,
+                        }}
+                        style={styles.carImage}
+                      />
+                    ) : (
+                      <View
+                        style={[
+                          styles.carImagePlaceholder,
+                          { backgroundColor: theme.background },
+                        ]}
+                      >
+                        <Ionicons
+                          name="car-outline"
+                          size={22}
+                          color={theme.mutedText}
+                        />
+                      </View>
+                    )}
+
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.carTitle, { color: theme.text }]}>
+                        {`${item.brand || ""} ${item.model || ""}`.trim() ||
+                          "Araç"}
+                      </Text>
+
+                      {item.plate ? (
+                        <Text
+                          style={[
+                            styles.carSubtitle,
+                            { color: theme.mutedText },
+                          ]}
+                        >
+                          {item.plate}
+                        </Text>
+                      ) : null}
+                    </View>
+                  </TouchableOpacity>
+                ))}
               </View>
-
-              <View>
-                <Text style={[styles.carInfoTitle, { color: theme.text }]}>
-                  {car.brand} {car.model}
-                </Text>
-
-                <Text style={[styles.carInfoPlate, { color: theme.mutedText }]}>
-                  {car.plate}
-                </Text>
-              </View>
-            </View>
-          ) : null}
-
-          <Text style={[styles.subtitle, { color: theme.mutedText }]}>
-            {t("services.createSubtitle")}
-          </Text>
+            )}
+          </View>
 
           <View
             style={[
@@ -431,4 +545,60 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "700",
   },
+  carSelectorWrapper: {
+    borderWidth: 1,
+    borderRadius: 18,
+    padding: 14,
+    marginBottom: 18,
+  },
+
+  carSelector: {
+    minHeight: 64,
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+
+  carDropdownItem: {
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderBottomWidth: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+
+  carImage: {
+    width: 44,
+    height: 44,
+    borderRadius: 10,
+  },
+
+  carImagePlaceholder: {
+    width: 44,
+    height: 44,
+    borderRadius: 10,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  carTitle: {
+    fontSize: 15,
+    fontWeight: "800",
+  },
+
+  carSubtitle: {
+    marginTop: 3,
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  dropdown: {
+  borderWidth: 1,
+  borderRadius: 14,
+  marginTop: 10,
+  overflow: "hidden",
+},
 });

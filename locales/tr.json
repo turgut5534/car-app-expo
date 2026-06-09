@@ -186,5 +186,29 @@
     "addDocumentSubtitle": "Bir belge yükle",
     "addCar": "Araç Ekle",
     "addCarSubtitle": "Yeni bir araç kaydet"
-  }
+  },
+  "documents": {
+  "createTitle": "Belge Ekle",
+  "createSubtitle": "Aracınız için bir belge yükleyin.",
+  "title": "Belge Başlığı",
+  "titlePlaceholder": "Sigorta Poliçesi",
+  "type": "Belge Türü",
+  "expiresAt": "Son Geçerlilik Tarihi",
+  "file": "Dosya",
+  "chooseFile": "Dosya seç",
+  "fileHint": "PDF veya görsel dosyası",
+  "saveDocument": "Belgeyi Kaydet",
+  "fillAllFields": "Lütfen zorunlu alanları doldurun.",
+  "createFailed": "Belge oluşturulamadı."
+},
+"documentTypes": {
+  "REGISTRATION": "Ruhsat",
+  "INSURANCE": "Sigorta Poliçesi",
+  "INSPECTION": "Muayene Raporu",
+  "INVOICE": "Fatura",
+  "SERVICE_REPORT": "Servis Raporu",
+  "PURCHASE_INVOICE": "Satın Alma Faturası",
+  "ROADSIDE_ASSISTANCE": "Yol Yardımı",
+  "OTHER": "Diğer"
+}
 }

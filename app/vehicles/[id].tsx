@@ -25,6 +25,22 @@ type Service = {
   currency: string;
 };
 
+type DocumentRecord = {
+  id: string;
+  type:
+    | "REGISTRATION"
+    | "INSURANCE"
+    | "INSPECTION"
+    | "INVOICE"
+    | "SERVICE_REPORT"
+    | "PURCHASE_INVOICE"
+    | "ROADSIDE_ASSISTANCE"
+    | "OTHER";
+  title: string;
+  fileUrl: string;
+  expiresAt?: string | null;
+  createdAt: string;
+};
 type CarDetail = {
   id: string;
   name: string;
@@ -46,6 +62,7 @@ type CarDetail = {
   };
   averageFuelConsumption?: string;
   costPerKm?: string;
+  documents: DocumentRecord[];
 };
 
 const API_URL = "http://192.168.0.10:3000/cars";
@@ -93,6 +110,7 @@ export default function CarDetailScreen() {
       setCar({
         ...data,
         services: data.services ?? [],
+        documents: data.documents ?? [],
       });
     } catch {
       setCar(null);
@@ -133,6 +151,123 @@ export default function CarDetailScreen() {
     { key: "documents", label: t("cars.documents") },
   ];
 
+  function DocumentItem({ document }: { document: DocumentRecord }) {
+    const { theme } = useAppTheme();
+    const { t } = useTranslation();
+
+    const config = getDocumentConfig(document.type, theme.activeMode);
+
+    const subtitle = document.expiresAt
+      ? `${t("cars.validUntil")} ${formatDate(document.expiresAt)}`
+      : `${t("cars.addedOn")} ${formatDate(document.createdAt)}`;
+
+    return (
+      <TouchableOpacity
+        style={[
+          styles.documentCard,
+          {
+            backgroundColor: theme.card,
+            borderColor: theme.border,
+          },
+        ]}
+        activeOpacity={0.85}
+        onPress={() => {
+          // ileride fileUrl açılır
+          // Linking.openURL(document.fileUrl)
+        }}
+      >
+        <View style={styles.documentLeft}>
+          <View
+            style={[styles.documentIconBox, { backgroundColor: config.bg }]}
+          >
+            <Ionicons name={config.icon} size={24} color={config.color} />
+          </View>
+
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.documentTitle, { color: theme.text }]}>
+              {document.title}
+            </Text>
+
+            <Text style={[styles.documentSubtitle, { color: theme.mutedText }]}>
+              {subtitle}
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.documentRight}>
+          <Text style={[styles.documentType, { color: theme.text }]}>PDF</Text>
+
+          <TouchableOpacity>
+            <Ionicons
+              name="ellipsis-vertical"
+              size={20}
+              color={theme.mutedText}
+            />
+          </TouchableOpacity>
+        </View>
+      </TouchableOpacity>
+    );
+  }
+
+  function getDocumentConfig(
+    type: DocumentRecord["type"],
+    activeMode: "light" | "dark",
+  ): {
+    icon: keyof typeof Ionicons.glyphMap;
+    color: string;
+    bg: string;
+  } {
+    const isDark = activeMode === "dark";
+
+    const configs = {
+      REGISTRATION: {
+        icon: "document-text-outline",
+        color: "#EF4444",
+        bg: isDark ? "#450A0A" : "#FEE2E2",
+      },
+      INSURANCE: {
+        icon: "shield-checkmark-outline",
+        color: "#2563EB",
+        bg: isDark ? "#172554" : "#DBEAFE",
+      },
+      INSPECTION: {
+        icon: "clipboard-outline",
+        color: "#16A34A",
+        bg: isDark ? "#052E16" : "#DCFCE7",
+      },
+      INVOICE: {
+        icon: "receipt-outline",
+        color: "#F97316",
+        bg: isDark ? "#431407" : "#FFEDD5",
+      },
+      SERVICE_REPORT: {
+        icon: "construct-outline",
+        color: "#0EA5E9",
+        bg: isDark ? "#082F49" : "#E0F2FE",
+      },
+      PURCHASE_INVOICE: {
+        icon: "document-attach-outline",
+        color: "#7C3AED",
+        bg: isDark ? "#2E1065" : "#EDE9FE",
+      },
+      ROADSIDE_ASSISTANCE: {
+        icon: "medkit-outline",
+        color: "#F97316",
+        bg: isDark ? "#431407" : "#FFEDD5",
+      },
+      OTHER: {
+        icon: "document-outline",
+        color: "#64748B",
+        bg: isDark ? "#1E293B" : "#F1F5F9",
+      },
+    } as const;
+
+    return configs[type] ?? configs.OTHER;
+  }
+
+  function formatDate(date: string) {
+    return new Date(date).toLocaleDateString();
+  }
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: theme.background }]}
@@ -156,7 +291,7 @@ export default function CarDetailScreen() {
         <ImageBackground
           source={
             car?.imageUrl
-              ? { uri: `http://192.168.0.10:3000/uploads/cars/${car.imageUrl}`, }
+              ? { uri: `http://192.168.0.10:3000/uploads/cars/${car.imageUrl}` }
               : require("../../assets/images/image.png")
           }
           style={styles.hero}
@@ -172,7 +307,7 @@ export default function CarDetailScreen() {
 
             <View style={styles.kmBadge}>
               <Text style={[styles.kmText, { color: theme.primary }]}>
-                {car.currentKm?.toLocaleString() ?? 0} km 
+                {car.currentKm?.toLocaleString() ?? 0} km
               </Text>
             </View>
           </View>
@@ -297,7 +432,41 @@ export default function CarDetailScreen() {
           </View>
         ) : null}
 
-        {activeTab !== "overview" && activeTab !== "services" ? (
+        {activeTab === "documents" ? (
+          <View style={styles.tabContent}>
+            <TouchableOpacity
+              style={[styles.addButton, { backgroundColor: theme.primary }]}
+              onPress={() => router.push(`/vehicles/${id}/documents/create`)}
+            >
+              <Ionicons name="add" size={20} color="#fff" />
+              <Text style={styles.addButtonText}>{t("cars.addDocument")}</Text>
+            </TouchableOpacity>
+
+            {car.documents.length > 0 ? (
+              car.documents.map((document) => (
+                <DocumentItem key={document.id} document={document} />
+              ))
+            ) : (
+              <View
+                style={[
+                  styles.emptyTab,
+                  {
+                    backgroundColor: theme.card,
+                    borderColor: theme.border,
+                  },
+                ]}
+              >
+                <Text style={{ color: theme.mutedText }}>
+                  {t("cars.noDocuments")}
+                </Text>
+              </View>
+            )}
+          </View>
+        ) : null}
+
+        {activeTab !== "overview" &&
+        activeTab !== "services" &&
+        activeTab !== "documents" ? (
           <View
             style={[
               styles.emptyTab,
@@ -603,4 +772,51 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     alignItems: "center",
   },
+  documentCard: {
+  minHeight: 78,
+  borderRadius: 14,
+  borderWidth: 1,
+  padding: 14,
+  marginBottom: 14,
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "space-between",
+},
+
+documentLeft: {
+  flexDirection: "row",
+  alignItems: "center",
+  gap: 12,
+  flex: 1,
+},
+
+documentIconBox: {
+  width: 42,
+  height: 42,
+  borderRadius: 10,
+  justifyContent: "center",
+  alignItems: "center",
+},
+
+documentTitle: {
+  fontSize: 15,
+  fontWeight: "900",
+},
+
+documentSubtitle: {
+  marginTop: 5,
+  fontSize: 13,
+  fontWeight: "600",
+},
+
+documentRight: {
+  flexDirection: "row",
+  alignItems: "center",
+  gap: 12,
+},
+
+documentType: {
+  fontSize: 13,
+  fontWeight: "900",
+},
 });

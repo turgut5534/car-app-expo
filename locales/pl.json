@@ -182,5 +182,29 @@
     "addDocumentSubtitle": "Prześlij dokument",
     "addCar": "Dodaj auto",
     "addCarSubtitle": "Zarejestruj nowe auto"
+  },
+  "documents": {
+    "createTitle": "Dodaj dokument",
+    "createSubtitle": "Prześlij dokument dla swojego pojazdu.",
+    "title": "Tytuł dokumentu",
+    "titlePlaceholder": "Polisa ubezpieczeniowa",
+    "type": "Typ dokumentu",
+    "expiresAt": "Data ważności",
+    "file": "Plik",
+    "chooseFile": "Wybierz plik",
+    "fileHint": "Plik PDF lub obraz",
+    "saveDocument": "Zapisz dokument",
+    "fillAllFields": "Proszę wypełnić wymagane pola.",
+    "createFailed": "Nie udało się utworzyć dokumentu."
+  },
+  "documentTypes": {
+    "REGISTRATION": "Dowód rejestracyjny",
+    "INSURANCE": "Polisa ubezpieczeniowa",
+    "INSPECTION": "Raport z przeglądu",
+    "INVOICE": "Faktura",
+    "SERVICE_REPORT": "Raport serwisowy",
+    "PURCHASE_INVOICE": "Faktura zakupu",
+    "ROADSIDE_ASSISTANCE": "Pomoc drogowa",
+    "OTHER": "Inne"
   }
 }

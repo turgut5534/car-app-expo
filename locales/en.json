@@ -174,7 +174,11 @@
     "detailLoadFailed": "Car details could not be loaded.",
     "detailTitleServices": "CAR DETAIL - SERVICES",
     "addService": "Add Service",
-    "noServices": "No service records yet"
+    "noServices": "No service records yet",
+    "addDocument": "Add Document",
+    "noDocuments": "No documents yet",
+    "validUntil": "Valid until",
+    "addedOn": "Added on"
   },
   "quickAdd": {
     "title": "QUICK ADD",
@@ -200,5 +204,31 @@
     "saveService": "Save Service",
     "fillAllFields": "Please fill in all fields.",
     "createFailed": "Service could not be created."
+  },
+  "documents": {
+    "createTitle": "Add Document",
+    "createSubtitle": "Upload a document for your vehicle.",
+    "title": "Document Title",
+    "titlePlaceholder": "Insurance Policy",
+    "type": "Document Type",
+    "expiresAt": "Expiration Date",
+    "file": "File",
+    "chooseFile": "Choose a file",
+    "fileHint": "PDF or image file",
+    "saveDocument": "Save Document",
+    "fillAllFields": "Please fill in all required fields.",
+    "createFailed": "Document could not be created.",
+    "noExpirationDate": "No expiration date",
+    "clearExpirationDate": "Clear expiration date"
+  },
+  "documentTypes": {
+    "REGISTRATION": "Registration Certificate",
+    "INSURANCE": "Insurance Policy",
+    "INSPECTION": "Inspection Report",
+    "INVOICE": "Invoice",
+    "SERVICE_REPORT": "Service Report",
+    "PURCHASE_INVOICE": "Purchase Invoice",
+    "ROADSIDE_ASSISTANCE": "Roadside Assistance",
+    "OTHER": "Other"
   }
 }

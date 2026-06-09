@@ -128,7 +128,7 @@ export default function TabsLayout() {
               subtitle={t("quickAdd.addServiceSubtitle")}
               onPress={() => {
                 setQuickAddVisible(false);
-                router.push("/services/create");
+                router.push("/vehicles/services/create");
               }}
             />
 
@@ -139,7 +139,7 @@ export default function TabsLayout() {
               subtitle={t("quickAdd.addExpenseSubtitle")}
               onPress={() => {
                 setQuickAddVisible(false);
-                router.push("/expenses/create");
+                router.push("/vehicles/expenses/create");
               }}
             />
 
@@ -150,7 +150,7 @@ export default function TabsLayout() {
               subtitle={t("quickAdd.addDocumentSubtitle")}
               onPress={() => {
                 setQuickAddVisible(false);
-                router.push("/documents/create");
+                router.push("/vehicles/documents/create");
               }}
             />
 

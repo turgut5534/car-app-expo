@@ -85,11 +85,6 @@ export default function CreateDocumentScreen() {
   };
 
   const createDocument = async () => {
-    if (!title.trim() || !type || !file) {
-      Alert.alert(t("common.error"), t("documents.fillAllFields"));
-      return;
-    }
-
     try {
       setLoading(true);
 
@@ -104,16 +99,19 @@ export default function CreateDocumentScreen() {
 
       formData.append("title", title.trim());
       formData.append("type", type);
-      formData.append("carId", id)
+      formData.append("carId", id);
 
       if (expiresAt) {
         formData.append("expiresAt", formatDateForApi(expiresAt));
       }
-      formData.append("file", {
-        uri: file.uri,
-        name: file.name,
-        type: file.mimeType || "application/octet-stream",
-      } as any);
+
+      if (file) {
+        formData.append("file", {
+          uri: file.uri,
+          name: file.name,
+          type: file.mimeType || "application/octet-stream",
+        } as any);
+      }
 
       const response = await fetch(`${API_URL}/${id}/documents`, {
         method: "POST",
@@ -138,7 +136,6 @@ export default function CreateDocumentScreen() {
       }
 
       router.back();
-      
     } catch (error) {
       Alert.alert(
         t("common.error"),

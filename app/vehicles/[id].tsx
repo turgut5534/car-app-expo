@@ -353,7 +353,12 @@ export default function CarDetailScreen() {
                 <DocumentItem
                   key={document.id}
                   document={document}
-                  onPress={() => setSelectedDocument(document)}
+                  disabled={!document.fileUrl}
+                  onPress={() => {
+                    if (!document.fileUrl) return;
+
+                    setSelectedDocument(document);
+                  }}
                 />
               ))
             ) : (
@@ -449,9 +454,11 @@ export default function CarDetailScreen() {
 function DocumentItem({
   document,
   onPress,
+  disabled,
 }: {
   document: DocumentRecord;
   onPress: () => void;
+  disabled?: boolean;
 }) {
   const { theme } = useAppTheme();
   const { t } = useTranslation();
@@ -469,9 +476,11 @@ function DocumentItem({
         {
           backgroundColor: theme.card,
           borderColor: theme.border,
+          opacity: disabled ? 0.65 : 1,
         },
       ]}
       activeOpacity={0.85}
+      disabled={disabled}
       onPress={onPress}
     >
       <View style={styles.documentLeft}>
@@ -491,9 +500,11 @@ function DocumentItem({
       </View>
 
       <View style={styles.documentRight}>
-        <Text style={[styles.documentType, { color: theme.text }]}>
-          {getFileExtension(document.fileUrl)}
-        </Text>
+        {document.fileUrl ? (
+          <Text style={[styles.documentType, { color: theme.text }]}>
+            {getFileExtension(document.fileUrl)}
+          </Text>
+        ) : null}
 
         <TouchableOpacity onPress={(e) => e.stopPropagation()}>
           <Ionicons

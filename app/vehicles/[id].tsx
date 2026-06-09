@@ -11,6 +11,7 @@ import { CarHero } from "../../components/vehicles/detail/CarHero";
 import { CarTabs } from "../../components/vehicles/detail/CarTabs";
 import { OverviewTab } from "../../components/vehicles/detail/OverviewTab";
 import { ServicesTab } from "../../components/vehicles/detail/ServicesTab";
+import { FuelTab } from "../../components/vehicles/detail/FuelTab"
 import { DocumentsTab } from "../../components/vehicles/detail/DocumentsTab";
 import { ComingSoonTab } from "../../components/vehicles/detail/ComingSoonTab";
 import { DocumentPreviewModal } from "../../components/vehicles/detail/DocumentPreviewModal";
@@ -65,6 +66,8 @@ export default function CarDetailScreen() {
 
         {activeTab === "services" ? <ServicesTab car={car} /> : null}
 
+        {activeTab === "fuel" ? <FuelTab car={car} /> : null}
+
         {activeTab === "documents" ? (
           <DocumentsTab
             car={car}
@@ -74,6 +77,7 @@ export default function CarDetailScreen() {
 
         {activeTab !== "overview" &&
         activeTab !== "services" &&
+        activeTab !== "fuel" &&
         activeTab !== "documents" ? (
           <ComingSoonTab />
         ) : null}

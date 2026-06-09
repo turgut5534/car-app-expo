@@ -172,7 +172,12 @@
     "averageFuelConsumption": "Ortalama Yakıt Tüketimi",
     "costPerKm": "Kilometre Başına Maliyet",
     "tabComingSoon": "Bu bölüm yakında kullanılabilir olacak.",
-    "detailLoadFailed": "Araç detayları yüklenemedi."
+    "detailLoadFailed": "Araç detayları yüklenemedi.",
+    "addFuel": "Yakıt Ekle",
+    "averageConsumption": "Ortalama Tüketim",
+    "averageFuelPrice": "Ortalama Yakıt Fiyatı",
+    "noFuelRecords": "Yakıt kaydı yok",
+    "noFuelRecordsDescription": "Bu araca ait henüz yakıt kaydı eklenmemiş."
   },
   "quickAdd": {
     "title": "HIZLI EKLE",

@@ -63,7 +63,7 @@
     "registerFailed": "Account creation failed.",
     "invalidEmail": "Please enter a valid email address.",
     "emailAlreadyExists": "An account with this email already exists.",
-    "emailRequired" : "Email is required"
+    "emailRequired": "Email is required"
   },
   "common": {
     "loading": "Loading...",
@@ -179,7 +179,14 @@
     "addDocument": "Add Document",
     "noDocuments": "No documents yet",
     "validUntil": "Valid until",
-    "addedOn": "Added on"
+    "addedOn": "Added on",
+    "addFuel": "Add Fuel",
+    "averageConsumption": "Average Consumption",
+    "averageFuelPrice": "Average Fuel Price",
+    "noFuelRecords": "No fuel records",
+    "noFuelRecordsDescription": "No fuel records have been added for this car yet.",
+    "vehicle": "Vehicle",
+    "selectVehicle": "Select vehicle"
   },
   "quickAdd": {
     "title": "QUICK ADD",
@@ -231,5 +238,18 @@
     "PURCHASE_INVOICE": "Purchase Invoice",
     "ROADSIDE_ASSISTANCE": "Roadside Assistance",
     "OTHER": "Other"
+  },
+  "fuel": {
+    "createTitle": "Add Fuel",
+    "createSubtitle": "Enter fuel purchase details to track your vehicle consumption.",
+    "liter": "Liter",
+    "pricePerLiter": "Price Per Liter",
+    "totalCost": "Total Cost",
+    "mileageKm": "Mileage",
+    "date": "Date",
+    "saveFuel": "Save Fuel",
+    "fillAllFields": "Please fill in all fields.",
+    "selectCar": "Please select a vehicle.",
+    "createFailed": "Fuel record could not be created."
   }
 }

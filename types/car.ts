@@ -54,6 +54,16 @@ export type CarDetail = {
   costPerKm?: string;
 };
 
+export type FuelRecord = {
+  id: string;
+  fuelDate: string;
+  liter: number;
+  pricePerLiter: string;
+  totalCost: string;
+  km: number;
+  currency?: string;
+};
+
 export type CarTabKey =
   | "overview"
   | "services"

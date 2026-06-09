@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -13,6 +13,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { useAppTheme } from "../../context/ThemeContext";
+import { useFocusEffect } from "@react-navigation/native";
 
 type Car = {
   id: string;
@@ -88,9 +89,11 @@ export default function HomeScreen() {
     }
   };
 
-  useEffect(() => {
-    fetchHomeData();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      fetchHomeData();
+    }, []),
+  );
 
   if (loading) {
     return (

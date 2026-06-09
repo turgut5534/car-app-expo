@@ -56,7 +56,7 @@ export default function CreateFuelScreen() {
 
   const applyCarLastFuelPrice = (car?: CarInfo) => {
     if (!car?.lastFuelPricePerLiter) {
-      setPricePerLiter("0.00");
+      setPricePerLiter("2.50");
       return;
     }
 
@@ -213,8 +213,7 @@ export default function CreateFuelScreen() {
           liter: Number(liter),
           pricePerLiter: Number(pricePerLiter),
           totalAmount: Number(totalCost),
-          km: Number(mileageKm),
-          fuelDate: date,
+          km: Number(mileageKm)
         }),
       });
 
@@ -528,8 +527,6 @@ export default function CreateFuelScreen() {
               onChangeText={(text) =>
                 setTotalCost(text.replace(/[^0-9.]/g, ""))
               }
-              placeholder="56.00"
-              placeholderTextColor={theme.mutedText}
               keyboardType="decimal-pad"
             />
 

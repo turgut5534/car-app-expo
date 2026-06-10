@@ -41,6 +41,7 @@ export default function CreateServiceScreen() {
     plate: string;
     imageUrl?: string;
     image?: string;
+    currentKm: string
   };
 
   const [cars, setCars] = useState<CarInfo[]>([]);
@@ -77,6 +78,13 @@ export default function CreateServiceScreen() {
 
       setCars(carList);
 
+      const initialCarId = selectedCarId || carList[0]?.id;
+        const initialCar = carList.find(
+        (car: CarInfo) => car.id === initialCarId,
+      );
+
+      setMileageKm(initialCar.currentKm.toString())
+
       if (!selectedCarId && carList.length > 0) {
         setSelectedCarId(carList[0].id);
       }
@@ -93,6 +101,7 @@ export default function CreateServiceScreen() {
   useEffect(() => {
     fetchCars();
   }, []);
+
   const createService = async () => {
     if (!title.trim() || !mileageKm.trim() || !date.trim() || !cost.trim()) {
       Alert.alert(t("common.error"), t("services.fillAllFields"));
@@ -303,6 +312,7 @@ export default function CreateServiceScreen() {
                     onPress={() => {
                       setSelectedCarId(item.id);
                       setShowCars(false);
+                      setMileageKm(item.currentKm.toString())
                     }}
                   >
                     {item.imageUrl || item.image ? (

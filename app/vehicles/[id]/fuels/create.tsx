@@ -63,13 +63,7 @@ export default function CreateFuelScreen() {
     setMileageKm(car.currentKm.toString())
     setPricePerLiter(Number(car.lastFuelPricePerLiter).toFixed(2));
   };
-
-  const applyCurrentKm = (car?: CarInfo) => {
-
-    setMileageKm(car.currentKm.toString())
-
-  };
-
+  
   const priceIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const priceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -112,7 +106,7 @@ export default function CreateFuelScreen() {
       }
 
       applyCarLastFuelPrice(initialCar);
-      applyCurrentKm(initialCar)
+      setMileageKm(initialCar.currentKm.toString())
 
     } catch (error) {
       Alert.alert(
@@ -394,7 +388,7 @@ export default function CreateFuelScreen() {
                     onPress={() => {
                       setSelectedCarId(item.id);
                       applyCarLastFuelPrice(item);
-                      applyCurrentKm(item)
+                      setMileageKm(item.currentKm.toString())
                       setShowCars(false);
                     }}
                   >

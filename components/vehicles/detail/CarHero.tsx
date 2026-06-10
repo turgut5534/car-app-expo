@@ -25,7 +25,7 @@ export function CarHero({ car }: Props) {
 
       <View style={styles.heroContent}>
         <View>
-          <Text style={styles.carName}>{car.name}</Text>
+          <Text style={styles.carName}>{car.brand} {car.model}</Text>
           <Text style={styles.plate}>{car.plate}</Text>
         </View>
 

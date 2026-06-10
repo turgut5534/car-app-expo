@@ -19,7 +19,7 @@ export function CarHeader({ car }: Props) {
       </TouchableOpacity>
 
       <Text style={[styles.pageTitle, { color: theme.text }]}>
-        {car.brand || ""} {car.model || car.name}
+        {car.brand || ""} {car.model}
       </Text>
 
       <TouchableOpacity>

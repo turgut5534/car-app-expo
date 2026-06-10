@@ -105,7 +105,15 @@
     "createFailed": "Failed to create vehicle.",
     "currentMileage": "Current mileage",
     "confirmDelete": "Are you sure you want to delete this vehicle?",
-    "deleteFailed": "Failed to delete vehicle"
+    "deleteFailed": "Failed to delete vehicle",
+    "fuelType": "Fuel type",
+    "fuelTypePlaceholder": "Select fuel type",
+    "fuelTypes": {
+      "petrol": "Petrol",
+      "diesel": "Diesel",
+      "lpg": "LPG",
+      "electric": "Electric"
+    }
   },
   "home": {
     "title": "HOME",

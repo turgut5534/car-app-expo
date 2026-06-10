@@ -53,6 +53,10 @@ const years = Array.from({ length: 46 }, (_, i) =>
   String(new Date().getFullYear() - i),
 );
 
+const fuelTypes = ["petrol", "diesel", "lpg", "electric"] as const;
+
+type FuelType = (typeof fuelTypes)[number];
+
 export default function CreateVehicleScreen() {
   const { t } = useTranslation();
   const { theme } = useAppTheme();
@@ -70,6 +74,8 @@ export default function CreateVehicleScreen() {
   const [models, setModels] = useState<CarModel[]>([]);
   const [showModels, setShowModels] = useState(false);
   const [modelsLoading, setModelsLoading] = useState(false);
+  const [selectedFuelType, setSelectedFuelType] = useState<FuelType | "">("");
+  const [showFuelTypes, setShowFuelTypes] = useState(false);
 
   const fetchModelsByBrand = async (brand: string) => {
     try {
@@ -106,7 +112,13 @@ export default function CreateVehicleScreen() {
   };
 
   const createVehicle = async () => {
-    if (!plate.trim() || !selectedBrand || !model.trim() || !selectedYear) {
+    if (
+      !plate.trim() ||
+      !selectedFuelType ||
+      !selectedBrand ||
+      !model.trim() ||
+      !selectedYear
+    ) {
       Alert.alert(t("common.error"), t("vehicles.fillAllFields"));
       return;
     }
@@ -137,6 +149,7 @@ export default function CreateVehicleScreen() {
       formData.append("model", model.trim());
       formData.append("year", String(selectedYear));
       formData.append("currentKm", String(mileage || 0));
+      formData.append("fuelType", selectedFuelType);
 
       const response = await fetch(`${API_URL}/upload`, {
         method: "POST",
@@ -225,10 +238,86 @@ export default function CreateVehicleScreen() {
               {t("vehicles.addFirstVehicle")}
             </Text>
 
+            {/* Add fuel type section */}
+            <View style={styles.fuelDropdownWrapper}>
+              <Text style={[styles.label, { color: theme.text }]}>
+                {t("vehicles.fuelType")}
+              </Text>
+
+              <TouchableOpacity
+                style={[
+                  styles.input,
+                  {
+                    backgroundColor: theme.card,
+                    borderColor: theme.border,
+                  },
+                ]}
+                onPress={() => {
+                  setShowFuelTypes(!showFuelTypes);
+                  setShowBrands(false);
+                  setShowModels(false);
+                  setShowYears(false);
+                }}
+              >
+                <Text
+                  style={[
+                    selectedFuelType
+                      ? styles.inputText
+                      : styles.placeholderText,
+                    {
+                      color: selectedFuelType ? theme.text : theme.mutedText,
+                    },
+                  ]}
+                >
+                  {selectedFuelType
+                    ? t(`vehicles.fuelTypes.${selectedFuelType}`)
+                    : t("vehicles.fuelTypePlaceholder")}
+                </Text>
+
+                <Ionicons
+                  name="chevron-down"
+                  size={18}
+                  color={theme.mutedText}
+                />
+              </TouchableOpacity>
+
+              {showFuelTypes && (
+                <View
+                  style={[
+                    styles.dropdownOverlay,
+                    {
+                      backgroundColor: theme.card,
+                      borderColor: theme.border,
+                    },
+                  ]}
+                >
+                  {fuelTypes.map((fuelType) => (
+                    <TouchableOpacity
+                      key={fuelType}
+                      style={[
+                        styles.dropdownItem,
+                        { borderBottomColor: theme.border },
+                      ]}
+                      onPress={() => {
+                        setSelectedFuelType(fuelType);
+                        setShowFuelTypes(false);
+                      }}
+                    >
+                      <Text
+                        style={[styles.dropdownText, { color: theme.text }]}
+                      >
+                        {t(`vehicles.fuelTypes.${fuelType}`)}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+            </View>
+
+            {/* Add plate section */}
             <Text style={[styles.label, { color: theme.text }]}>
               {t("vehicles.plate")}
             </Text>
-
             <TextInput
               style={[
                 styles.input,
@@ -239,203 +328,232 @@ export default function CreateVehicleScreen() {
                 },
               ]}
               value={plate}
-             onChangeText={(text) => setPlate(text.toUpperCase())}
+              onChangeText={(text) => setPlate(text.toUpperCase())}
               placeholder={t("vehicles.platePlaceholder")}
               placeholderTextColor={theme.mutedText}
               autoCapitalize="characters"
             />
 
-            <Text style={[styles.label, { color: theme.text }]}>
-              {t("vehicles.brand")}
-            </Text>
-
-            <TouchableOpacity
-              style={[
-                styles.input,
-                {
-                  backgroundColor: theme.card,
-                  borderColor: theme.border,
-                },
-              ]}
-              onPress={() => {
-                setShowBrands(!showBrands);
-                setShowYears(false);
-                setShowModels(false);
-              }}
-            >
-              <Text
-                style={[
-                  selectedBrand ? styles.inputText : styles.placeholderText,
-                  {
-                    color: selectedBrand ? theme.text : theme.mutedText,
-                  },
-                ]}
-              >
-                {selectedBrand || t("vehicles.brandPlaceholder")}
+            {/* Add brand section */}
+            <View style={styles.brandDropdownWrapper}>
+              <Text style={[styles.label, { color: theme.text }]}>
+                {t("vehicles.brand")}
               </Text>
 
-              <Ionicons name="chevron-down" size={18} color={theme.mutedText} />
-            </TouchableOpacity>
-
-            {showBrands && (
-              <View
+              <TouchableOpacity
                 style={[
-                  styles.dropdown,
+                  styles.input,
                   {
                     backgroundColor: theme.card,
                     borderColor: theme.border,
                   },
                 ]}
+                onPress={() => {
+                  setShowBrands(!showBrands);
+                  setShowYears(false);
+                  setShowModels(false);
+                  setShowFuelTypes(false);
+                }}
               >
-                {carBrands.map((brand) => (
-                  <TouchableOpacity
-                    key={brand}
-                    style={[
-                      styles.dropdownItem,
-                      { borderBottomColor: theme.border },
-                    ]}
-                    onPress={() => {
-                      setSelectedBrand(brand);
-                      setShowBrands(false);
-                      fetchModelsByBrand(brand);
-                    }}
-                  >
-                    <Text style={[styles.dropdownText, { color: theme.text }]}>
-                      {brand}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            )}
+                <Text
+                  style={[
+                    selectedBrand ? styles.inputText : styles.placeholderText,
+                    {
+                      color: selectedBrand ? theme.text : theme.mutedText,
+                    },
+                  ]}
+                >
+                  {selectedBrand || t("vehicles.brandPlaceholder")}
+                </Text>
 
-            <Text style={[styles.label, { color: theme.text }]}>
-              {t("vehicles.model")}
-            </Text>
-            <TouchableOpacity
-              style={[
-                styles.input,
-                {
-                  backgroundColor: theme.card,
-                  borderColor: theme.border,
-                },
-              ]}
-              disabled={!selectedBrand || modelsLoading}
-              onPress={() => {
-                setShowModels(!showModels);
-                setShowBrands(false);
-                setShowYears(false);
-              }}
-            >
-              <Text
-                style={[
-                  model ? styles.inputText : styles.placeholderText,
-                  { color: model ? theme.text : theme.mutedText },
-                ]}
-              >
-                {modelsLoading
-                  ? "Loading models..."
-                  : model || t("vehicles.modelPlaceholder")}
+                <Ionicons
+                  name="chevron-down"
+                  size={18}
+                  color={theme.mutedText}
+                />
+              </TouchableOpacity>
+
+              {showBrands && (
+                <View
+                  style={[
+                    styles.dropdownOverlay,
+                    {
+                      backgroundColor: theme.card,
+                      borderColor: theme.border,
+                    },
+                  ]}
+                >
+                  {carBrands.map((brand) => (
+                    <TouchableOpacity
+                      key={brand}
+                      style={[
+                        styles.dropdownItem,
+                        { borderBottomColor: theme.border },
+                      ]}
+                      onPress={() => {
+                        setSelectedBrand(brand);
+                        setShowBrands(false);
+                        fetchModelsByBrand(brand);
+                        setShowFuelTypes(false);
+                      }}
+                    >
+                      <Text
+                        style={[styles.dropdownText, { color: theme.text }]}
+                      >
+                        {brand}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+            </View>
+
+            {/* Add model section */}
+            <View style={styles.modelDropdownWrapper}>
+              <Text style={[styles.label, { color: theme.text }]}>
+                {t("vehicles.model")}
               </Text>
-
-              <Ionicons name="chevron-down" size={18} color={theme.mutedText} />
-            </TouchableOpacity>
-
-            {showModels && (
-              <View
+              <TouchableOpacity
                 style={[
-                  styles.dropdown,
+                  styles.input,
                   {
                     backgroundColor: theme.card,
                     borderColor: theme.border,
                   },
                 ]}
+                disabled={!selectedBrand || modelsLoading}
+                onPress={() => {
+                  setShowModels(!showModels);
+                  setShowBrands(false);
+                  setShowYears(false);
+                  setShowFuelTypes(false);
+                }}
               >
-                {models.map((item) => (
-                  <TouchableOpacity
-                    key={item.Model_ID}
-                    style={[
-                      styles.dropdownItem,
-                      { borderBottomColor: theme.border },
-                    ]}
-                    onPress={() => {
-                      setModel(item.Model_Name);
-                      setShowModels(false);
-                    }}
-                  >
-                    <Text style={[styles.dropdownText, { color: theme.text }]}>
-                      {item.Model_Name}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            )}
+                <Text
+                  style={[
+                    model ? styles.inputText : styles.placeholderText,
+                    { color: model ? theme.text : theme.mutedText },
+                  ]}
+                >
+                  {modelsLoading
+                    ? "Loading models..."
+                    : model || t("vehicles.modelPlaceholder")}
+                </Text>
 
-            <Text style={[styles.label, { color: theme.text }]}>
-              {t("vehicles.year")}
-            </Text>
+                <Ionicons
+                  name="chevron-down"
+                  size={18}
+                  color={theme.mutedText}
+                />
+              </TouchableOpacity>
+              {showModels && (
+                <View
+                  style={[
+                    styles.dropdownOverlay,
+                    {
+                      backgroundColor: theme.card,
+                      borderColor: theme.border,
+                    },
+                  ]}
+                >
+                  {models.map((item) => (
+                    <TouchableOpacity
+                      key={item.Model_ID}
+                      style={[
+                        styles.dropdownItem,
+                        { borderBottomColor: theme.border },
+                      ]}
+                      onPress={() => {
+                        setModel(item.Model_Name);
+                        setShowModels(false);
+                      }}
+                    >
+                      <Text
+                        style={[styles.dropdownText, { color: theme.text }]}
+                      >
+                        {item.Model_Name}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+            </View>
 
-            <TouchableOpacity
-              style={[
-                styles.input,
-                {
-                  backgroundColor: theme.card,
-                  borderColor: theme.border,
-                },
-              ]}
-              onPress={() => {
-                setShowYears(!showYears);
-                setShowBrands(false);
-              }}
-            >
-              <Text
-                style={[
-                  selectedYear ? styles.inputText : styles.placeholderText,
-                  {
-                    color: selectedYear ? theme.text : theme.mutedText,
-                  },
-                ]}
-              >
-                {selectedYear || t("vehicles.yearPlaceholder")}
+            {/* Add year section */}
+            <View style={styles.yearDropdownWrapper}>
+              <Text style={[styles.label, { color: theme.text }]}>
+                {t("vehicles.year")}
               </Text>
-
-              <Ionicons name="chevron-down" size={18} color={theme.mutedText} />
-            </TouchableOpacity>
-
-            {showYears && (
-              <View
+              <TouchableOpacity
                 style={[
-                  styles.dropdown,
+                  styles.input,
                   {
                     backgroundColor: theme.card,
                     borderColor: theme.border,
                   },
                 ]}
+                onPress={() => {
+                  setShowYears(!showYears);
+                  setShowBrands(false);
+                  setShowModels(false);
+                  setShowFuelTypes(false);
+                }}
               >
-                {years.map((year) => (
-                  <TouchableOpacity
-                    key={year}
-                    style={[
-                      styles.dropdownItem,
-                      { borderBottomColor: theme.border },
-                    ]}
-                    onPress={() => {
-                      setSelectedYear(year);
-                      setShowYears(false);
-                      setShowModels(false);
-                    }}
-                  >
-                    <Text style={[styles.dropdownText, { color: theme.text }]}>
-                      {year}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            )}
+                <Text
+                  style={[
+                    selectedYear ? styles.inputText : styles.placeholderText,
+                    {
+                      color: selectedYear ? theme.text : theme.mutedText,
+                    },
+                  ]}
+                >
+                  {selectedYear || t("vehicles.yearPlaceholder")}
+                </Text>
 
+                <Ionicons
+                  name="chevron-down"
+                  size={18}
+                  color={theme.mutedText}
+                />
+              </TouchableOpacity>
+              {showYears && (
+                <View
+                  style={[
+                    styles.dropdownOverlay,
+                    {
+                      backgroundColor: theme.card,
+                      borderColor: theme.border,
+                    },
+                  ]}
+                >
+                  {years.map((year) => (
+                    <TouchableOpacity
+                      key={year}
+                      style={[
+                        styles.dropdownItem,
+                        { borderBottomColor: theme.border },
+                      ]}
+                      onPress={() => {
+                        setSelectedYear(year);
+                        setShowYears(false);
+                        setShowModels(false);
+                      }}
+                    >
+                      <Text
+                        style={[styles.dropdownText, { color: theme.text }]}
+                      >
+                        {year}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+            </View>
+
+            {/* Add mileage section */}
             <Text style={[styles.label, { color: theme.text }]}>
               {t("vehicles.currentMileage")}
             </Text>
-
             <TextInput
               style={[
                 styles.input,
@@ -543,6 +661,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   placeholderText: {},
+
   dropdown: {
     borderWidth: 1,
     borderRadius: 12,
@@ -578,24 +697,43 @@ const styles = StyleSheet.create({
     height: "100%",
     borderRadius: 999,
   },
-
-  carCircle: {
-    width: 140,
-    height: 140,
-    borderRadius: 70,
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "hidden",
+  dropdownWrapper: {
+    position: "relative",
+    zIndex: 20,
   },
 
-  plusCircle: {
+  dropdownOverlay: {
     position: "absolute",
+    top: 82,
+    left: 0,
     right: 0,
-    bottom: 0,
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    alignItems: "center",
-    justifyContent: "center",
+    borderWidth: 1,
+    borderRadius: 12,
+    overflow: "hidden",
+    zIndex: 999,
+    elevation: 999,
+  },
+  fuelDropdownWrapper: {
+    position: "relative",
+    zIndex: 40,
+    elevation: 40,
+  },
+
+  brandDropdownWrapper: {
+    position: "relative",
+    zIndex: 30,
+    elevation: 30,
+  },
+
+  modelDropdownWrapper: {
+    position: "relative",
+    zIndex: 20,
+    elevation: 20,
+  },
+
+  yearDropdownWrapper: {
+    position: "relative",
+    zIndex: 10,
+    elevation: 10,
   },
 });

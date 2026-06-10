@@ -211,7 +211,6 @@ export default function CreateFuelScreen() {
     }
   };
 
-
   if (loading) {
     return (
       <SafeAreaView
@@ -279,6 +278,8 @@ export default function CreateFuelScreen() {
               {
                 backgroundColor: theme.card,
                 borderColor: theme.border,
+                zIndex: 50,
+                elevation: 50,
               },
             ]}
           >
@@ -355,7 +356,7 @@ export default function CreateFuelScreen() {
             {showCars ? (
               <View
                 style={[
-                  styles.dropdown,
+                  styles.dropdownOverlay,
                   {
                     backgroundColor: theme.card,
                     borderColor: theme.border,
@@ -585,12 +586,26 @@ const styles = StyleSheet.create({
   },
 
   carSelectorWrapper: {
+    position: "relative",
+    zIndex: 50,
+    elevation: 50,
     borderWidth: 1,
     borderRadius: 18,
     padding: 14,
     marginBottom: 18,
   },
 
+  dropdownOverlay: {
+    position: "absolute",
+    top: 92,
+    left: 14,
+    right: 14,
+    borderWidth: 1,
+    borderRadius: 14,
+    overflow: "hidden",
+    zIndex: 999,
+    elevation: 999,
+  },
   carSelector: {
     minHeight: 64,
     borderWidth: 1,
@@ -601,12 +616,6 @@ const styles = StyleSheet.create({
     gap: 12,
   },
 
-  dropdown: {
-    borderWidth: 1,
-    borderRadius: 14,
-    marginTop: 10,
-    overflow: "hidden",
-  },
 
   carDropdownItem: {
     paddingVertical: 12,

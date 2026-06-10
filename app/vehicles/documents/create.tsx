@@ -252,6 +252,8 @@ export default function CreateDocumentScreen() {
               {
                 backgroundColor: theme.card,
                 borderColor: theme.border,
+                zIndex: 50,
+                elevation: 50,
               },
             ]}
           >
@@ -322,7 +324,7 @@ export default function CreateDocumentScreen() {
             {showCars && (
               <View
                 style={[
-                  styles.dropdown,
+                  styles.dropdownOverlay,
                   {
                     backgroundColor: theme.card,
                     borderColor: theme.border,
@@ -344,7 +346,7 @@ export default function CreateDocumentScreen() {
                     {car.imageUrl || car.image ? (
                       <Image
                         source={{
-                          uri: `${API_URL}/../uploads/cars/${car.imageUrl}` ,
+                          uri: `${API_URL}/../uploads/cars/${car.imageUrl}`,
                         }}
                         style={styles.carImage}
                       />
@@ -438,7 +440,7 @@ export default function CreateDocumentScreen() {
             {showTypes && (
               <View
                 style={[
-                  styles.dropdown,
+                  styles.dropdownOverlay,
                   {
                     backgroundColor: theme.card,
                     borderColor: theme.border,
@@ -688,12 +690,26 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   carSelectorWrapper: {
+    position: "relative",
+    zIndex: 50,
+    elevation: 50,
     borderWidth: 1,
     borderRadius: 18,
     padding: 14,
     marginBottom: 18,
   },
 
+  dropdownOverlay: {
+    position: "absolute",
+    top: 92,
+    left: 14,
+    right: 14,
+    borderWidth: 1,
+    borderRadius: 14,
+    overflow: "hidden",
+    zIndex: 999,
+    elevation: 999,
+  },
   carSelector: {
     minHeight: 64,
     borderWidth: 1,

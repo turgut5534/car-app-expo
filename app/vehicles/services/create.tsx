@@ -100,8 +100,7 @@ export default function CreateServiceScreen() {
     }
 
     try {
-
-       setLoading(true);
+      setLoading(true);
       const token = await AsyncStorage.getItem("token");
 
       if (!token) {
@@ -216,6 +215,8 @@ export default function CreateServiceScreen() {
               {
                 backgroundColor: theme.card,
                 borderColor: theme.border,
+                zIndex: 50,
+                elevation: 50,
               },
             ]}
           >
@@ -239,7 +240,7 @@ export default function CreateServiceScreen() {
                   {selectedCar?.imageUrl || selectedCar?.image ? (
                     <Image
                       source={{
-                       uri: `${API_URL}/../uploads/cars/${selectedCar.imageUrl}`,
+                        uri: `${API_URL}/../uploads/cars/${selectedCar.imageUrl}`,
                       }}
                       style={styles.carImage}
                     />
@@ -286,7 +287,7 @@ export default function CreateServiceScreen() {
             {showCars && (
               <View
                 style={[
-                  styles.dropdown,
+                  styles.dropdownOverlay,
                   {
                     backgroundColor: theme.card,
                     borderColor: theme.border,
@@ -308,7 +309,7 @@ export default function CreateServiceScreen() {
                     {item.imageUrl || item.image ? (
                       <Image
                         source={{
-                         uri: `${API_URL}/../uploads/cars/${item.imageUrl}`,
+                          uri: `${API_URL}/../uploads/cars/${item.imageUrl}`,
                         }}
                         style={styles.carImage}
                       />
@@ -546,10 +547,25 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   carSelectorWrapper: {
+    position: "relative",
+    zIndex: 50,
+    elevation: 50,
     borderWidth: 1,
     borderRadius: 18,
     padding: 14,
     marginBottom: 18,
+  },
+
+  dropdownOverlay: {
+    position: "absolute",
+    top: 92,
+    left: 14,
+    right: 14,
+    borderWidth: 1,
+    borderRadius: 14,
+    overflow: "hidden",
+    zIndex: 999,
+    elevation: 999,
   },
 
   carSelector: {
@@ -594,11 +610,5 @@ const styles = StyleSheet.create({
     marginTop: 3,
     fontSize: 12,
     fontWeight: "600",
-  },
-  dropdown: {
-  borderWidth: 1,
-  borderRadius: 14,
-  marginTop: 10,
-  overflow: "hidden",
-},
+  }
 });

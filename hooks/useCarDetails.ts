@@ -51,7 +51,9 @@ export function useCarDetail(id?: string) {
         ...data,
         services: data.services ?? [],
         documents: data.documents ?? [],
-        fuelRecords: data.fuelRecords ?? data.fuels ?? [],
+        fuelRecords: data.fuels ?? [],
+        averageFuelConsumption: data.averageFuelConsumption,
+        averageFuelPrice: data.averageFuelPrice
       });
     } catch {
       setCar(null);

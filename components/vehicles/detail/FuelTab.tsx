@@ -15,7 +15,7 @@ export function FuelTab({ car }: Props) {
   const { theme } = useAppTheme();
 
   const currency = car.owner?.currency || "";
-  const fuels = car.fuels ?? [];
+  const fuels = car.fuelRecords ?? [];
 
   return (
     <View style={styles.container}>
@@ -55,7 +55,10 @@ export function FuelTab({ car }: Props) {
             </Text>
 
             <Text style={styles.greenValue}>
-              {car.averageFuelConsumption || "-"}
+              {car.averageFuelConsumption != null
+                ? Number(car.averageFuelConsumption).toFixed(1)
+                : "-"}{" "}
+              L / 100 km
             </Text>
           </View>
         </View>
@@ -87,7 +90,9 @@ export function FuelTab({ car }: Props) {
             </Text>
 
             <Text style={[styles.blackValue, { color: theme.text }]}>
-              {car.averageFuelPrice || "-"}
+              {car.averageFuelConsumption != null
+                ? Number(car.averageFuelPrice).toFixed(2)
+                : "-"}{" "}{car.owner?.currency}
             </Text>
           </View>
         </View>
@@ -247,7 +252,9 @@ function FuelItem({
             {t("cars.consumption")}
           </Text>
 
-          <Text style={styles.consumptionValue}>{fuel.consumption} / 100 km</Text>
+          <Text style={styles.consumptionValue}>
+            {fuel.consumption} / 100 km
+          </Text>
         </View>
       </View>
     </TouchableOpacity>

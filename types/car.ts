@@ -39,6 +39,7 @@ export type CarDetail = {
   services: Service[];
   documents: DocumentRecord[];
   fuelType: string,
+  averageFuelPrice: number,
   owner?: {
     currency: string;
   };
@@ -53,6 +54,7 @@ export type CarDetail = {
   };
   averageFuelConsumption?: string;
   costPerKm?: string;
+  fuelRecords : FuelRecord
 };
 
 export type FuelRecord = {

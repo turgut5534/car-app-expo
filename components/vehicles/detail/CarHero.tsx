@@ -3,6 +3,7 @@ import { ImageBackground, View, Text, StyleSheet } from "react-native";
 import { useAppTheme } from "../../../context/ThemeContext";
 import { API_ORIGIN } from "../../../constants/api";
 import { CarDetail } from "../../../types/car";
+import { useTranslation } from "react-i18next";
 
 type Props = {
   car: CarDetail;
@@ -10,6 +11,7 @@ type Props = {
 
 export function CarHero({ car }: Props) {
   const { theme } = useAppTheme();
+  const { t } = useTranslation();
 
   return (
     <ImageBackground
@@ -25,8 +27,13 @@ export function CarHero({ car }: Props) {
 
       <View style={styles.heroContent}>
         <View>
-          <Text style={styles.carName}>{car.brand} {car.model}</Text>
+          <Text style={styles.carName}>
+            {car.brand} {car.model}
+          </Text>
           <Text style={styles.plate}>{car.plate}</Text>
+          <Text style={styles.plate}>
+            {t(`vehicles.fuelTypes.${car.fuelType}`)}
+          </Text>
         </View>
 
         <View style={styles.kmBadge}>

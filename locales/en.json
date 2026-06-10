@@ -109,10 +109,10 @@
     "fuelType": "Fuel type",
     "fuelTypePlaceholder": "Select fuel type",
     "fuelTypes": {
-      "petrol": "Petrol",
-      "diesel": "Diesel",
-      "lpg": "LPG",
-      "electric": "Electric"
+      "PETROL": "PETROL",
+      "DIESEL": "DIESEL",
+      "LPG": "LPG",
+      "ELECTRIC": "ELECTRIC"
     }
   },
   "home": {

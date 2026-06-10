@@ -53,7 +53,7 @@ const years = Array.from({ length: 46 }, (_, i) =>
   String(new Date().getFullYear() - i),
 );
 
-const fuelTypes = ["petrol", "diesel", "lpg", "electric"] as const;
+const fuelTypes = ["PETROL", "DIESEL", "LPG", "ELECTRIC"] as const;
 
 type FuelType = (typeof fuelTypes)[number];
 

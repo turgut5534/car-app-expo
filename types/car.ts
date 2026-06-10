@@ -38,6 +38,7 @@ export type CarDetail = {
   totalExpenses: string;
   services: Service[];
   documents: DocumentRecord[];
+  fuelType: string,
   owner?: {
     currency: string;
   };

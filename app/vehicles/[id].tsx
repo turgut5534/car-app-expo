@@ -11,7 +11,7 @@ import { CarHero } from "../../components/vehicles/detail/CarHero";
 import { CarTabs } from "../../components/vehicles/detail/CarTabs";
 import { OverviewTab } from "../../components/vehicles/detail/OverviewTab";
 import { ServicesTab } from "../../components/vehicles/detail/ServicesTab";
-import { FuelTab } from "../../components/vehicles/detail/FuelTab"
+import { FuelTab } from "../../components/vehicles/detail/FuelTab";
 import { DocumentsTab } from "../../components/vehicles/detail/DocumentsTab";
 import { ComingSoonTab } from "../../components/vehicles/detail/ComingSoonTab";
 import { DocumentPreviewModal } from "../../components/vehicles/detail/DocumentPreviewModal";
@@ -55,7 +55,11 @@ export default function CarDetailScreen() {
       style={[styles.container, { backgroundColor: theme.background }]}
       edges={["top"]}
     >
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        style={{ backgroundColor: theme.background }}
+        contentContainerStyle={{ backgroundColor: theme.background }}
+      >
         <CarHeader car={car} />
 
         <CarHero car={car} />
@@ -69,10 +73,7 @@ export default function CarDetailScreen() {
         {activeTab === "fuel" ? <FuelTab car={car} /> : null}
 
         {activeTab === "documents" ? (
-          <DocumentsTab
-            car={car}
-            onSelectDocument={setSelectedDocument}
-          />
+          <DocumentsTab car={car} onSelectDocument={setSelectedDocument} />
         ) : null}
 
         {activeTab !== "overview" &&

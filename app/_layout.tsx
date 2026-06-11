@@ -1,8 +1,34 @@
 import { useEffect, useState } from "react";
 import { Stack } from "expo-router";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { View } from "react-native";
+import { StatusBar } from "expo-status-bar";
+
 import { initI18n } from "../i18n";
-import { AppThemeProvider } from "../context/ThemeContext";
+import { AppThemeProvider, useAppTheme } from "../context/ThemeContext";
+
+function RootNavigator() {
+  const { theme } = useAppTheme();
+
+  return (
+    <View style={{ flex: 1, backgroundColor: theme.background }}>
+      <StatusBar
+        style={theme.dark ? "light" : "dark"}
+        backgroundColor={theme.background}
+      />
+
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: {
+            backgroundColor: theme.background,
+          },
+          animation: "fade",
+        }}
+      />
+    </View>
+  );
+}
 
 export default function RootLayout() {
   const [ready, setReady] = useState(false);
@@ -23,7 +49,7 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <AppThemeProvider>
-        <Stack screenOptions={{ headerShown: false }} />
+        <RootNavigator />
       </AppThemeProvider>
     </SafeAreaProvider>
   );

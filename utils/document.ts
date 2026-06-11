@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { API_ORIGIN } from "../constants/api";
+import { API_URL } from "../constants/api";
 import { DocumentRecord } from "../types/car";
 
 export function getDocumentUrl(fileUrl: string) {
@@ -8,10 +8,10 @@ export function getDocumentUrl(fileUrl: string) {
   }
 
   if (fileUrl.startsWith("/uploads")) {
-    return `${API_ORIGIN}${fileUrl}`;
+    return `${API_URL}${fileUrl}`;
   }
 
-  return `${API_ORIGIN}/uploads/documents/${fileUrl}`;
+  return `${API_URL}/uploads/documents/${fileUrl}`;
 }
 
 export function getFileExtension(fileUrl: string) {

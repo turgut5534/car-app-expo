@@ -19,8 +19,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAppTheme } from "../../context/ThemeContext";
 import * as ImagePicker from "expo-image-picker";
 import { Image } from "react-native";
-
-const API_URL = "http://192.168.0.10:3000/cars";
+import { API_URL } from "@/constants/api";
 
 const carBrands = [
   "Audi",
@@ -123,7 +122,6 @@ export default function CreateVehicleScreen() {
       return;
     }
 
-    console.log("UPLOAD URL:", `${API_URL}/upload`);
     try {
       setLoading(true);
 

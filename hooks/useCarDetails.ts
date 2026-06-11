@@ -27,7 +27,7 @@ export function useCarDetail(id?: string) {
         return;
       }
 
-      const response = await fetch(`${API_URL}/${id}`, {
+      const response = await fetch(`${API_URL}/cars/${id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

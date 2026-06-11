@@ -18,8 +18,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAppTheme } from "../../../../context/ThemeContext";
+import { API_URL } from "@/constants/api";
 
-const API_URL = "http://192.168.0.10:3000/cars";
 
 export default function CreateServiceScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -62,7 +62,7 @@ export default function CreateServiceScreen() {
         return;
       }
 
-      const response = await fetch(API_URL, {
+      const response = await fetch(`${API_URL}/cars`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -117,13 +117,14 @@ export default function CreateServiceScreen() {
         return;
       }
 
-      const response = await fetch(`${API_URL}/${selectedCarId}/services`, {
+      const response = await fetch(`${API_URL}/services`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
+          carId: selectedCarId,
           title: title.trim(),
           km: Number(mileageKm),
           serviceDate: date,

@@ -1,7 +1,7 @@
 import { ImageBackground, View, Text, StyleSheet } from "react-native";
 
 import { useAppTheme } from "../../../context/ThemeContext";
-import { API_ORIGIN } from "../../../constants/api";
+import { API_URL } from "../../../constants/api";
 import { CarDetail } from "../../../types/car";
 import { useTranslation } from "react-i18next";
 
@@ -17,7 +17,7 @@ export function CarHero({ car }: Props) {
     <ImageBackground
       source={
         car.imageUrl
-          ? { uri: `${API_ORIGIN}/uploads/cars/${car.imageUrl}` }
+          ? { uri: `${API_URL}/uploads/cars/${car.imageUrl}` }
           : require("../../../assets/images/image.png")
       }
       style={styles.hero}

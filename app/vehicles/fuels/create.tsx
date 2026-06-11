@@ -19,9 +19,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAppTheme } from "../../../context/ThemeContext";
-
-const API_ORIGIN = "http://192.168.0.10:3000";
-const API_URL = `${API_ORIGIN}/cars`;
+import { API_URL } from "@/constants/api";
 
 type CarInfo = {
   id: string;
@@ -69,7 +67,7 @@ export default function CreateFuelScreen() {
         return;
       }
 
-      const response = await fetch(API_URL, {
+      const response = await fetch(`${API_URL}/cars`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -179,13 +177,14 @@ export default function CreateFuelScreen() {
         return;
       }
 
-      const response = await fetch(`${API_URL}/${selectedCarId}/fuel`, {
+      const response = await fetch(`${API_URL}/fuels`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
+          carId: selectedCarId,
           liter: Number(liter),
           pricePerLiter: Number(pricePerLiter),
           totalCost: Number(totalCost),
@@ -305,7 +304,7 @@ export default function CreateFuelScreen() {
                   {selectedCar?.imageUrl || selectedCar?.image ? (
                     <Image
                       source={{
-                        uri: `${API_ORIGIN}/uploads/cars/${
+                        uri: `${API_URL}/uploads/cars/${
                           selectedCar.imageUrl || selectedCar.image
                         }`,
                       }}
@@ -378,7 +377,7 @@ export default function CreateFuelScreen() {
                     {item.imageUrl || item.image ? (
                       <Image
                         source={{
-                          uri: `${API_ORIGIN}/uploads/cars/${
+                          uri: `${API_URL}/uploads/cars/${
                             item.imageUrl || item.image
                           }`,
                         }}

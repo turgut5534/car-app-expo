@@ -20,8 +20,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as DocumentPicker from "expo-document-picker";
 import { useAppTheme } from "../../../../context/ThemeContext";
 import DateTimePicker from "@react-native-community/datetimepicker";
-
-const API_URL = "http://192.168.0.10:3000/cars";
+import { API_URL } from "@/constants/api";
 
 type DocumentType =
   | "REGISTRATION"
@@ -85,7 +84,7 @@ export default function CreateDocumentScreen() {
           return;
         }
 
-        const response = await fetch(API_URL, {
+        const response = await fetch(`${API_URL}/cars`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -172,7 +171,7 @@ export default function CreateDocumentScreen() {
         } as any);
       }
 
-      const response = await fetch(`${API_URL}/${selectedCarId}/documents`, {
+      const response = await fetch(`${API_URL}/documents`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,

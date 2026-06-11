@@ -20,8 +20,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as DocumentPicker from "expo-document-picker";
 import { useAppTheme } from "../../../context/ThemeContext";
 import DateTimePicker from "@react-native-community/datetimepicker";
-
-const API_URL = "http://192.168.0.10:3000/cars";
+import { API_URL } from "@/constants/api";
 
 type DocumentType =
   | "REGISTRATION"
@@ -54,7 +53,9 @@ type Car = {
 };
 
 export default function CreateDocumentScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { carId } = useLocalSearchParams<{
+    carId: string;
+  }>();
   const { t } = useTranslation();
   const { theme } = useAppTheme();
 
@@ -68,7 +69,7 @@ export default function CreateDocumentScreen() {
   );
   const [loading, setLoading] = useState(false);
   const [cars, setCars] = useState<Car[]>([]);
-  const [selectedCarId, setSelectedCarId] = useState(id);
+  const [selectedCarId, setSelectedCarId] = useState(carId);
   const [showCars, setShowCars] = useState(false);
   const [carsLoading, setCarsLoading] = useState(false);
   const selectedCar = cars.find((car) => car.id === selectedCarId);
@@ -85,7 +86,7 @@ export default function CreateDocumentScreen() {
           return;
         }
 
-        const response = await fetch(API_URL, {
+        const response = await fetch(`${API_URL}/cars`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -172,7 +173,7 @@ export default function CreateDocumentScreen() {
         } as any);
       }
 
-      const response = await fetch(`${API_URL}/${selectedCarId}/documents`, {
+      const response = await fetch(`${API_URL}/documents`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -632,12 +633,6 @@ const styles = StyleSheet.create({
   inputText: {
     fontWeight: "600",
   },
-  dropdown: {
-    borderWidth: 1,
-    borderRadius: 12,
-    marginTop: 6,
-    overflow: "hidden",
-  },
   dropdownItem: {
     paddingVertical: 13,
     paddingHorizontal: 14,
@@ -710,6 +705,7 @@ const styles = StyleSheet.create({
     zIndex: 999,
     elevation: 999,
   },
+
   carSelector: {
     minHeight: 64,
     borderWidth: 1,

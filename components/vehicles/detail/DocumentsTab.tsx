@@ -20,7 +20,14 @@ export function DocumentsTab({ car, onSelectDocument }: Props) {
     <View style={styles.tabContent}>
       <TouchableOpacity
         style={[styles.addButton, { backgroundColor: theme.primary }]}
-        onPress={() => router.push(`/vehicles/${car.id}/documents/create`)}
+        onPress={() =>
+          router.push({
+            pathname: "/vehicles/documents/create",
+            params: {
+              carId: car.id,
+            },
+          })
+        }
       >
         <Ionicons name="add" size={20} color="#fff" />
         <Text style={styles.addButtonText}>{t("cars.addDocument")}</Text>

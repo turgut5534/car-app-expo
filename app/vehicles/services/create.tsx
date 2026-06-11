@@ -18,11 +18,12 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAppTheme } from "../../../context/ThemeContext";
-
-const API_URL = "http://192.168.0.10:3000/cars";
+import { API_URL } from "@/constants/api";
 
 export default function CreateServiceScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { carId } = useLocalSearchParams<{
+    carId: string;
+  }>();
   const { t } = useTranslation();
   const { theme } = useAppTheme();
 
@@ -41,10 +42,11 @@ export default function CreateServiceScreen() {
     plate: string;
     imageUrl?: string;
     image?: string;
+    currentKm: string;
   };
 
   const [cars, setCars] = useState<CarInfo[]>([]);
-  const [selectedCarId, setSelectedCarId] = useState(id);
+  const [selectedCarId, setSelectedCarId] = useState(carId);
   const [showCars, setShowCars] = useState(false);
   const [carsLoading, setCarsLoading] = useState(false);
 
@@ -61,7 +63,7 @@ export default function CreateServiceScreen() {
         return;
       }
 
-      const response = await fetch(API_URL, {
+      const response = await fetch(`${API_URL}/cars`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -76,6 +78,13 @@ export default function CreateServiceScreen() {
       const carList = Array.isArray(data) ? data : data?.cars || [];
 
       setCars(carList);
+
+      const initialCarId = selectedCarId || carList[0]?.id;
+      const initialCar = carList.find(
+        (car: CarInfo) => car.id === initialCarId,
+      );
+
+      setMileageKm(initialCar.currentKm.toString());
 
       if (!selectedCarId && carList.length > 0) {
         setSelectedCarId(carList[0].id);
@@ -93,6 +102,7 @@ export default function CreateServiceScreen() {
   useEffect(() => {
     fetchCars();
   }, []);
+
   const createService = async () => {
     if (!title.trim() || !mileageKm.trim() || !date.trim() || !cost.trim()) {
       Alert.alert(t("common.error"), t("services.fillAllFields"));
@@ -108,13 +118,14 @@ export default function CreateServiceScreen() {
         return;
       }
 
-      const response = await fetch(`${API_URL}/${selectedCarId}/services`, {
+      const response = await fetch(`${API_URL}/services`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
+          carId: selectedCarId,
           title: title.trim(),
           km: Number(mileageKm),
           serviceDate: date,
@@ -304,6 +315,7 @@ export default function CreateServiceScreen() {
                     onPress={() => {
                       setSelectedCarId(item.id);
                       setShowCars(false);
+                      setMileageKm(item.currentKm.toString());
                     }}
                   >
                     {item.imageUrl || item.image ? (
@@ -610,5 +622,5 @@ const styles = StyleSheet.create({
     marginTop: 3,
     fontSize: 12,
     fontWeight: "600",
-  }
+  },
 });

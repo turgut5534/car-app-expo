@@ -19,7 +19,14 @@ export function ServicesTab({ car }: Props) {
     <View style={styles.tabContent}>
       <TouchableOpacity
         style={[styles.addButton, { backgroundColor: theme.primary }]}
-        onPress={() => router.push(`/vehicles/${car.id}/services/create`)}
+        onPress={() =>
+          router.push({
+            pathname: "/vehicles/services/create",
+            params: {
+              carId: car.id,
+            },
+          })
+        }
       >
         <Ionicons name="add" size={20} color="#fff" />
         <Text style={styles.addButtonText}>{t("cars.addService")}</Text>

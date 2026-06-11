@@ -28,10 +28,14 @@ type CarInfo = {
   plate?: string;
   imageUrl?: string;
   image?: string;
+  lastFuelPricePerLiter?: number | string | null;
+  currentKm: string;
 };
 
 export default function CreateFuelScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { carId } = useLocalSearchParams<{
+    carId: string;
+  }>();
   const { t } = useTranslation();
   const { theme } = useAppTheme();
 
@@ -41,15 +45,24 @@ export default function CreateFuelScreen() {
   const [pricePerLiter, setPricePerLiter] = useState("");
   const [totalCost, setTotalCost] = useState("");
   const [mileageKm, setMileageKm] = useState("");
-  const [date, setDate] = useState(today);
   const [loading, setLoading] = useState(false);
 
   const [cars, setCars] = useState<CarInfo[]>([]);
-  const [selectedCarId, setSelectedCarId] = useState(id);
+  const [selectedCarId, setSelectedCarId] = useState(carId);
   const [showCars, setShowCars] = useState(false);
   const [carsLoading, setCarsLoading] = useState(false);
 
   const selectedCar = cars.find((car) => car.id === selectedCarId);
+
+  const applyCarLastFuelPrice = (car?: CarInfo) => {
+    if (!car?.lastFuelPricePerLiter) {
+      setPricePerLiter("2.50");
+      return;
+    }
+
+    setMileageKm(car.currentKm.toString());
+    setPricePerLiter(Number(car.lastFuelPricePerLiter).toFixed(2));
+  };
 
   const priceIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const priceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -83,9 +96,17 @@ export default function CreateFuelScreen() {
 
       setCars(carList);
 
-      if (!selectedCarId && carList.length > 0) {
-        setSelectedCarId(carList[0].id);
+      const initialCarId = selectedCarId || carList[0]?.id;
+      const initialCar = carList.find(
+        (car: CarInfo) => car.id === initialCarId,
+      );
+
+      if (initialCarId) {
+        setSelectedCarId(initialCarId);
       }
+
+      applyCarLastFuelPrice(initialCar);
+      setMileageKm(initialCar.currentKm.toString());
     } catch (error) {
       Alert.alert(
         t("common.error"),
@@ -151,13 +172,7 @@ export default function CreateFuelScreen() {
   };
 
   const createFuel = async () => {
-    if (
-      !liter.trim() ||
-      !pricePerLiter.trim() ||
-      !totalCost.trim() ||
-      !mileageKm.trim() ||
-      !date.trim()
-    ) {
+    if (!pricePerLiter.trim() || !totalCost.trim() || !mileageKm.trim()) {
       Alert.alert(t("common.error"), t("fuel.fillAllFields"));
       return;
     }
@@ -187,9 +202,8 @@ export default function CreateFuelScreen() {
           carId: selectedCarId,
           liter: Number(liter),
           pricePerLiter: Number(pricePerLiter),
-          totalCost: Number(totalCost),
+          totalAmount: Number(totalCost),
           km: Number(mileageKm),
-          fuelDate: date,
         }),
       });
 
@@ -371,6 +385,8 @@ export default function CreateFuelScreen() {
                     ]}
                     onPress={() => {
                       setSelectedCarId(item.id);
+                      applyCarLastFuelPrice(item);
+                      setMileageKm(item.currentKm.toString());
                       setShowCars(false);
                     }}
                   >
@@ -451,7 +467,7 @@ export default function CreateFuelScreen() {
                 </Text>
 
                 <Text style={[styles.priceStepperValue, { color: theme.text }]}>
-                  {pricePerLiter || "0.00"}
+                  {pricePerLiter || "2.50"}
                 </Text>
               </View>
 
@@ -503,8 +519,6 @@ export default function CreateFuelScreen() {
               onChangeText={(text) =>
                 setTotalCost(text.replace(/[^0-9.]/g, ""))
               }
-              placeholder="56.00"
-              placeholderTextColor={theme.mutedText}
               keyboardType="decimal-pad"
             />
 
@@ -605,6 +619,7 @@ const styles = StyleSheet.create({
     zIndex: 999,
     elevation: 999,
   },
+
   carSelector: {
     minHeight: 64,
     borderWidth: 1,
@@ -614,7 +629,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 12,
   },
-
 
   carDropdownItem: {
     paddingVertical: 12,

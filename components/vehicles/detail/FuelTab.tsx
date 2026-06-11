@@ -21,7 +21,14 @@ export function FuelTab({ car }: Props) {
     <View style={styles.container}>
       <TouchableOpacity
         style={[styles.addButton, { backgroundColor: theme.primary }]}
-        onPress={() => router.push(`/vehicles/${car.id}/fuels/create`)}
+        onPress={() =>
+          router.push({
+            pathname: "/vehicles/fuels/create",
+            params: {
+              carId: car.id,
+            },
+          })
+        }
       >
         <Ionicons name="water" size={22} color="#fff" />
         <Text style={styles.addButtonText}>{t("cars.addFuel")}</Text>
@@ -92,7 +99,8 @@ export function FuelTab({ car }: Props) {
             <Text style={[styles.blackValue, { color: theme.text }]}>
               {car.averageFuelConsumption != null
                 ? Number(car.averageFuelPrice).toFixed(2)
-                : "-"}{" "}{car.owner?.currency}
+                : "-"}{" "}
+              {car.owner?.currency}
             </Text>
           </View>
         </View>
@@ -150,7 +158,7 @@ function FuelItem({
   const { t } = useTranslation();
   const { theme } = useAppTheme();
 
-  const activeCurrency = fuel.currency || currency;
+  const activeCurrency = currency;
 
   return (
     <TouchableOpacity

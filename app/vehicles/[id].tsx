@@ -25,9 +25,13 @@ export default function CarDetailScreen() {
     car,
     loading,
     activeTab,
-    setActiveTab,
+    changeTabAndLoadLazy,
+    servicesLoading,
     selectedDocument,
     setSelectedDocument,
+    documentsLoading,
+    fuelsLoading,
+    expensesLoading
   } = useCarDetail(id);
 
   if (loading) {
@@ -64,21 +68,46 @@ export default function CarDetailScreen() {
 
         <CarHero car={car} />
 
-        <CarTabs activeTab={activeTab} onChange={setActiveTab} />
+        <CarTabs activeTab={activeTab} onChange={changeTabAndLoadLazy} />
 
         {activeTab === "overview" ? <OverviewTab car={car} /> : null}
 
-        {activeTab === "services" ? <ServicesTab car={car} /> : null}
+        {activeTab === "services" ? (
+          servicesLoading ? (
+            <ActivityIndicator color={theme.primary} />
+          ) : (
+            <ServicesTab car={car} />
+          )
+        ) : null}
 
-        {activeTab === "fuel" ? <FuelTab car={car} /> : null}
+        {activeTab === "fuel" ? (
+          fuelsLoading ? (
+            <ActivityIndicator color={theme.primary} />
+          ) : (
+            <FuelTab car={car} />
+          )
+        ) : null}
+{/* 
+        {activeTab === "expenses" ? (
+          expensesLoading ? (
+            <ActivityIndicator color={theme.primary} />
+          ) : (
+            <ExpensesTab car={car} />
+          )
+        ) : null} */}
 
         {activeTab === "documents" ? (
-          <DocumentsTab car={car} onSelectDocument={setSelectedDocument} />
+          documentsLoading ? (
+            <ActivityIndicator color={theme.primary} />
+          ) : (
+            <DocumentsTab car={car} onSelectDocument={setSelectedDocument} />
+          )
         ) : null}
 
         {activeTab !== "overview" &&
         activeTab !== "services" &&
         activeTab !== "fuel" &&
+        activeTab !== "expenses" &&
         activeTab !== "documents" ? (
           <ComingSoonTab />
         ) : null}

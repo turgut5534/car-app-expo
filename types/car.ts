@@ -54,7 +54,8 @@ export type CarDetail = {
   };
   averageFuelConsumption?: string;
   costPerKm?: string;
-  fuelRecords : FuelRecord
+  fuelRecords : FuelRecord,
+  expenses: ExpenseRecord[];
 };
 
 export type FuelRecord = {
@@ -66,6 +67,27 @@ export type FuelRecord = {
   km: number;
   consumption: number
 };
+
+export type ExpenseRecord = {
+  id: string;
+  title: string;
+  description: number;
+  amount: number;
+  category: ExpenseCategory[]
+};
+
+export enum ExpenseCategory {
+  FUEL = "FUEL",
+  SERVICE = "SERVICE",
+  INSURANCE = "INSURANCE",
+  TAX = "TAX",
+  PARKING = "PARKING",
+  CAR_WASH = "CAR_WASH",
+  TOLL = "TOLL",
+  TIRE = "TIRE",
+  DOCUMENT = "DOCUMENT",
+  OTHER = "OTHER",
+}
 
 export type CarTabKey =
   | "overview"

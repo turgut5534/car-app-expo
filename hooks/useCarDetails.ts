@@ -223,7 +223,6 @@ export function useCarDetail(id?: string) {
   );
   const fetchCar = useCallback(async () => {
     try {
-      setLoadedTabs({});
       setLoading(true);
 
       const token = await AsyncStorage.getItem("token");
@@ -253,15 +252,17 @@ export function useCarDetail(id?: string) {
         throw new Error(data?.message || t("cars.detailLoadFailed"));
       }
 
-      setCar({
+      setCar((prev) => ({
         ...data,
-        services: data.services ?? [],
-        documents: data.documents ?? [],
-        fuelRecords: data.fuels ?? [],
+
+        services: prev?.services ?? data.services ?? [],
+        documents: prev?.documents ?? data.documents ?? [],
+        fuelRecords: prev?.fuelRecords ?? data.fuels ?? [],
+        expenses: prev?.expenses ?? data.expenses ?? [],
+
         averageFuelConsumption: data.averageFuelConsumption,
         averageFuelPrice: data.averageFuelPrice,
-      });
-      setLoadedTabs({});
+      }));
     } catch {
       setCar(null);
     } finally {
@@ -280,10 +281,22 @@ export function useCarDetail(id?: string) {
       if (activeTab === "fuel") {
         fetchFuels();
       }
+
       if (activeTab === "documents") {
-        fetchServices();
+        fetchDocuments();
       }
-    }, [activeTab]),
+
+      if (activeTab === "expenses") {
+        fetchExpenses();
+      }
+    }, [
+      activeTab,
+      fetchCar,
+      fetchServices,
+      fetchFuels,
+      fetchDocuments,
+      fetchExpenses,
+    ]),
   );
   return {
     car,

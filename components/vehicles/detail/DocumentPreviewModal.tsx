@@ -1,6 +1,5 @@
 import {
   Modal,
-  SafeAreaView,
   View,
   Text,
   Pressable,
@@ -12,6 +11,7 @@ import { useAppTheme } from "../../../context/ThemeContext";
 import { DocumentRecord } from "../../../types/car";
 import { getFileExtension } from "../../../utils/document";
 import { DocumentPreview } from "./DocumentPreview";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 type Props = {
   document: DocumentRecord | null;

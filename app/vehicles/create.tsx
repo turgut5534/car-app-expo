@@ -247,24 +247,28 @@ export default function CreateVehicleScreen() {
               ]}
             >
               <ScrollView nestedScrollEnabled style={{ maxHeight: 250 }}>
-                {carData.map((item) => (
-                  <TouchableOpacity
-                    key={item.brand}
-                    style={[
-                      styles.dropdownItem,
-                      { borderBottomColor: theme.border },
-                    ]}
-                    onPress={() => {
-                      setSelectedBrand(item.brand);
-                      setShowBrands(false);
-                      fetchModelsByBrand(item.brand);
-                    }}
-                  >
-                    <Text style={[styles.dropdownText, { color: theme.text }]}>
-                      {item.brand}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+                {[...carData]
+                  .sort((a, b) => a.brand.localeCompare(b.brand))
+                  .map((item) => (
+                    <TouchableOpacity
+                      key={item.brand}
+                      style={[
+                        styles.dropdownItem,
+                        { borderBottomColor: theme.border },
+                      ]}
+                      onPress={() => {
+                        setSelectedBrand(item.brand);
+                        setShowBrands(false);
+                        fetchModelsByBrand(item.brand);
+                      }}
+                    >
+                      <Text
+                        style={[styles.dropdownText, { color: theme.text }]}
+                      >
+                        {item.brand}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
               </ScrollView>
             </View>
           )}

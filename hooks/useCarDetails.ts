@@ -270,33 +270,10 @@ export function useCarDetail(id?: string) {
     }
   }, [id, t]);
 
-  useFocusEffect(
+useFocusEffect(
     useCallback(() => {
       fetchCar();
-
-      if (activeTab === "services") {
-        fetchServices();
-      }
-
-      if (activeTab === "fuel") {
-        fetchFuels();
-      }
-
-      if (activeTab === "documents") {
-        fetchDocuments();
-      }
-
-      if (activeTab === "expenses") {
-        fetchExpenses();
-      }
-    }, [
-      activeTab,
-      fetchCar,
-      fetchServices,
-      fetchFuels,
-      fetchDocuments,
-      fetchExpenses,
-    ]),
+    }, [fetchCar])
   );
   return {
     car,

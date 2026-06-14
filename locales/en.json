@@ -77,7 +77,11 @@
     "cancel": "Cancel",
     "viewDetails": "View Details",
     "yes": "Yes",
-    "no": "No"
+    "no": "No",
+    "next": "Next",
+    "back": "Back",
+    "optional": "Optional",
+    "step": "Step"
   },
   "vehicles": {
     "title": "MY CARS",
@@ -226,7 +230,24 @@
     "saveService": "Save Service",
     "fillAllFields": "Please fill in all fields.",
     "createFailed": "Service could not be created.",
-    "vehicle": "Vehicle"
+    "vehicle": "Vehicle",
+    "description": "Description",
+    "addFile": "Add files",
+    "type": "Service type"
+  },
+  "serviceCategories": {
+    "OIL_CHANGE": "Oil Change",
+    "FILTER_CHANGE": "Filter Change",
+    "BRAKE": "Brake Service",
+    "TIRE": "Tire Service",
+    "BATTERY": "Battery",
+    "ENGINE": "Engine",
+    "TRANSMISSION": "Transmission",
+    "SUSPENSION": "Suspension",
+    "AC": "AC Service",
+    "INSPECTION": "Inspection",
+    "WASH": "Car Wash",
+    "OTHER": "Other"
   },
   "documents": {
     "createTitle": "Add Document",

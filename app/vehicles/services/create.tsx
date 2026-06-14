@@ -19,6 +19,24 @@ import { useTranslation } from "react-i18next";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAppTheme } from "../../../context/ThemeContext";
 import { API_URL } from "@/constants/api";
+import * as DocumentPicker from "expo-document-picker";
+
+export const SERVICE_CATEGORIES = [
+  "OIL_CHANGE",
+  "FILTER_CHANGE",
+  "BRAKE",
+  "TIRE",
+  "BATTERY",
+  "ENGINE",
+  "TRANSMISSION",
+  "SUSPENSION",
+  "AC",
+  "INSPECTION",
+  "WASH",
+  "OTHER",
+] as const;
+
+export type ServiceCategory = (typeof SERVICE_CATEGORIES)[number];
 
 export default function CreateServiceScreen() {
   const { carId } = useLocalSearchParams<{
@@ -29,11 +47,20 @@ export default function CreateServiceScreen() {
 
   const today = new Date().toISOString().split("T")[0];
 
+  const [step, setStep] = useState(1);
+
   const [title, setTitle] = useState("");
   const [mileageKm, setMileageKm] = useState("");
   const [date, setDate] = useState(today);
   const [cost, setCost] = useState("");
+  const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
+  const [category, setCategory] = useState<ServiceCategory>("OIL_CHANGE");
+  const [showCategories, setShowCategories] = useState(false);
+
+  const [attachments, setAttachments] = useState<
+    DocumentPicker.DocumentPickerAsset[]
+  >([]);
 
   type CarInfo = {
     id: string;
@@ -51,6 +78,22 @@ export default function CreateServiceScreen() {
   const [carsLoading, setCarsLoading] = useState(false);
 
   const selectedCar = cars.find((car) => car.id === selectedCarId);
+
+  const pickFile = async () => {
+    const result = await DocumentPicker.getDocumentAsync({
+      type: ["image/*", "application/pdf"],
+      multiple: true,
+    });
+
+    if (!result.canceled) {
+      setAttachments((prev) => [...prev, ...result.assets]);
+    }
+  };
+
+  const formatDateForApi = (date: Date | null) => {
+    if (!date) return "";
+    return date.toISOString().split("T")[0];
+  };
 
   const fetchCars = async () => {
     try {
@@ -84,7 +127,9 @@ export default function CreateServiceScreen() {
         (car: CarInfo) => car.id === initialCarId,
       );
 
-      setMileageKm(initialCar.currentKm.toString());
+      if (initialCar) {
+        setMileageKm(initialCar.currentKm.toString());
+      }
 
       if (!selectedCarId && carList.length > 0) {
         setSelectedCarId(carList[0].id);
@@ -104,7 +149,11 @@ export default function CreateServiceScreen() {
   }, []);
 
   const createService = async () => {
-    if (!title.trim() || !mileageKm.trim() || !date.trim() || !cost.trim()) {
+    if (
+      (category === "OTHER" && !title.trim()) ||
+      !mileageKm.trim() ||
+      !date.trim()
+    ) {
       Alert.alert(t("common.error"), t("services.fillAllFields"));
       return;
     }
@@ -118,6 +167,12 @@ export default function CreateServiceScreen() {
         return;
       }
 
+      const finalTitle =
+        category === "OTHER"
+          ? title.trim()
+          : t(`serviceCategories.${category}`);
+      const finalAmount = cost.trim() ? Number(cost) : 0;
+
       const response = await fetch(`${API_URL}/services`, {
         method: "POST",
         headers: {
@@ -126,10 +181,12 @@ export default function CreateServiceScreen() {
         },
         body: JSON.stringify({
           carId: selectedCarId,
-          title: title.trim(),
+          title: finalTitle,
           km: Number(mileageKm),
           serviceDate: date,
-          amount: Number(cost),
+          amount: finalAmount,
+          category: category,
+          description: description,
         }),
       });
 
@@ -150,6 +207,32 @@ export default function CreateServiceScreen() {
     }
   };
 
+  const isStep1Valid = !!selectedCarId && !!category;
+  const isStep2Valid =
+    category === "OTHER"
+      ? !!title.trim() && !!mileageKm.trim() && !!date.trim()
+      : !!mileageKm.trim() && !!date.trim();
+
+  const handleNext = () => {
+    if (step === 1 && !isStep1Valid) {
+      Alert.alert(t("common.error"), t("services.fillAllFields"));
+      return;
+    }
+    if (step === 2 && !isStep2Valid) {
+      Alert.alert(t("common.error"), t("services.fillAllFields"));
+      return;
+    }
+    setStep(step + 1);
+  };
+
+  const handleBack = () => {
+    if (step > 1) {
+      setStep(step - 1);
+    } else {
+      router.back();
+    }
+  };
+
   if (loading) {
     return (
       <SafeAreaView
@@ -163,13 +246,7 @@ export default function CreateServiceScreen() {
         ]}
       >
         <ActivityIndicator size="large" color={theme.primary} />
-
-        <Text
-          style={{
-            color: theme.mutedText,
-            marginTop: 12,
-          }}
-        >
+        <Text style={{ color: theme.mutedText, marginTop: 12 }}>
           {t("common.loading")}
         </Text>
       </SafeAreaView>
@@ -188,13 +265,22 @@ export default function CreateServiceScreen() {
         <ScrollView
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
+          contentContainerStyle={{ flexGrow: 1 }}
+          nestedScrollEnabled={true}
         >
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => router.back()}
-          >
-            <Ionicons name="arrow-back" size={24} color={theme.text} />
-          </TouchableOpacity>
+          <View style={styles.headerRow}>
+            <TouchableOpacity style={styles.exitButton} onPress={router.back}>
+              <Ionicons name="close" size={26} color={theme.text} />
+            </TouchableOpacity>
+
+            <View style={styles.stepIndicatorContainer}>
+              <Text
+                style={[styles.stepIndicatorText, { color: theme.primary }]}
+              >
+                {t("common.step")} {step}/3
+              </Text>
+            </View>
+          </View>
 
           <View
             style={[
@@ -220,248 +306,453 @@ export default function CreateServiceScreen() {
             {t("services.createSubtitle")}
           </Text>
 
-          <View
-            style={[
-              styles.carSelectorWrapper,
-              {
-                backgroundColor: theme.card,
-                borderColor: theme.border,
-                zIndex: 50,
-                elevation: 50,
-              },
-            ]}
-          >
-            <Text style={[styles.label, { color: theme.text }]}>{t("services.vehicle")}</Text>
-
-            <TouchableOpacity
-              style={[
-                styles.carSelector,
-                {
-                  backgroundColor: theme.card,
-                  borderColor: theme.border,
-                },
-              ]}
-              onPress={() => setShowCars(!showCars)}
-              disabled={carsLoading}
-            >
-              {carsLoading ? (
-                <ActivityIndicator color={theme.primary} />
-              ) : (
-                <>
-                  {selectedCar?.imageUrl || selectedCar?.image ? (
-                    <Image
-                      source={{
-                        uri: `${API_URL}/../uploads/cars/${selectedCar.imageUrl}`,
-                      }}
-                      style={styles.carImage}
-                    />
-                  ) : (
-                    <View
-                      style={[
-                        styles.carImagePlaceholder,
-                        { backgroundColor: theme.background },
-                      ]}
-                    >
-                      <Ionicons
-                        name="car-outline"
-                        size={22}
-                        color={theme.mutedText}
-                      />
-                    </View>
-                  )}
-
-                  <View style={{ flex: 1 }}>
-                    <Text style={[styles.carTitle, { color: theme.text }]}>
-                      {selectedCar
-                        ? `${selectedCar.brand || ""} ${selectedCar.model || ""}`.trim()
-                        : "Araç seç"}
-                    </Text>
-
-                    {selectedCar?.plate ? (
-                      <Text
-                        style={[styles.carSubtitle, { color: theme.mutedText }]}
-                      >
-                        {selectedCar.plate}
-                      </Text>
-                    ) : null}
-                  </View>
-
-                  <Ionicons
-                    name={showCars ? "chevron-up" : "chevron-down"}
-                    size={18}
-                    color={theme.mutedText}
-                  />
-                </>
-              )}
-            </TouchableOpacity>
-
-            {showCars && (
+          {/* =========================================
+              ADIM 1: ARAÇ + KATEGORİ
+             ========================================= */}
+          {step === 1 && (
+            <>
               <View
                 style={[
-                  styles.dropdownOverlay,
+                  styles.carSelectorWrapper,
                   {
                     backgroundColor: theme.card,
                     borderColor: theme.border,
+                    zIndex: 50,
+                    elevation: 50,
                   },
                 ]}
               >
-                {cars.map((item) => (
-                  <TouchableOpacity
-                    key={item.id}
-                    style={[
-                      styles.carDropdownItem,
-                      { borderBottomColor: theme.border },
-                    ]}
-                    onPress={() => {
-                      setSelectedCarId(item.id);
-                      setShowCars(false);
-                      setMileageKm(item.currentKm.toString());
-                    }}
-                  >
-                    {item.imageUrl || item.image ? (
-                      <Image
-                        source={{
-                          uri: `${API_URL}/../uploads/cars/${item.imageUrl}`,
-                        }}
-                        style={styles.carImage}
-                      />
-                    ) : (
-                      <View
-                        style={[
-                          styles.carImagePlaceholder,
-                          { backgroundColor: theme.background },
-                        ]}
-                      >
-                        <Ionicons
-                          name="car-outline"
-                          size={22}
-                          color={theme.mutedText}
+                <Text style={[styles.label, { color: theme.text }]}>
+                  {t("services.vehicle")}
+                </Text>
+
+                <TouchableOpacity
+                  style={[
+                    styles.carSelector,
+                    {
+                      backgroundColor: theme.card,
+                      borderColor: theme.border,
+                    },
+                  ]}
+                  onPress={() => {
+                    setShowCars(!showCars);
+                    if (showCategories) setShowCategories(false);
+                  }}
+                  disabled={carsLoading}
+                >
+                  {carsLoading ? (
+                    <ActivityIndicator color={theme.primary} />
+                  ) : (
+                    <>
+                      {selectedCar?.imageUrl || selectedCar?.image ? (
+                        <Image
+                          source={{
+                            uri: `${API_URL}/../uploads/cars/${selectedCar.imageUrl}`,
+                          }}
+                          style={styles.carImage}
                         />
-                      </View>
-                    )}
-
-                    <View style={{ flex: 1 }}>
-                      <Text style={[styles.carTitle, { color: theme.text }]}>
-                        {`${item.brand || ""} ${item.model || ""}`.trim() ||
-                          "Araç"}
-                      </Text>
-
-                      {item.plate ? (
-                        <Text
+                      ) : (
+                        <View
                           style={[
-                            styles.carSubtitle,
-                            { color: theme.mutedText },
+                            styles.carImagePlaceholder,
+                            { backgroundColor: theme.background },
                           ]}
                         >
-                          {item.plate}
+                          <Ionicons
+                            name="car-outline"
+                            size={22}
+                            color={theme.mutedText}
+                          />
+                        </View>
+                      )}
+
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.carTitle, { color: theme.text }]}>
+                          {selectedCar
+                            ? `${selectedCar.brand || ""} ${selectedCar.model || ""}`.trim()
+                            : t("services.selectVehicle")}
                         </Text>
-                      ) : null}
-                    </View>
-                  </TouchableOpacity>
-                ))}
+
+                        {selectedCar?.plate ? (
+                          <Text
+                            style={[
+                              styles.carSubtitle,
+                              { color: theme.mutedText },
+                            ]}
+                          >
+                            {selectedCar.plate}
+                          </Text>
+                        ) : null}
+                      </View>
+
+                      <Ionicons
+                        name={showCars ? "chevron-up" : "chevron-down"}
+                        size={18}
+                        color={theme.mutedText}
+                      />
+                    </>
+                  )}
+                </TouchableOpacity>
+
+                {showCars && (
+                  <View
+                    style={[
+                      styles.dropdownOverlay,
+                      {
+                        backgroundColor: theme.card,
+                        borderColor: theme.border,
+                      },
+                    ]}
+                  >
+                    {cars.map((item) => (
+                      <TouchableOpacity
+                        key={item.id}
+                        style={[
+                          styles.carDropdownItem,
+                          { borderBottomColor: theme.border },
+                        ]}
+                        onPress={() => {
+                          setSelectedCarId(item.id);
+                          setShowCars(false);
+                          setMileageKm(item.currentKm.toString());
+                        }}
+                      >
+                        {item.imageUrl || item.image ? (
+                          <Image
+                            source={{
+                              uri: `${API_URL}/../uploads/cars/${item.imageUrl}`,
+                            }}
+                            style={styles.carImage}
+                          />
+                        ) : (
+                          <View
+                            style={[
+                              styles.carImagePlaceholder,
+                              { backgroundColor: theme.background },
+                            ]}
+                          >
+                            <Ionicons
+                              name="car-outline"
+                              size={22}
+                              color={theme.mutedText}
+                            />
+                          </View>
+                        )}
+
+                        <View style={{ flex: 1 }}>
+                          <Text
+                            style={[styles.carTitle, { color: theme.text }]}
+                          >
+                            {`${item.brand || ""} ${item.model || ""}`.trim() ||
+                              t("services.vehicleFallback")}
+                          </Text>
+
+                          {item.plate ? (
+                            <Text
+                              style={[
+                                styles.carSubtitle,
+                                { color: theme.mutedText },
+                              ]}
+                            >
+                              {item.plate}
+                            </Text>
+                          ) : null}
+                        </View>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
               </View>
+
+              <View
+                style={[
+                  styles.card,
+                  {
+                    backgroundColor: theme.card,
+                    borderColor: theme.border,
+                    zIndex: 40, // Car dropdown'unun altında kalması için
+                    elevation: 40,
+                  },
+                ]}
+              >
+                <Text style={[styles.label, { color: theme.text }]}>
+                  {t("services.type")}
+                </Text>
+
+                <TouchableOpacity
+                  style={[
+                    styles.dropdownInput,
+                    {
+                      backgroundColor: theme.card,
+                      borderColor: theme.border,
+                    },
+                  ]}
+                  onPress={() => {
+                    setShowCategories(!showCategories);
+                    if (showCars) setShowCars(false);
+                  }}
+                >
+                  <Text style={[styles.inputText, { color: theme.text }]}>
+                    {t(`serviceCategories.${category}`)}
+                  </Text>
+
+                  <Ionicons
+                    name="chevron-down"
+                    size={18}
+                    color={theme.mutedText}
+                  />
+                </TouchableOpacity>
+
+                {showCategories && (
+                  <View
+                    style={[
+                      styles.categoryDropdownOverlay,
+                      {
+                        backgroundColor: theme.card,
+                        borderColor: theme.border,
+                      },
+                    ]}
+                  >
+                    <ScrollView
+                      nestedScrollEnabled={true}
+                      style={{ maxHeight: 240 }}
+                    >
+                      {SERVICE_CATEGORIES.map((item) => (
+                        <TouchableOpacity
+                          key={item}
+                          style={[
+                            styles.dropdownItem,
+                            { borderBottomColor: theme.border },
+                          ]}
+                          onPress={() => {
+                            setCategory(item);
+                            setShowCategories(false);
+                            if (item !== "OTHER") setTitle("");
+                          }}
+                        >
+                          <Text
+                            style={[styles.dropdownText, { color: theme.text }]}
+                          >
+                            {t(`serviceCategories.${item}`)}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </ScrollView>
+                  </View>
+                )}
+              </View>
+
+              {/* ÇÖZÜM: Kategori menüsü açıkken kaydırma payı yaratır */}
+              {showCategories && <View style={{ height: 260 }} />}
+            </>
+          )}
+
+          {/* =========================================
+              ADIM 2: KM + TARİH
+             ========================================= */}
+          {step === 2 && (
+            <View
+              style={[
+                styles.card,
+                { backgroundColor: theme.card, borderColor: theme.border },
+              ]}
+            >
+              {category === "OTHER" && (
+                <>
+                  <Text style={[styles.label, { color: theme.text }]}>
+                    {t("services.serviceName")}
+                  </Text>
+                  <TextInput
+                    style={[
+                      styles.input,
+                      {
+                        backgroundColor: theme.card,
+                        borderColor: theme.border,
+                        color: theme.text,
+                      },
+                    ]}
+                    value={title}
+                    onChangeText={setTitle}
+                    placeholder={t("services.serviceNamePlaceholder")}
+                    placeholderTextColor={theme.mutedText}
+                  />
+                </>
+              )}
+
+              <Text style={[styles.label, { color: theme.text }]}>
+                {t("services.mileageKm")}
+              </Text>
+              <TextInput
+                style={[
+                  styles.input,
+                  {
+                    backgroundColor: theme.card,
+                    borderColor: theme.border,
+                    color: theme.text,
+                  },
+                ]}
+                value={mileageKm}
+                onChangeText={(text) =>
+                  setMileageKm(text.replace(/[^0-9]/g, ""))
+                }
+                placeholder="145000"
+                placeholderTextColor={theme.mutedText}
+                keyboardType="numeric"
+              />
+
+              <Text style={[styles.label, { color: theme.text }]}>
+                {t("services.date")}
+              </Text>
+              <TextInput
+                style={[
+                  styles.input,
+                  {
+                    backgroundColor: theme.card,
+                    borderColor: theme.border,
+                    color: theme.text,
+                  },
+                ]}
+                value={date}
+                onChangeText={setDate}
+                placeholder="YYYY-MM-DD"
+                placeholderTextColor={theme.mutedText}
+              />
+            </View>
+          )}
+
+          {/* =========================================
+              ADIM 3: MALİYET + AÇIKLAMA + DOSYALAR
+             ========================================= */}
+          {step === 3 && (
+            <View
+              style={[
+                styles.card,
+                { backgroundColor: theme.card, borderColor: theme.border },
+              ]}
+            >
+              <Text style={[styles.label, { color: theme.text }]}>
+                {t("services.cost")} ({t("common.optional")})
+              </Text>
+              <TextInput
+                style={[
+                  styles.input,
+                  {
+                    backgroundColor: theme.card,
+                    borderColor: theme.border,
+                    color: theme.text,
+                  },
+                ]}
+                value={cost}
+                onChangeText={(text) => setCost(text.replace(/[^0-9.]/g, ""))}
+                placeholder="75"
+                placeholderTextColor={theme.mutedText}
+                keyboardType="decimal-pad"
+              />
+
+              <Text style={[styles.label, { color: theme.text }]}>
+                {t("services.description")} ({t("common.optional")})
+              </Text>
+              <TextInput
+                style={[
+                  styles.input,
+                  {
+                    backgroundColor: theme.card,
+                    borderColor: theme.border,
+                    color: theme.text,
+                    minHeight: 120,
+                    textAlignVertical: "top",
+                    paddingTop: 12,
+                  },
+                ]}
+                value={description}
+                onChangeText={setDescription}
+                placeholderTextColor={theme.mutedText}
+                multiline
+                numberOfLines={5}
+              />
+
+              <Text style={[styles.label, { color: theme.text }]}>
+                {t("services.addFile")} ({t("common.optional")})
+              </Text>
+
+              <TouchableOpacity
+                onPress={pickFile}
+                style={[
+                  styles.input,
+                  {
+                    backgroundColor: theme.card,
+                    borderColor: theme.border,
+                    justifyContent: "center",
+                  },
+                ]}
+              >
+                <Text
+                  style={{
+                    color: theme.text,
+                    textAlign: "center",
+                    fontWeight: "500",
+                  }}
+                >
+                  {attachments.length > 0
+                    ? `${attachments.length} ${t("services.filesSelected")}`
+                    : t("services.addFile")}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {/* =========================================
+              NAVİGASYON BUTONLARI (İLERİ/GERİ/KAYDET)
+             ========================================= */}
+          <View style={styles.navigationButtons}>
+            {step > 1 && (
+              <TouchableOpacity
+                style={[
+                  styles.button,
+                  styles.backNavButton,
+                  { borderColor: theme.border },
+                ]}
+                onPress={handleBack}
+              >
+                <Text style={[styles.buttonText, { color: theme.text }]}>
+                  {t("common.back")}
+                </Text>
+              </TouchableOpacity>
             )}
-          </View>
 
-          <View
-            style={[
-              styles.card,
-              {
-                backgroundColor: theme.card,
-                borderColor: theme.border,
-              },
-            ]}
-          >
-            <Text style={[styles.label, { color: theme.text }]}>
-              {t("services.serviceName")}
-            </Text>
-            <TextInput
-              style={[
-                styles.input,
-                {
-                  backgroundColor: theme.card,
-                  borderColor: theme.border,
-                  color: theme.text,
-                },
-              ]}
-              value={title}
-              onChangeText={setTitle}
-              placeholder={t("services.serviceNamePlaceholder")}
-              placeholderTextColor={theme.mutedText}
-            />
-
-            <Text style={[styles.label, { color: theme.text }]}>
-              {t("services.mileageKm")}
-            </Text>
-            <TextInput
-              style={[
-                styles.input,
-                {
-                  backgroundColor: theme.card,
-                  borderColor: theme.border,
-                  color: theme.text,
-                },
-              ]}
-              value={mileageKm}
-              onChangeText={(text) => setMileageKm(text.replace(/[^0-9]/g, ""))}
-              placeholder="145000"
-              placeholderTextColor={theme.mutedText}
-              keyboardType="numeric"
-            />
-
-            <Text style={[styles.label, { color: theme.text }]}>
-              {t("services.date")}
-            </Text>
-            <TextInput
-              style={[
-                styles.input,
-                {
-                  backgroundColor: theme.card,
-                  borderColor: theme.border,
-                  color: theme.text,
-                },
-              ]}
-              value={date}
-              onChangeText={setDate}
-              placeholder="YYYY-MM-DD"
-              placeholderTextColor={theme.mutedText}
-            />
-
-            <Text style={[styles.label, { color: theme.text }]}>
-              {t("services.cost")}
-            </Text>
-            <TextInput
-              style={[
-                styles.input,
-                {
-                  backgroundColor: theme.card,
-                  borderColor: theme.border,
-                  color: theme.text,
-                },
-              ]}
-              value={cost}
-              onChangeText={(text) => setCost(text.replace(/[^0-9.]/g, ""))}
-              placeholder="75"
-              placeholderTextColor={theme.mutedText}
-              keyboardType="decimal-pad"
-            />
-          </View>
-
-          <TouchableOpacity
-            style={[
-              styles.button,
-              { backgroundColor: theme.primary },
-              loading && styles.disabledButton,
-            ]}
-            onPress={createService}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator color="#FFFFFF" />
+            {step < 3 ? (
+              <TouchableOpacity
+                style={[
+                  styles.button,
+                  { backgroundColor: theme.primary, flex: 1 },
+                  ((step === 1 && !isStep1Valid) ||
+                    (step === 2 && !isStep2Valid)) &&
+                    styles.disabledButton,
+                ]}
+                onPress={handleNext}
+              >
+                <Text style={styles.buttonText}>{t("common.next")}</Text>
+              </TouchableOpacity>
             ) : (
-              <Text style={styles.buttonText}>{t("services.saveService")}</Text>
+              <TouchableOpacity
+                style={[
+                  styles.button,
+                  { backgroundColor: theme.primary, flex: 1 },
+                  loading && styles.disabledButton,
+                ]}
+                onPress={createService}
+                disabled={loading}
+              >
+                {loading ? (
+                  <ActivityIndicator color="#FFFFFF" />
+                ) : (
+                  <Text style={styles.buttonText}>
+                    {t("services.saveService")}
+                  </Text>
+                )}
+              </TouchableOpacity>
             )}
-          </TouchableOpacity>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -473,9 +764,25 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 24,
   },
-  backButton: {
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     marginTop: 8,
     marginBottom: 20,
+  },
+  backButton: {
+    padding: 4,
+  },
+  stepIndicatorContainer: {
+    backgroundColor: "rgba(0,0,0,0.05)",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  stepIndicatorText: {
+    fontWeight: "700",
+    fontSize: 14,
   },
   iconCircle: {
     width: 112,
@@ -497,10 +804,10 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     marginBottom: 26,
   },
+
   card: {
-    borderWidth: 1,
-    borderRadius: 18,
-    padding: 18,
+    zIndex: 1,
+    elevation: 1,
   },
   label: {
     fontSize: 13,
@@ -513,14 +820,18 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 12,
     paddingHorizontal: 14,
+    justifyContent: "center",
   },
   button: {
     height: 56,
     borderRadius: 14,
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 24,
-    marginBottom: 28,
+  },
+  backNavButton: {
+    borderWidth: 1,
+    flex: 0.4,
+    backgroundColor: "transparent",
   },
   disabledButton: {
     opacity: 0.6,
@@ -530,56 +841,34 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     fontSize: 16,
   },
-  carInfoCard: {
-    borderWidth: 1,
-    borderRadius: 16,
-    padding: 14,
+  navigationButtons: {
     flexDirection: "row",
-    alignItems: "center",
     gap: 12,
-    marginBottom: 18,
-  },
-
-  carInfoIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  carInfoTitle: {
-    fontSize: 16,
-    fontWeight: "900",
-  },
-
-  carInfoPlate: {
-    marginTop: 4,
-    fontSize: 13,
-    fontWeight: "700",
+    marginTop: 24,
+    marginBottom: 28,
   },
   carSelectorWrapper: {
+    zIndex: 3000,
+    elevation: 3000,
     position: "relative",
-    zIndex: 50,
-    elevation: 50,
-    borderWidth: 1,
-    borderRadius: 18,
-    padding: 14,
-    marginBottom: 18,
   },
-
   dropdownOverlay: {
+    borderWidth: 1,
+    borderRadius: 14,
+    marginTop: 8,
+    overflow: "hidden",
+  },
+  categoryDropdownOverlay: {
     position: "absolute",
-    top: 92,
+    top: 80,
     left: 14,
     right: 14,
     borderWidth: 1,
     borderRadius: 14,
-    overflow: "hidden",
-    zIndex: 999,
-    elevation: 999,
+    zIndex: 9999,
+    elevation: 9999,
+    backgroundColor: "white",
   },
-
   carSelector: {
     minHeight: 64,
     borderWidth: 1,
@@ -589,7 +878,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 12,
   },
-
   carDropdownItem: {
     paddingVertical: 12,
     paddingHorizontal: 12,
@@ -598,13 +886,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 12,
   },
-
   carImage: {
     width: 44,
     height: 44,
     borderRadius: 10,
   },
-
   carImagePlaceholder: {
     width: 44,
     height: 44,
@@ -612,15 +898,36 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-
   carTitle: {
     fontSize: 15,
     fontWeight: "800",
   },
-
   carSubtitle: {
     marginTop: 3,
     fontSize: 12,
     fontWeight: "600",
+  },
+  inputText: {
+    fontWeight: "600",
+  },
+  dropdownItem: {
+    paddingVertical: 13,
+    paddingHorizontal: 14,
+    borderBottomWidth: 1,
+  },
+  dropdownText: {
+    fontWeight: "600",
+  },
+  dropdownInput: {
+    minHeight: 50,
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  exitButton: {
+    padding: 4,
   },
 });

@@ -59,14 +59,16 @@ export default function CreateDocumentScreen() {
   const { t } = useTranslation();
   const { theme } = useAppTheme();
 
+  // Çok adımlı form state'i
+  const [step, setStep] = useState<1 | 2>(1);
+
   const [title, setTitle] = useState("");
   const [type, setType] = useState<DocumentType>("REGISTRATION");
   const [expiresAt, setExpiresAt] = useState<Date | null>(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTypes, setShowTypes] = useState(false);
-  const [file, setFile] = useState<DocumentPicker.DocumentPickerAsset | null>(
-    null,
-  );
+  const [file, setFile] = useState<DocumentPicker.DocumentPickerAsset | null>(null);
+  
   const [loading, setLoading] = useState(false);
   const [cars, setCars] = useState<Car[]>([]);
   const [selectedCarId, setSelectedCarId] = useState(carId);
@@ -78,7 +80,6 @@ export default function CreateDocumentScreen() {
     const fetchCars = async () => {
       try {
         setCarsLoading(true);
-
         const token = await AsyncStorage.getItem("token");
 
         if (!token) {
@@ -99,7 +100,6 @@ export default function CreateDocumentScreen() {
         }
 
         const carList = Array.isArray(data) ? data : data?.cars || [];
-
         setCars(carList);
 
         if (!selectedCarId && carList.length > 0) {
@@ -127,9 +127,9 @@ export default function CreateDocumentScreen() {
 
     return `${day}.${month}.${year}`;
   };
+
   const formatDateForApi = (date: Date | null) => {
     if (!date) return "";
-
     return date.toISOString().split("T")[0];
   };
 
@@ -147,7 +147,6 @@ export default function CreateDocumentScreen() {
   const createDocument = async () => {
     try {
       setLoading(true);
-
       const token = await AsyncStorage.getItem("token");
 
       if (!token) {
@@ -157,9 +156,13 @@ export default function CreateDocumentScreen() {
 
       const formData = new FormData();
 
-      formData.append("title", title.trim());
       formData.append("type", type);
       formData.append("carId", selectedCarId);
+
+      // Sadece OTHER seçiliyse title gönderiyoruz
+      if (type === "OTHER" && title.trim() !== "") {
+        formData.append("title", title.trim());
+      }
 
       if (expiresAt) {
         formData.append("expiresAt", formatDateForApi(expiresAt));
@@ -182,7 +185,6 @@ export default function CreateDocumentScreen() {
       });
 
       const text = await response.text();
-
       let data: any = null;
 
       try {
@@ -219,9 +221,17 @@ export default function CreateDocumentScreen() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          <TouchableOpacity style={styles.backButton} onPress={router.back}>
-            <Ionicons name="arrow-back" size={24} color={theme.text} />
-          </TouchableOpacity>
+          <View style={styles.headerRow}>
+            <TouchableOpacity style={styles.exitButton} onPress={router.back}>
+              <Ionicons name="close" size={26} color={theme.text} />
+            </TouchableOpacity>
+            
+            <View style={[styles.stepIndicator, { backgroundColor: theme.card, borderColor: theme.border }]}>
+              <Text style={[styles.stepText, { color: theme.text }]}>
+                {t("documents.stepIndicator", { step: step, total: 2, defaultValue: `Adım ${step} / 2` })}
+              </Text>
+            </View>
+          </View>
 
           <View
             style={[
@@ -233,7 +243,7 @@ export default function CreateDocumentScreen() {
             ]}
           >
             <Ionicons
-              name="document-text-outline"
+              name={step === 1 ? "document-text-outline" : "cloud-upload-outline"}
               size={56}
               color={theme.primary}
             />
@@ -247,334 +257,397 @@ export default function CreateDocumentScreen() {
             {t("documents.createSubtitle")}
           </Text>
 
-          <View
-            style={[
-              styles.carSelectorWrapper,
-              {
-                backgroundColor: theme.card,
-                borderColor: theme.border,
-                zIndex: 50,
-                elevation: 50,
-              },
-            ]}
-          >
-            <Text style={[styles.label, { color: theme.text }]}>Araç</Text>
-
-            <TouchableOpacity
-              style={[
-                styles.carSelector,
-                {
-                  backgroundColor: theme.card,
-                  borderColor: theme.border,
-                },
-              ]}
-              onPress={() => setShowCars(!showCars)}
-              disabled={carsLoading}
-            >
-              {carsLoading ? (
-                <ActivityIndicator color={theme.primary} />
-              ) : (
-                <>
-                  {selectedCar?.imageUrl || selectedCar?.image ? (
-                    <Image
-                      source={{
-                        uri: `${API_URL}/../uploads/cars/${selectedCar.imageUrl}`,
-                      }}
-                      style={styles.carImage}
-                    />
-                  ) : (
-                    <View
-                      style={[
-                        styles.carImagePlaceholder,
-                        { backgroundColor: theme.background },
-                      ]}
-                    >
-                      <Ionicons
-                        name="car-outline"
-                        size={22}
-                        color={theme.mutedText}
-                      />
-                    </View>
-                  )}
-
-                  <View style={{ flex: 1 }}>
-                    <Text style={[styles.carTitle, { color: theme.text }]}>
-                      {selectedCar
-                        ? `${selectedCar.brand || ""} ${selectedCar.model || ""}`.trim()
-                        : "Araç seç"}
-                    </Text>
-
-                    {selectedCar?.plate ? (
-                      <Text
-                        style={[styles.carSubtitle, { color: theme.mutedText }]}
-                      >
-                        {selectedCar.plate}
-                      </Text>
-                    ) : null}
-                  </View>
-
-                  <Ionicons
-                    name={showCars ? "chevron-up" : "chevron-down"}
-                    size={18}
-                    color={theme.mutedText}
-                  />
-                </>
-              )}
-            </TouchableOpacity>
-
-            {showCars && (
+          {/* ADIM 1: Araç, Tür ve Tarih */}
+          {step === 1 && (
+            <View style={styles.stepContainer}>
               <View
                 style={[
-                  styles.dropdownOverlay,
+                  styles.carSelectorWrapper,
                   {
                     backgroundColor: theme.card,
                     borderColor: theme.border,
+                    zIndex: 50,
+                    elevation: 50,
                   },
                 ]}
               >
-                {cars.map((car) => (
-                  <TouchableOpacity
-                    key={car.id}
-                    style={[
-                      styles.carDropdownItem,
-                      { borderBottomColor: theme.border },
-                    ]}
-                    onPress={() => {
-                      setSelectedCarId(car.id);
-                      setShowCars(false);
-                    }}
-                  >
-                    {car.imageUrl || car.image ? (
-                      <Image
-                        source={{
-                          uri: `${API_URL}/../uploads/cars/${car.imageUrl}`,
-                        }}
-                        style={styles.carImage}
-                      />
-                    ) : (
-                      <View
-                        style={[
-                          styles.carImagePlaceholder,
-                          { backgroundColor: theme.background },
-                        ]}
-                      >
-                        <Ionicons
-                          name="car-outline"
-                          size={22}
-                          color={theme.mutedText}
+                <Text style={[styles.label, { color: theme.text, marginTop: 0 }]}>
+                  {t("documents.car", { defaultValue: "Araç" })}
+                </Text>
+
+                <TouchableOpacity
+                  style={[
+                    styles.carSelector,
+                    {
+                      backgroundColor: theme.card,
+                      borderColor: theme.border,
+                    },
+                  ]}
+                  onPress={() => setShowCars(!showCars)}
+                  disabled={carsLoading}
+                >
+                  {carsLoading ? (
+                    <ActivityIndicator color={theme.primary} />
+                  ) : (
+                    <>
+                      {selectedCar?.imageUrl || selectedCar?.image ? (
+                        <Image
+                          source={{
+                            uri: `${API_URL}/../uploads/cars/${selectedCar.imageUrl}`,
+                          }}
+                          style={styles.carImage}
                         />
-                      </View>
-                    )}
-
-                    <View style={{ flex: 1 }}>
-                      <Text style={[styles.carTitle, { color: theme.text }]}>
-                        {`${car.brand || ""} ${car.model || ""}`.trim() ||
-                          "Araç"}
-                      </Text>
-
-                      {car.plate ? (
-                        <Text
+                      ) : (
+                        <View
                           style={[
-                            styles.carSubtitle,
-                            { color: theme.mutedText },
+                            styles.carImagePlaceholder,
+                            { backgroundColor: theme.background },
                           ]}
                         >
-                          {car.plate}
+                          <Ionicons
+                            name="car-outline"
+                            size={22}
+                            color={theme.mutedText}
+                          />
+                        </View>
+                      )}
+
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.carTitle, { color: theme.text }]}>
+                          {selectedCar
+                            ? `${selectedCar.brand || ""} ${selectedCar.model || ""}`.trim()
+                            : t("documents.selectCar", { defaultValue: "Araç seç" })}
                         </Text>
-                      ) : null}
-                    </View>
-                  </TouchableOpacity>
-                ))}
+
+                        {selectedCar?.plate ? (
+                          <Text
+                            style={[styles.carSubtitle, { color: theme.mutedText }]}
+                          >
+                            {selectedCar.plate}
+                          </Text>
+                        ) : null}
+                      </View>
+
+                      <Ionicons
+                        name={showCars ? "chevron-up" : "chevron-down"}
+                        size={18}
+                        color={theme.mutedText}
+                      />
+                    </>
+                  )}
+                </TouchableOpacity>
+
+                {showCars && (
+                  <View
+                    style={[
+                      styles.dropdownOverlay,
+                      {
+                        backgroundColor: theme.card,
+                        borderColor: theme.border,
+                      },
+                    ]}
+                  >
+                    {cars.map((car) => (
+                      <TouchableOpacity
+                        key={car.id}
+                        style={[
+                          styles.carDropdownItem,
+                          { borderBottomColor: theme.border },
+                        ]}
+                        onPress={() => {
+                          setSelectedCarId(car.id);
+                          setShowCars(false);
+                        }}
+                      >
+                        {car.imageUrl || car.image ? (
+                          <Image
+                            source={{
+                              uri: `${API_URL}/../uploads/cars/${car.imageUrl}`,
+                            }}
+                            style={styles.carImage}
+                          />
+                        ) : (
+                          <View
+                            style={[
+                              styles.carImagePlaceholder,
+                              { backgroundColor: theme.background },
+                            ]}
+                          >
+                            <Ionicons
+                              name="car-outline"
+                              size={22}
+                              color={theme.mutedText}
+                            />
+                          </View>
+                        )}
+
+                        <View style={{ flex: 1 }}>
+                          <Text style={[styles.carTitle, { color: theme.text }]}>
+                            {`${car.brand || ""} ${car.model || ""}`.trim() ||
+                              t("documents.car", { defaultValue: "Araç" })}
+                          </Text>
+
+                          {car.plate ? (
+                            <Text
+                              style={[
+                                styles.carSubtitle,
+                                { color: theme.mutedText },
+                              ]}
+                            >
+                              {car.plate}
+                            </Text>
+                          ) : null}
+                        </View>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
               </View>
-            )}
-          </View>
 
-          <View
-            style={[
-              styles.card,
-              {
-                backgroundColor: theme.card,
-                borderColor: theme.border,
-              },
-            ]}
-          >
-            <Text style={[styles.label, { color: theme.text }]}>
-              {t("documents.title")}
-            </Text>
-
-            <TextInput
-              style={[
-                styles.input,
-                {
-                  backgroundColor: theme.card,
-                  borderColor: theme.border,
-                  color: theme.text,
-                },
-              ]}
-              value={title}
-              onChangeText={setTitle}
-              placeholder={t("documents.titlePlaceholder")}
-              placeholderTextColor={theme.mutedText}
-            />
-
-            <Text style={[styles.label, { color: theme.text }]}>
-              {t("documents.type")}
-            </Text>
-
-            <TouchableOpacity
-              style={[
-                styles.input,
-                {
-                  backgroundColor: theme.card,
-                  borderColor: theme.border,
-                },
-              ]}
-              onPress={() => setShowTypes(!showTypes)}
-            >
-              <Text style={[styles.inputText, { color: theme.text }]}>
-                {t(`documentTypes.${type}`)}
-              </Text>
-
-              <Ionicons name="chevron-down" size={18} color={theme.mutedText} />
-            </TouchableOpacity>
-
-            {showTypes && (
               <View
                 style={[
-                  styles.dropdownOverlay,
+                  styles.card,
                   {
                     backgroundColor: theme.card,
                     borderColor: theme.border,
                   },
                 ]}
               >
-                {documentTypes.map((item) => (
-                  <TouchableOpacity
-                    key={item}
+                <Text style={[styles.label, { color: theme.text, marginTop: 0 }]}>
+                  {t("documents.type")}
+                </Text>
+
+                <TouchableOpacity
+                  style={[
+                    styles.input,
+                    {
+                      backgroundColor: theme.card,
+                      borderColor: theme.border,
+                    },
+                  ]}
+                  onPress={() => setShowTypes(!showTypes)}
+                >
+                  <Text style={[styles.inputText, { color: theme.text }]}>
+                    {t(`documentTypes.${type}`)}
+                  </Text>
+
+                  <Ionicons name="chevron-down" size={18} color={theme.mutedText} />
+                </TouchableOpacity>
+
+                {showTypes && (
+                  <View
                     style={[
-                      styles.dropdownItem,
-                      { borderBottomColor: theme.border },
+                      styles.dropdownOverlayType,
+                      {
+                        backgroundColor: theme.card,
+                        borderColor: theme.border,
+                      },
                     ]}
-                    onPress={() => {
-                      setType(item);
-                      setShowTypes(false);
+                  >
+                    {documentTypes.map((item) => (
+                      <TouchableOpacity
+                        key={item}
+                        style={[
+                          styles.dropdownItem,
+                          { borderBottomColor: theme.border },
+                        ]}
+                        onPress={() => {
+                          setType(item);
+                          setShowTypes(false);
+                          // Tip değiştiğinde başlığı sıfırlamak istersen:
+                          if (item !== "OTHER") setTitle("");
+                        }}
+                      >
+                        <Text style={[styles.dropdownText, { color: theme.text }]}>
+                          {t(`documentTypes.${item}`)}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
+
+                {/* EĞER "OTHER" SEÇİLİYSE BAŞLIK ALANI AÇILIR */}
+                {type === "OTHER" && (
+                  <>
+                    <Text style={[styles.label, { color: theme.text }]}>
+                      {t("documents.title", { defaultValue: "Belge Başlığı" })}
+                    </Text>
+
+                    <TextInput
+                      style={[
+                        styles.input,
+                        {
+                          backgroundColor: theme.card,
+                          borderColor: theme.border,
+                          color: theme.text,
+                        },
+                      ]}
+                      value={title}
+                      onChangeText={setTitle}
+                      placeholder={t("documents.titlePlaceholder", { defaultValue: "Belge adı girin..." })}
+                      placeholderTextColor={theme.mutedText}
+                    />
+                  </>
+                )}
+
+                <Text style={[styles.label, { color: theme.text }]}>
+                  {t("documents.expiresAt")}
+                </Text>
+
+                <TouchableOpacity
+                  style={[
+                    styles.input,
+                    {
+                      backgroundColor: theme.card,
+                      borderColor: theme.border,
+                    },
+                  ]}
+                  onPress={() => setShowDatePicker(true)}
+                >
+                  <Text
+                    style={{
+                      color: expiresAt ? theme.text : theme.mutedText,
+                      fontWeight: "600",
                     }}
                   >
-                    <Text style={[styles.dropdownText, { color: theme.text }]}>
-                      {t(`documentTypes.${item}`)}
+                    {formatDate(expiresAt)}
+                  </Text>
+
+                  <Ionicons
+                    name="calendar-outline"
+                    size={20}
+                    color={theme.mutedText}
+                  />
+                </TouchableOpacity>
+
+                {showDatePicker && (
+                  <DateTimePicker
+                    value={expiresAt ?? new Date()}
+                    mode="date"
+                    display="default"
+                    onChange={(_, selectedDate) => {
+                      setShowDatePicker(false);
+                      if (selectedDate) {
+                        setExpiresAt(selectedDate);
+                      }
+                    }}
+                  />
+                )}
+
+                {expiresAt ? (
+                  <TouchableOpacity
+                    style={styles.clearDateButton}
+                    onPress={() => setExpiresAt(null)}
+                  >
+                    <Text
+                      style={[styles.clearDateText, { color: theme.mutedText }]}
+                    >
+                      {t("documents.clearExpirationDate")}
                     </Text>
                   </TouchableOpacity>
-                ))}
+                ) : null}
               </View>
-            )}
 
-            <Text style={[styles.label, { color: theme.text }]}>
-              {t("documents.expiresAt")}
-            </Text>
-
-            <TouchableOpacity
-              style={[
-                styles.input,
-                {
-                  backgroundColor: theme.card,
-                  borderColor: theme.border,
-                },
-              ]}
-              onPress={() => setShowDatePicker(true)}
-            >
-              <Text
-                style={{
-                  color: expiresAt ? theme.text : theme.mutedText,
-                  fontWeight: "600",
-                }}
-              >
-                {formatDate(expiresAt)}
-              </Text>
-
-              <Ionicons
-                name="calendar-outline"
-                size={20}
-                color={theme.mutedText}
-              />
-            </TouchableOpacity>
-
-            {showDatePicker && (
-              <DateTimePicker
-                value={expiresAt ?? new Date()}
-                mode="date"
-                display="default"
-                onChange={(_, selectedDate) => {
-                  setShowDatePicker(false);
-
-                  if (selectedDate) {
-                    setExpiresAt(selectedDate);
-                  }
-                }}
-              />
-            )}
-
-            {expiresAt ? (
+              {/* Sadece İleri Butonu (Geri butonu ilk adımda yok) */}
               <TouchableOpacity
-                style={styles.clearDateButton}
-                onPress={() => setExpiresAt(null)}
+                style={[styles.button, { backgroundColor: theme.primary, marginTop: 24 }]}
+                onPress={() => setStep(2)}
               >
-                <Text
-                  style={[styles.clearDateText, { color: theme.mutedText }]}
-                >
-                  {t("documents.clearExpirationDate")}
+                <Text style={styles.buttonText}>
+                  {t("common.next", { defaultValue: "İleri" })}
                 </Text>
               </TouchableOpacity>
-            ) : null}
+            </View>
+          )}
 
-            <Text style={[styles.label, { color: theme.text }]}>
-              {t("documents.file")}
-            </Text>
+          {/* ADIM 2: Dosya Yükleme (Opsiyonel) */}
+          {step === 2 && (
+            <View style={styles.stepContainer}>
+              <View
+                style={[
+                  styles.card,
+                  {
+                    backgroundColor: theme.card,
+                    borderColor: theme.border,
+                  },
+                ]}
+              >
+                <View style={styles.optionalLabelRow}>
+                  <Text style={[styles.label, { color: theme.text, marginTop: 0 }]}>
+                    {t("documents.file")}
+                  </Text>
+                  <Text style={[styles.optionalText, { color: theme.mutedText }]}>
+                    {t("documents.optional", { defaultValue: "(İsteğe Bağlı)" })}
+                  </Text>
+                </View>
 
-            <TouchableOpacity
-              style={[
-                styles.fileBox,
-                {
-                  backgroundColor: theme.background,
-                  borderColor: theme.border,
-                },
-              ]}
-              onPress={pickFile}
-            >
-              <Ionicons
-                name="cloud-upload-outline"
-                size={28}
-                color={theme.primary}
-              />
+                <TouchableOpacity
+                  style={[
+                    styles.fileBox,
+                    {
+                      backgroundColor: theme.background,
+                      borderColor: theme.border,
+                    },
+                  ]}
+                  onPress={pickFile}
+                >
+                  <Ionicons
+                    name="cloud-upload-outline"
+                    size={28}
+                    color={theme.primary}
+                  />
 
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.fileTitle, { color: theme.text }]}>
-                  {file ? file.name : t("documents.chooseFile")}
-                </Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.fileTitle, { color: theme.text }]}>
+                      {file ? file.name : t("documents.chooseFile")}
+                    </Text>
 
-                <Text style={[styles.fileSubtitle, { color: theme.mutedText }]}>
-                  {t("documents.fileHint")}
-                </Text>
+                    <Text style={[styles.fileSubtitle, { color: theme.mutedText }]}>
+                      {t("documents.fileHint")}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
               </View>
-            </TouchableOpacity>
-          </View>
 
-          <TouchableOpacity
-            style={[
-              styles.button,
-              { backgroundColor: theme.primary },
-              loading && styles.disabledButton,
-            ]}
-            onPress={createDocument}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator color="#FFFFFF" />
-            ) : (
-              <Text style={styles.buttonText}>
-                {t("documents.saveDocument")}
-              </Text>
-            )}
-          </TouchableOpacity>
+              {/* İkinci Adımda Geri ve Kaydet Butonları */}
+              <View style={styles.buttonRow}>
+                <TouchableOpacity
+                  style={[
+                    styles.button, 
+                    styles.flex1, 
+                    { backgroundColor: 'transparent', borderWidth: 1, borderColor: theme.primary }
+                  ]}
+                  onPress={() => setStep(1)}
+                  disabled={loading}
+                >
+                  <Text style={[styles.buttonText, { color: theme.primary }]}>
+                    {t("common.back", { defaultValue: "Geri" })}
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.button, 
+                    styles.flex1, 
+                    { backgroundColor: theme.primary },
+                    loading && styles.disabledButton,
+                  ]}
+                  onPress={createDocument}
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <ActivityIndicator color="#FFFFFF" />
+                  ) : (
+                    <Text style={styles.buttonText}>
+                      {t("documents.saveDocument")}
+                    </Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+
+          <View style={{ height: 40 }} />
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -586,9 +659,28 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 24,
   },
-  backButton: {
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginTop: 8,
     marginBottom: 20,
+  },
+  exitButton: {
+    padding: 4,
+  },
+  stepIndicator: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  stepText: {
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  stepContainer: {
+    width: '100%',
   },
   iconCircle: {
     width: 112,
@@ -618,8 +710,18 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 13,
     fontWeight: "700",
-    marginTop: 12,
+    marginTop: 16,
     marginBottom: 7,
+  },
+  optionalLabelRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 7,
+  },
+  optionalText: {
+    fontSize: 12,
+    fontWeight: "600",
   },
   input: {
     minHeight: 50,
@@ -659,13 +761,19 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "600",
   },
+  buttonRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 24,
+  },
   button: {
     height: 56,
     borderRadius: 14,
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 24,
-    marginBottom: 28,
+  },
+  flex1: {
+    flex: 1,
   },
   disabledButton: {
     opacity: 0.6,
@@ -679,21 +787,17 @@ const styles = StyleSheet.create({
     marginTop: 8,
     alignSelf: "flex-start",
   },
-
   clearDateText: {
     fontSize: 13,
     fontWeight: "700",
   },
   carSelectorWrapper: {
     position: "relative",
-    zIndex: 50,
-    elevation: 50,
     borderWidth: 1,
     borderRadius: 18,
     padding: 14,
     marginBottom: 18,
   },
-
   dropdownOverlay: {
     position: "absolute",
     top: 92,
@@ -705,7 +809,17 @@ const styles = StyleSheet.create({
     zIndex: 999,
     elevation: 999,
   },
-
+  dropdownOverlayType: {
+    position: "absolute",
+    top: 80,
+    left: 18,
+    right: 18,
+    borderWidth: 1,
+    borderRadius: 14,
+    overflow: "hidden",
+    zIndex: 999,
+    elevation: 999,
+  },
   carSelector: {
     minHeight: 64,
     borderWidth: 1,
@@ -714,8 +828,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
+    marginTop: 8,
   },
-
   carDropdownItem: {
     paddingVertical: 12,
     paddingHorizontal: 12,
@@ -724,13 +838,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 12,
   },
-
   carImage: {
     width: 44,
     height: 44,
     borderRadius: 10,
   },
-
   carImagePlaceholder: {
     width: 44,
     height: 44,
@@ -738,12 +850,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-
   carTitle: {
     fontSize: 15,
     fontWeight: "800",
   },
-
   carSubtitle: {
     marginTop: 3,
     fontSize: 12,

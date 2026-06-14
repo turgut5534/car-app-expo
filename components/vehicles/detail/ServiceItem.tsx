@@ -1,5 +1,6 @@
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, Pressable } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 
 import { useAppTheme } from "../../../context/ThemeContext";
 import { Service } from "../../../types/car";
@@ -22,11 +23,23 @@ export function ServiceItem({ service, currency }: Props) {
 
   const iconName = iconMap[service.type ?? "oil"];
 
+  const handlePress = () => {
+    router.push({
+      pathname: "/service/[id]",
+      params: { id: service.id },
+    });
+  };
+
   return (
-    <View
-      style={[
+    <Pressable
+      onPress={handlePress}
+      style={({ pressed }) => [
         styles.serviceCard,
-        { backgroundColor: theme.card, borderColor: theme.border },
+        {
+          backgroundColor: theme.card,
+          borderColor: theme.border,
+          opacity: pressed ? 0.7 : 1,
+        },
       ]}
     >
       <View style={styles.serviceLeft}>
@@ -54,10 +67,19 @@ export function ServiceItem({ service, currency }: Props) {
         </View>
       </View>
 
-      <Text style={[styles.serviceCost, { color: theme.text }]}>
-        {service.amount} {currency}
-      </Text>
-    </View>
+      {/* RIGHT SIDE */}
+      <View style={styles.rightSide}>
+        <Text style={[styles.serviceCost, { color: theme.text }]}>
+          {service.amount} {currency}
+        </Text>
+
+        <Ionicons
+          name="chevron-forward"
+          size={20}
+          color={theme.mutedText}
+        />
+      </View>
+    </Pressable>
   );
 }
 
@@ -97,4 +119,9 @@ const styles = StyleSheet.create({
   serviceCost: {
     fontWeight: "900",
   },
+  rightSide: {
+  alignItems: "flex-end",
+  justifyContent: "center",
+  gap: 6,
+},
 });

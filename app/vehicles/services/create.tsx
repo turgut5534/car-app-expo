@@ -20,6 +20,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAppTheme } from "../../../context/ThemeContext";
 import { API_URL } from "@/constants/api";
 import * as DocumentPicker from "expo-document-picker";
+import { Decimal } from "@prisma/client/runtime/library";
 
 export const SERVICE_CATEGORIES = [
   "OIL_CHANGE",
@@ -173,21 +174,32 @@ export default function CreateServiceScreen() {
           : t(`serviceCategories.${category}`);
       const finalAmount = cost.trim() ? Number(cost) : 0;
 
+      const formData = new FormData();
+
+      formData.append("title", finalTitle.trim());
+      formData.append("carId", selectedCarId);
+      formData.append("km", String(Number(mileageKm)));
+      formData.append("serviceDate", date);
+      formData.append("amount", String(Number(finalAmount)));
+      formData.append("category", category);
+      formData.append("description", description);
+
+      if (attachments.length > 0) {
+        attachments.forEach((file) => {
+          formData.append("files", {
+            uri: file.uri,
+            name: file.name ?? "file",
+            type: file.mimeType || "application/octet-stream",
+          } as any);
+        });
+      }
+
       const response = await fetch(`${API_URL}/services`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          carId: selectedCarId,
-          title: finalTitle,
-          km: Number(mileageKm),
-          serviceDate: date,
-          amount: finalAmount,
-          category: category,
-          description: description,
-        }),
+        body: formData,
       });
 
       const data = await response.json();
@@ -644,7 +656,7 @@ export default function CreateServiceScreen() {
                 ]}
                 value={cost}
                 onChangeText={(text) => setCost(text.replace(/[^0-9.]/g, ""))}
-                placeholder="75"
+                placeholder="0"
                 placeholderTextColor={theme.mutedText}
                 keyboardType="decimal-pad"
               />
@@ -859,15 +871,10 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   categoryDropdownOverlay: {
-    position: "absolute",
-    top: 80,
-    left: 14,
-    right: 14,
     borderWidth: 1,
     borderRadius: 14,
-    zIndex: 9999,
-    elevation: 9999,
-    backgroundColor: "white",
+    marginTop: 8,
+    overflow: "hidden",
   },
   carSelector: {
     minHeight: 64,

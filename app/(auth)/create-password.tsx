@@ -12,6 +12,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import { useAppTheme } from "../../context/ThemeContext";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 type Errors = {
   email?: string;
@@ -75,7 +76,10 @@ export default function CreatePasswordScreen() {
         throw new Error(data.message || t("register.registerFailed"));
       }
 
+      await AsyncStorage.setItem("token", data.accessToken);
+
       router.replace("/(tabs)/home");
+
     } catch (error) {
       setErrors({
         general:

@@ -162,6 +162,8 @@ export default function CreateDocumentScreen() {
       // Sadece OTHER seçiliyse title gönderiyoruz
       if (type === "OTHER" && title.trim() !== "") {
         formData.append("title", title.trim());
+      } else{
+        setTitle(type)
       }
 
       if (expiresAt) {

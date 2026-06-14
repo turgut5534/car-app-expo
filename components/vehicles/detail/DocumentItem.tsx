@@ -47,7 +47,7 @@ export function DocumentItem({ document, onPress, disabled }: Props) {
 
         <View style={{ flex: 1 }}>
           <Text style={[styles.documentTitle, { color: theme.text }]}>
-            {document.title}
+            {t(`documentTypes.${document.type}`)}
           </Text>
 
           <Text style={[styles.documentSubtitle, { color: theme.mutedText }]}>

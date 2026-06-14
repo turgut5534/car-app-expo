@@ -14,7 +14,7 @@ export function CarHeader({ car }: Props) {
 
   return (
     <View style={styles.topBar}>
-      <TouchableOpacity onPress={() => router.back()}>
+      <TouchableOpacity onPress={() => router.push("/(tabs)/home")}>
         <Ionicons name="chevron-back" size={28} color={theme.text} />
       </TouchableOpacity>
 

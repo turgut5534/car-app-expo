@@ -25,7 +25,7 @@ export function ServiceItem({ service, currency }: Props) {
 
   const handlePress = () => {
     router.push({
-      pathname: "/service/[id]",
+      pathname: "/vehicles/services/[id]/details",
       params: { id: service.id },
     });
   };

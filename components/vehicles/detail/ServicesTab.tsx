@@ -37,7 +37,7 @@ export function ServicesTab({ car }: Props) {
           <ServiceItem
             key={service.id}
             service={service}
-            currency={car.owner?.currency || service.currency || ""}
+            currency={car.owner?.currency || service.createdBy.currency || ""}
           />
         ))
       ) : (

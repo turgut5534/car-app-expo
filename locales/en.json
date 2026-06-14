@@ -233,7 +233,9 @@
     "vehicle": "Vehicle",
     "description": "Description",
     "addFile": "Add files",
-    "type": "Service type"
+    "type": "Service type",
+    "details": "Service details",
+    "files": "Files"
   },
   "serviceCategories": {
     "OIL_CHANGE": "Oil Change",

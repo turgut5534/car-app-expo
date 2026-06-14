@@ -20,7 +20,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAppTheme } from "../../../context/ThemeContext";
 import { API_URL } from "@/constants/api";
 import * as DocumentPicker from "expo-document-picker";
-import { Decimal } from "@prisma/client/runtime/library";
 
 export const SERVICE_CATEGORIES = [
   "OIL_CHANGE",
@@ -91,10 +90,6 @@ export default function CreateServiceScreen() {
     }
   };
 
-  const formatDateForApi = (date: Date | null) => {
-    if (!date) return "";
-    return date.toISOString().split("T")[0];
-  };
 
   const fetchCars = async () => {
     try {
@@ -186,6 +181,7 @@ export default function CreateServiceScreen() {
 
       if (attachments.length > 0) {
         attachments.forEach((file) => {
+          console.log(file.name)
           formData.append("files", {
             uri: file.uri,
             name: file.name ?? "file",

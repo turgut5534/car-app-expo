@@ -225,7 +225,8 @@
     "cost": "Cost",
     "saveService": "Save Service",
     "fillAllFields": "Please fill in all fields.",
-    "createFailed": "Service could not be created."
+    "createFailed": "Service could not be created.",
+    "vehicle": "Vehicle"
   },
   "documents": {
     "createTitle": "Add Document",

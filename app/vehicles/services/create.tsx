@@ -231,7 +231,7 @@ export default function CreateServiceScreen() {
               },
             ]}
           >
-            <Text style={[styles.label, { color: theme.text }]}>Araç</Text>
+            <Text style={[styles.label, { color: theme.text }]}>{t("services.vehicle")}</Text>
 
             <TouchableOpacity
               style={[

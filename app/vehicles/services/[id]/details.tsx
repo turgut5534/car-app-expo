@@ -91,7 +91,7 @@ export default function ServiceDetailsScreen() {
     } catch (error) {
       Alert.alert(
         t("common.error"),
-        error instanceof Error ? error.message : "Failed"
+        error instanceof Error ? error.message : "Failed",
       );
     } finally {
       setLoading(false);
@@ -128,15 +128,14 @@ export default function ServiceDetailsScreen() {
   };
 
   const isPdf = (file: Attachment) => {
-    return (
-      file.mimeType === "application/pdf" || 
-      /\.pdf$/i.test(file.fileName)
-    );
+    return file.mimeType === "application/pdf" || /\.pdf$/i.test(file.fileName);
   };
 
   if (loading) {
     return (
-      <SafeAreaView style={[styles.loadingContainer, { backgroundColor: theme.background }]}>
+      <SafeAreaView
+        style={[styles.loadingContainer, { backgroundColor: theme.background }]}
+      >
         <ActivityIndicator size="large" color={theme.primary} />
         <Text style={{ color: theme.mutedText, marginTop: 12 }}>
           {t("common.loading")}
@@ -147,17 +146,23 @@ export default function ServiceDetailsScreen() {
 
   if (!service) {
     return (
-      <SafeAreaView style={[styles.loadingContainer, { backgroundColor: theme.background }]}>
+      <SafeAreaView
+        style={[styles.loadingContainer, { backgroundColor: theme.background }]}
+      >
         <Text style={{ color: theme.text }}>{t("services.notFound")}</Text>
       </SafeAreaView>
     );
   }
 
   const serviceDate = new Date(service.serviceDate).toLocaleDateString();
-  
+
   // Dosyaları kategorize et
-  const visualAttachments = service.attachments.filter(f => isImage(f) || isPdf(f));
-  const otherAttachments = service.attachments.filter((f) => !isImage(f) && !isPdf(f));
+  const visualAttachments = service.attachments.filter(
+    (f) => isImage(f) || isPdf(f),
+  );
+  const otherAttachments = service.attachments.filter(
+    (f) => !isImage(f) && !isPdf(f),
+  );
 
   const shadowStyle = {
     shadowColor: theme.activeMode === "dark" ? "#000" : "#888",
@@ -168,23 +173,79 @@ export default function ServiceDetailsScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: theme.background }]}
+    >
       <ScrollView
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.primary} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={theme.primary}
+          />
         }
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 40 }}
       >
         {/* HEADER */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={styles.backButton}
+          >
             <Ionicons name="chevron-back" size={28} color={theme.text} />
           </TouchableOpacity>
+
           <Text style={[styles.headerTitle, { color: theme.text }]}>
             {t("services.details")}
           </Text>
-          <View style={{ width: 40 }} />
+
+          <View style={styles.headerActions}>
+            {/* EDIT */}
+            <TouchableOpacity
+              onPress={() =>
+                router.push({
+                  pathname: "/vehicles/services/edit",
+                  params: { id: service.id },
+                })
+              }
+              style={styles.actionBtn}
+            >
+              <Ionicons name="create-outline" size={22} color={theme.primary} />
+            </TouchableOpacity>
+
+            {/* DELETE */}
+            <TouchableOpacity
+              onPress={() => {
+                Alert.alert(t("common.delete"), t("services.deleteConfirm"), [
+                  { text: t("common.cancel"), style: "cancel" },
+                  {
+                    text: t("common.delete"),
+                    style: "destructive",
+                    onPress: async () => {
+                      try {
+                        const token = await AsyncStorage.getItem("token");
+
+                        await fetch(`${API_URL}/services/${service.id}`, {
+                          method: "DELETE",
+                          headers: {
+                            Authorization: `Bearer ${token}`,
+                          },
+                        });
+
+                        router.back();
+                      } catch {
+                        Alert.alert(t("common.error"));
+                      }
+                    },
+                  },
+                ]);
+              }}
+              style={styles.actionBtn}
+            >
+              <Ionicons name="trash-outline" size={22} color="#EF4444" />
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* ICON & TITLE */}
@@ -192,7 +253,10 @@ export default function ServiceDetailsScreen() {
           <View
             style={[
               styles.iconCircle,
-              { backgroundColor: theme.activeMode === "dark" ? "#172554" : "#EEF4FF" },
+              {
+                backgroundColor:
+                  theme.activeMode === "dark" ? "#172554" : "#EEF4FF",
+              },
             ]}
           >
             <Ionicons name="construct" size={48} color={theme.primary} />
@@ -203,18 +267,27 @@ export default function ServiceDetailsScreen() {
         </View>
 
         {/* VEHICLE CARD */}
-        <View style={[styles.card, { backgroundColor: theme.card }, shadowStyle]}>
+        <View
+          style={[styles.card, { backgroundColor: theme.card }, shadowStyle]}
+        >
           <Text style={[styles.sectionTitle, { color: theme.text }]}>
             {t("services.vehicle")}
           </Text>
           <View style={styles.vehicleRow}>
             {service.car.imageUrl ? (
               <Image
-                source={{ uri: `${API_URL}/../uploads/cars/${service.car.imageUrl}` }}
+                source={{
+                  uri: `${API_URL}/../uploads/cars/${service.car.imageUrl}`,
+                }}
                 style={styles.vehicleImage}
               />
             ) : (
-              <View style={[styles.vehiclePlaceholder, { backgroundColor: theme.background }]}>
+              <View
+                style={[
+                  styles.vehiclePlaceholder,
+                  { backgroundColor: theme.background },
+                ]}
+              >
                 <Ionicons name="car-sport" size={32} color={theme.mutedText} />
               </View>
             )}
@@ -222,7 +295,12 @@ export default function ServiceDetailsScreen() {
               <Text style={[styles.vehicleTitle, { color: theme.text }]}>
                 {service.car.brand} {service.car.model}
               </Text>
-              <View style={[styles.plateBadge, { backgroundColor: theme.background }]}>
+              <View
+                style={[
+                  styles.plateBadge,
+                  { backgroundColor: theme.background },
+                ]}
+              >
                 <Text style={{ color: theme.text, fontWeight: "700" }}>
                   {service.car.plate}
                 </Text>
@@ -232,16 +310,30 @@ export default function ServiceDetailsScreen() {
         </View>
 
         {/* SERVICE DETAILS CARD */}
-        <View style={[styles.card, { backgroundColor: theme.card }, shadowStyle]}>
-          <InfoRow label={t("services.type")} value={t(`serviceCategories.${service.category}`)} theme={theme} />
+        <View
+          style={[styles.card, { backgroundColor: theme.card }, shadowStyle]}
+        >
+          <InfoRow
+            label={t("services.type")}
+            value={t(`serviceCategories.${service.category}`)}
+            theme={theme}
+          />
           <View style={[styles.divider, { backgroundColor: theme.border }]} />
-          <InfoRow label={t("services.date")} value={serviceDate} theme={theme} />
+          <InfoRow
+            label={t("services.date")}
+            value={serviceDate}
+            theme={theme}
+          />
           <View style={[styles.divider, { backgroundColor: theme.border }]} />
-          <InfoRow label={t("services.mileageKm")} value={`${service.km.toLocaleString()} km`} theme={theme} />
+          <InfoRow
+            label={t("services.mileageKm")}
+            value={`${service.km.toLocaleString()} km`}
+            theme={theme}
+          />
           <View style={[styles.divider, { backgroundColor: theme.border }]} />
           <InfoRow
             label={t("services.cost")}
-            value={service.amount ? `€${service.amount}` : "-"}
+            value={service.amount ? `${service.amount} ${service.createdBy.currency}` : "-"}
             theme={theme}
             valueColor={theme.primary}
           />
@@ -249,18 +341,24 @@ export default function ServiceDetailsScreen() {
 
         {/* DESCRIPTION CARD */}
         {!!service.description && (
-          <View style={[styles.card, { backgroundColor: theme.card }, shadowStyle]}>
+          <View
+            style={[styles.card, { backgroundColor: theme.card }, shadowStyle]}
+          >
             <Text style={[styles.sectionTitle, { color: theme.text }]}>
               {t("services.description")}
             </Text>
-            <Text style={{ color: theme.mutedText, lineHeight: 24, fontSize: 15 }}>
+            <Text
+              style={{ color: theme.mutedText, lineHeight: 24, fontSize: 15 }}
+            >
               {service.description}
             </Text>
           </View>
         )}
 
         {/* ATTACHMENTS CARD */}
-        <View style={[styles.card, { backgroundColor: theme.card }, shadowStyle]}>
+        <View
+          style={[styles.card, { backgroundColor: theme.card }, shadowStyle]}
+        >
           <Text style={[styles.sectionTitle, { color: theme.text }]}>
             {t("services.files")} ({service.attachments.length})
           </Text>
@@ -273,7 +371,11 @@ export default function ServiceDetailsScreen() {
             <>
               {/* VISUAL THUMBNAILS (Images + PDFs) */}
               {visualAttachments.length > 0 && (
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.thumbnailContainer}>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  style={styles.thumbnailContainer}
+                >
                   {visualAttachments.map((file, index) => {
                     if (isImage(file)) {
                       return (
@@ -283,7 +385,9 @@ export default function ServiceDetailsScreen() {
                           onPress={() => setPreviewIndex(index)}
                         >
                           <Image
-                            source={{ uri: `${API_URL}/uploads/services/${file.fileName}` }}
+                            source={{
+                              uri: `${API_URL}/uploads/services/${file.fileName}`,
+                            }}
                             style={styles.thumbnailImage}
                           />
                         </TouchableOpacity>
@@ -298,12 +402,19 @@ export default function ServiceDetailsScreen() {
                           onPress={() => setPreviewIndex(index)}
                           style={[
                             styles.pdfThumbnail,
-                            { backgroundColor: theme.background, borderColor: theme.border }
+                            {
+                              backgroundColor: theme.background,
+                              borderColor: theme.border,
+                            },
                           ]}
                         >
-                          <Ionicons name="document-text" size={40} color="#EF4444" />
-                          <Text 
-                            style={[styles.pdfText, { color: theme.text }]} 
+                          <Ionicons
+                            name="document-text"
+                            size={40}
+                            color="#EF4444"
+                          />
+                          <Text
+                            style={[styles.pdfText, { color: theme.text }]}
                             numberOfLines={1}
                             ellipsizeMode="tail"
                           >
@@ -323,15 +434,38 @@ export default function ServiceDetailsScreen() {
                     <TouchableOpacity
                       key={file.id}
                       onPress={() => openAttachment(file)}
-                      style={[styles.fileRow, { backgroundColor: theme.background }]}
+                      style={[
+                        styles.fileRow,
+                        { backgroundColor: theme.background },
+                      ]}
                     >
-                      <View style={[styles.fileIconBox, { backgroundColor: theme.card }]}>
-                        <Ionicons name="document-text" size={20} color={theme.primary} />
+                      <View
+                        style={[
+                          styles.fileIconBox,
+                          { backgroundColor: theme.card },
+                        ]}
+                      >
+                        <Ionicons
+                          name="document-text"
+                          size={20}
+                          color={theme.primary}
+                        />
                       </View>
-                      <Text style={{ flex: 1, color: theme.text, fontWeight: "500" }} numberOfLines={1}>
+                      <Text
+                        style={{
+                          flex: 1,
+                          color: theme.text,
+                          fontWeight: "500",
+                        }}
+                        numberOfLines={1}
+                      >
                         {file.fileName}
                       </Text>
-                      <Ionicons name="download-outline" size={22} color={theme.mutedText} />
+                      <Ionicons
+                        name="download-outline"
+                        size={22}
+                        color={theme.mutedText}
+                      />
                     </TouchableOpacity>
                   ))}
                 </View>
@@ -348,9 +482,13 @@ export default function ServiceDetailsScreen() {
             {/* Modal Header */}
             <View style={styles.modalHeader}>
               <Text style={styles.modalPagination}>
-                {previewIndex !== null ? previewIndex + 1 : 0} / {visualAttachments.length}
+                {previewIndex !== null ? previewIndex + 1 : 0} /{" "}
+                {visualAttachments.length}
               </Text>
-              <TouchableOpacity onPress={() => setPreviewIndex(null)} style={styles.closeButton}>
+              <TouchableOpacity
+                onPress={() => setPreviewIndex(null)}
+                style={styles.closeButton}
+              >
                 <Ionicons name="close" size={28} color="#FFF" />
               </TouchableOpacity>
             </View>
@@ -370,7 +508,9 @@ export default function ServiceDetailsScreen() {
                 index,
               })}
               onMomentumScrollEnd={(ev) => {
-                const newIndex = Math.round(ev.nativeEvent.contentOffset.x / width);
+                const newIndex = Math.round(
+                  ev.nativeEvent.contentOffset.x / width,
+                );
                 setPreviewIndex(newIndex);
               }}
               renderItem={({ item }) => {
@@ -378,7 +518,13 @@ export default function ServiceDetailsScreen() {
 
                 if (isImage(item)) {
                   return (
-                    <View style={{ width, justifyContent: "center", alignItems: "center" }}>
+                    <View
+                      style={{
+                        width,
+                        justifyContent: "center",
+                        alignItems: "center",
+                      }}
+                    >
                       <Image
                         source={{ uri: url }}
                         style={styles.fullScreenImage}
@@ -390,16 +536,22 @@ export default function ServiceDetailsScreen() {
 
                 if (isPdf(item)) {
                   // Android cihazlar için PDF'i Google Docs Viewer ile açıyoruz (İndirmeyi önlemek için)
-                  const pdfUrl =  url;
+                  const pdfUrl = url;
 
                   return (
-                    <View style={{ width, height: "100%", backgroundColor: "#FFF" }}>
+                    <View
+                      style={{ width, height: "100%", backgroundColor: "#FFF" }}
+                    >
                       <WebView
                         source={{ uri: pdfUrl }}
                         style={{ flex: 1 }}
                         startInLoadingState={true}
                         renderLoading={() => (
-                          <ActivityIndicator size="large" color="#000" style={styles.webviewLoader} />
+                          <ActivityIndicator
+                            size="large"
+                            color="#000"
+                            style={styles.webviewLoader}
+                          />
                         )}
                       />
                     </View>
@@ -421,7 +573,13 @@ function InfoRow({ label, value, theme, valueColor }: any) {
   return (
     <View style={styles.infoRow}>
       <Text style={{ color: theme.mutedText, fontSize: 15 }}>{label}</Text>
-      <Text style={{ color: valueColor || theme.text, fontWeight: "700", fontSize: 15 }}>
+      <Text
+        style={{
+          color: valueColor || theme.text,
+          fontWeight: "700",
+          fontSize: 15,
+        }}
+      >
         {value}
       </Text>
     </View>
@@ -478,7 +636,7 @@ const styles = StyleSheet.create({
     padding: 20,
     marginHorizontal: 20,
     marginBottom: 20,
-    borderWidth: 0, 
+    borderWidth: 0,
   },
   sectionTitle: {
     fontSize: 18,
@@ -575,7 +733,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  
+
   // MODAL & SLIDER STYLES
   modalOverlay: {
     flex: 1,
@@ -611,5 +769,18 @@ const styles = StyleSheet.create({
     top: "50%",
     left: "50%",
     transform: [{ translateX: -18 }, { translateY: -18 }],
+  },
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+
+  actionBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });

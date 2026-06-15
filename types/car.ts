@@ -58,6 +58,21 @@ export type CarDetail = {
   expenses: ExpenseRecord[];
 };
 
+export type CarImage = {
+  url?: string;
+  fileName: boolean;
+  mimeType?: string;
+};
+
+export type CarEdit = {
+  brand: string;
+  model: string;
+  plate: string;
+  currentKm: number;
+  year: number,
+  images: CarImage[];
+};
+
 export type FuelRecord = {
   id: string;
   fuelDate: string;

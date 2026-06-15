@@ -22,7 +22,7 @@ export function CarHeader({ car }: Props) {
         {car.brand || ""} {car.model}
       </Text>
 
-      <TouchableOpacity>
+      <TouchableOpacity onPress={() => {router.push(`/vehicles/${car.id}/edit`)}}>
         <Ionicons name="settings-outline" size={24} color={theme.text} />
       </TouchableOpacity>
     </View>

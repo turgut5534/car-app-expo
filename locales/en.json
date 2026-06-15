@@ -235,7 +235,8 @@
     "addFile": "Add files",
     "type": "Service type",
     "details": "Service details",
-    "files": "Files"
+    "files": "Files",
+      "deleteConfirm": "Are you sure you want to delete this service?"
   },
   "serviceCategories": {
     "OIL_CHANGE": "Oil Change",

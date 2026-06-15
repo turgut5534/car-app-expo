@@ -90,7 +90,6 @@ export default function CreateServiceScreen() {
     }
   };
 
-
   const fetchCars = async () => {
     try {
       setCarsLoading(true);
@@ -181,7 +180,7 @@ export default function CreateServiceScreen() {
 
       if (attachments.length > 0) {
         attachments.forEach((file) => {
-          console.log(file.name)
+          console.log(file.name);
           formData.append("files", {
             uri: file.uri,
             name: file.name ?? "file",
@@ -861,10 +860,16 @@ const styles = StyleSheet.create({
     position: "relative",
   },
   dropdownOverlay: {
+    position: "absolute",
+    top: 72, // input yüksekliği + margin
+    left: 0,
+    right: 0,
     borderWidth: 1,
     borderRadius: 14,
-    marginTop: 8,
     overflow: "hidden",
+    zIndex: 9999,
+    elevation: 9999,
+    maxHeight: 250,
   },
   categoryDropdownOverlay: {
     borderWidth: 1,

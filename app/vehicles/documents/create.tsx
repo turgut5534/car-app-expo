@@ -59,16 +59,18 @@ export default function CreateDocumentScreen() {
   const { t } = useTranslation();
   const { theme } = useAppTheme();
 
-  // Çok adımlı form state'i
-  const [step, setStep] = useState<1 | 2>(1);
+  // Toplam adım sayısını 3'e çıkardık
+  const [step, setStep] = useState(1);
 
   const [title, setTitle] = useState("");
   const [type, setType] = useState<DocumentType>("REGISTRATION");
   const [expiresAt, setExpiresAt] = useState<Date | null>(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTypes, setShowTypes] = useState(false);
-  const [file, setFile] = useState<DocumentPicker.DocumentPickerAsset | null>(null);
-  
+  const [file, setFile] = useState<DocumentPicker.DocumentPickerAsset | null>(
+    null
+  );
+
   const [loading, setLoading] = useState(false);
   const [cars, setCars] = useState<Car[]>([]);
   const [selectedCarId, setSelectedCarId] = useState(carId);
@@ -108,7 +110,7 @@ export default function CreateDocumentScreen() {
       } catch (error) {
         Alert.alert(
           t("common.error"),
-          error instanceof Error ? error.message : "Araçlar yüklenemedi",
+          error instanceof Error ? error.message : "Araçlar yüklenemedi"
         );
       } finally {
         setCarsLoading(false);
@@ -144,6 +146,27 @@ export default function CreateDocumentScreen() {
     }
   };
 
+  const handleNext = () => {
+    if (step === 1 && type === "OTHER" && !title.trim()) {
+      Alert.alert(
+        t("common.error"),
+        t("documents.fillTitle", { defaultValue: "Lütfen belge başlığını girin." })
+      );
+      return;
+    }
+    if (step < 3) {
+      setStep(step + 1);
+    }
+  };
+
+  const handleBack = () => {
+    if (step > 1) {
+      setStep(step - 1);
+    } else {
+      router.back();
+    }
+  };
+
   const createDocument = async () => {
     try {
       setLoading(true);
@@ -159,11 +182,10 @@ export default function CreateDocumentScreen() {
       formData.append("type", type);
       formData.append("carId", selectedCarId);
 
-      // Sadece OTHER seçiliyse title gönderiyoruz
       if (type === "OTHER" && title.trim() !== "") {
         formData.append("title", title.trim());
-      } else{
-        setTitle(type)
+      } else {
+        setTitle(type);
       }
 
       if (expiresAt) {
@@ -203,11 +225,18 @@ export default function CreateDocumentScreen() {
     } catch (error) {
       Alert.alert(
         t("common.error"),
-        error instanceof Error ? error.message : t("documents.createFailed"),
+        error instanceof Error ? error.message : t("documents.createFailed")
       );
     } finally {
       setLoading(false);
     }
+  };
+
+  // İkonu adıma göre değiştir
+  const getStepIcon = () => {
+    if (step === 1) return "document-text-outline";
+    if (step === 2) return "cloud-upload-outline";
+    return "list-outline";
   };
 
   return (
@@ -222,15 +251,16 @@ export default function CreateDocumentScreen() {
         <ScrollView
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
+          contentContainerStyle={{ flexGrow: 1 }}
         >
           <View style={styles.headerRow}>
             <TouchableOpacity style={styles.exitButton} onPress={router.back}>
               <Ionicons name="close" size={26} color={theme.text} />
             </TouchableOpacity>
-            
-            <View style={[styles.stepIndicator, { backgroundColor: theme.card, borderColor: theme.border }]}>
-              <Text style={[styles.stepText, { color: theme.text }]}>
-                {t("documents.stepIndicator", { step: step, total: 2, defaultValue: `Adım ${step} / 2` })}
+
+            <View style={styles.stepIndicatorContainer}>
+              <Text style={[styles.stepIndicatorText, { color: theme.primary }]}>
+                {t("common.step", { defaultValue: "Adım" })} {step}/3
               </Text>
             </View>
           </View>
@@ -244,22 +274,24 @@ export default function CreateDocumentScreen() {
               },
             ]}
           >
-            <Ionicons
-              name={step === 1 ? "document-text-outline" : "cloud-upload-outline"}
-              size={56}
-              color={theme.primary}
-            />
+            <Ionicons name={getStepIcon()} size={56} color={theme.primary} />
           </View>
 
           <Text style={[styles.title, { color: theme.text }]}>
-            {t("documents.createTitle")}
+            {step === 3
+              ? t("common.summary", { defaultValue: "Özet" })
+              : t("documents.createTitle")}
           </Text>
 
           <Text style={[styles.subtitle, { color: theme.mutedText }]}>
-            {t("documents.createSubtitle")}
+            {step === 3
+              ? t("documents.checkDetailsBeforeSaving", { defaultValue: "Kaydetmeden önce belge detaylarını kontrol edin." })
+              : t("documents.createSubtitle")}
           </Text>
 
-          {/* ADIM 1: Araç, Tür ve Tarih */}
+          {/* =========================================
+              ADIM 1: ARAÇ, TÜR ve TARİH
+             ========================================= */}
           {step === 1 && (
             <View style={styles.stepContainer}>
               <View
@@ -317,13 +349,20 @@ export default function CreateDocumentScreen() {
                       <View style={{ flex: 1 }}>
                         <Text style={[styles.carTitle, { color: theme.text }]}>
                           {selectedCar
-                            ? `${selectedCar.brand || ""} ${selectedCar.model || ""}`.trim()
-                            : t("documents.selectCar", { defaultValue: "Araç seç" })}
+                            ? `${selectedCar.brand || ""} ${
+                                selectedCar.model || ""
+                              }`.trim()
+                            : t("documents.selectCar", {
+                                defaultValue: "Araç seç",
+                              })}
                         </Text>
 
                         {selectedCar?.plate ? (
                           <Text
-                            style={[styles.carSubtitle, { color: theme.mutedText }]}
+                            style={[
+                              styles.carSubtitle,
+                              { color: theme.mutedText },
+                            ]}
                           >
                             {selectedCar.plate}
                           </Text>
@@ -433,7 +472,11 @@ export default function CreateDocumentScreen() {
                     {t(`documentTypes.${type}`)}
                   </Text>
 
-                  <Ionicons name="chevron-down" size={18} color={theme.mutedText} />
+                  <Ionicons
+                    name="chevron-down"
+                    size={18}
+                    color={theme.mutedText}
+                  />
                 </TouchableOpacity>
 
                 {showTypes && (
@@ -456,11 +499,12 @@ export default function CreateDocumentScreen() {
                         onPress={() => {
                           setType(item);
                           setShowTypes(false);
-                          // Tip değiştiğinde başlığı sıfırlamak istersen:
                           if (item !== "OTHER") setTitle("");
                         }}
                       >
-                        <Text style={[styles.dropdownText, { color: theme.text }]}>
+                        <Text
+                          style={[styles.dropdownText, { color: theme.text }]}
+                        >
                           {t(`documentTypes.${item}`)}
                         </Text>
                       </TouchableOpacity>
@@ -486,7 +530,9 @@ export default function CreateDocumentScreen() {
                       ]}
                       value={title}
                       onChangeText={setTitle}
-                      placeholder={t("documents.titlePlaceholder", { defaultValue: "Belge adı girin..." })}
+                      placeholder={t("documents.titlePlaceholder", {
+                        defaultValue: "Belge adı girin...",
+                      })}
                       placeholderTextColor={theme.mutedText}
                     />
                   </>
@@ -549,20 +595,12 @@ export default function CreateDocumentScreen() {
                   </TouchableOpacity>
                 ) : null}
               </View>
-
-              {/* Sadece İleri Butonu (Geri butonu ilk adımda yok) */}
-              <TouchableOpacity
-                style={[styles.button, { backgroundColor: theme.primary, marginTop: 24 }]}
-                onPress={() => setStep(2)}
-              >
-                <Text style={styles.buttonText}>
-                  {t("common.next", { defaultValue: "İleri" })}
-                </Text>
-              </TouchableOpacity>
             </View>
           )}
 
-          {/* ADIM 2: Dosya Yükleme (Opsiyonel) */}
+          {/* =========================================
+              ADIM 2: DOSYA YÜKLEME (Opsiyonel)
+             ========================================= */}
           {step === 2 && (
             <View style={styles.stepContainer}>
               <View
@@ -610,49 +648,138 @@ export default function CreateDocumentScreen() {
                   </View>
                 </TouchableOpacity>
               </View>
-
-              {/* İkinci Adımda Geri ve Kaydet Butonları */}
-              <View style={styles.buttonRow}>
-                <TouchableOpacity
-                  style={[
-                    styles.button, 
-                    styles.flex1, 
-                    { backgroundColor: 'transparent', borderWidth: 1, borderColor: theme.primary }
-                  ]}
-                  onPress={() => setStep(1)}
-                  disabled={loading}
-                >
-                  <Text style={[styles.buttonText, { color: theme.primary }]}>
-                    {t("common.back", { defaultValue: "Geri" })}
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[
-                    styles.button, 
-                    styles.flex1, 
-                    { backgroundColor: theme.primary },
-                    loading && styles.disabledButton,
-                  ]}
-                  onPress={createDocument}
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <ActivityIndicator color="#FFFFFF" />
-                  ) : (
-                    <Text style={styles.buttonText}>
-                      {t("documents.saveDocument")}
-                    </Text>
-                  )}
-                </TouchableOpacity>
-              </View>
             </View>
           )}
 
+          {/* =========================================
+              ADIM 3: ÖZET
+             ========================================= */}
+          {step === 3 && (
+            <View
+              style={[
+                styles.summaryCard,
+                { backgroundColor: theme.card, borderColor: theme.border },
+              ]}
+            >
+              <SummaryRow
+                theme={theme}
+                label={t("documents.car", { defaultValue: "Araç" })}
+                value={
+                  selectedCar
+                    ? `${selectedCar.brand || ""} ${selectedCar.model || ""}`.trim()
+                    : "-"
+                }
+              />
+              <SummaryRow
+                theme={theme}
+                label={t("documents.type")}
+                value={
+                  type === "OTHER" && title ? title : t(`documentTypes.${type}`)
+                }
+              />
+              <SummaryRow
+                theme={theme}
+                label={t("documents.expiresAt")}
+                value={formatDate(expiresAt)}
+              />
+              <SummaryRow
+                theme={theme}
+                label={t("documents.file")}
+                value={
+                  file
+                    ? file.name
+                    : t("common.none", { defaultValue: "Eklenmedi" })
+                }
+                isLast
+              />
+            </View>
+          )}
+
+          {/* =========================================
+              NAVİGASYON BUTONLARI
+             ========================================= */}
+          <View style={styles.navigationButtons}>
+            {step > 1 && (
+              <TouchableOpacity
+                style={[
+                  styles.button,
+                  styles.backNavButton,
+                  { borderColor: theme.border },
+                ]}
+                onPress={handleBack}
+              >
+                <Text style={[styles.buttonText, { color: theme.text }]}>
+                  {t("common.back", { defaultValue: "Geri" })}
+                </Text>
+              </TouchableOpacity>
+            )}
+
+            {step < 3 ? (
+              <TouchableOpacity
+                style={[styles.button, { backgroundColor: theme.primary, flex: 1 }]}
+                onPress={handleNext}
+              >
+                <Text style={styles.buttonText}>
+                  {t("common.next", { defaultValue: "İleri" })}
+                </Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                style={[
+                  styles.button,
+                  { backgroundColor: theme.primary, flex: 1 },
+                  loading && styles.disabledButton,
+                ]}
+                onPress={createDocument}
+                disabled={loading}
+              >
+                {loading ? (
+                  <ActivityIndicator color="#FFFFFF" />
+                ) : (
+                  <Text style={styles.buttonText}>
+                    {t("documents.saveDocument")}
+                  </Text>
+                )}
+              </TouchableOpacity>
+            )}
+          </View>
+          
           <View style={{ height: 40 }} />
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
+  );
+}
+
+// Özet görünümü için yardımcı bileşen
+function SummaryRow({
+  theme,
+  label,
+  value,
+  isLast = false,
+}: {
+  theme: any;
+  label: string;
+  value: string;
+  isLast?: boolean;
+}) {
+  return (
+    <View
+      style={[
+        styles.summaryRow,
+        !isLast && { borderBottomWidth: 1, borderBottomColor: theme.border },
+      ]}
+    >
+      <Text style={[styles.summaryLabel, { color: theme.mutedText }]}>
+        {label}
+      </Text>
+      <Text
+        style={[styles.summaryValue, { color: theme.text }]}
+        numberOfLines={2}
+      >
+        {value}
+      </Text>
+    </View>
   );
 }
 
@@ -662,27 +789,27 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     marginTop: 8,
     marginBottom: 20,
   },
   exitButton: {
     padding: 4,
   },
-  stepIndicator: {
+  stepIndicatorContainer: {
+    backgroundColor: "rgba(0,0,0,0.05)",
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
-    borderWidth: 1,
   },
-  stepText: {
-    fontSize: 13,
+  stepIndicatorText: {
     fontWeight: "700",
+    fontSize: 14,
   },
   stepContainer: {
-    width: '100%',
+    width: "100%",
   },
   iconCircle: {
     width: 112,
@@ -709,6 +836,29 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     padding: 18,
   },
+  summaryCard: {
+    borderWidth: 1,
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  summaryRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 14,
+  },
+  summaryLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    flex: 1,
+  },
+  summaryValue: {
+    fontSize: 14,
+    fontWeight: "800",
+    flex: 2,
+    textAlign: "right",
+  },
   label: {
     fontSize: 13,
     fontWeight: "700",
@@ -716,9 +866,9 @@ const styles = StyleSheet.create({
     marginBottom: 7,
   },
   optionalLabelRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 7,
   },
   optionalText: {
@@ -763,8 +913,8 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "600",
   },
-  buttonRow: {
-    flexDirection: 'row',
+  navigationButtons: {
+    flexDirection: "row",
     gap: 12,
     marginTop: 24,
   },
@@ -774,8 +924,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  flex1: {
-    flex: 1,
+  backNavButton: {
+    borderWidth: 1,
+    flex: 0.4,
+    backgroundColor: "transparent",
   },
   disabledButton: {
     opacity: 0.6,

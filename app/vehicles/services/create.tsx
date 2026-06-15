@@ -180,7 +180,6 @@ export default function CreateServiceScreen() {
 
       if (attachments.length > 0) {
         attachments.forEach((file) => {
-          console.log(file.name);
           formData.append("files", {
             uri: file.uri,
             name: file.name ?? "file",
@@ -229,7 +228,10 @@ export default function CreateServiceScreen() {
       Alert.alert(t("common.error"), t("services.fillAllFields"));
       return;
     }
-    setStep(step + 1);
+    // 3. Adımın kontrolleri (hepsi opsiyonel olduğu için direkt 4'e geçebiliriz)
+    if (step < 4) {
+      setStep(step + 1);
+    }
   };
 
   const handleBack = () => {
@@ -284,7 +286,7 @@ export default function CreateServiceScreen() {
               <Text
                 style={[styles.stepIndicatorText, { color: theme.primary }]}
               >
-                {t("common.step")} {step}/3
+                {t("common.step")} {step}/4
               </Text>
             </View>
           </View>
@@ -306,11 +308,13 @@ export default function CreateServiceScreen() {
           </View>
 
           <Text style={[styles.title, { color: theme.text }]}>
-            {t("services.createTitle")}
+            {step === 4 ? t("common.summary") : t("services.createTitle")}
           </Text>
 
           <Text style={[styles.subtitle, { color: theme.mutedText }]}>
-            {t("services.createSubtitle")}
+            {step === 4
+              ? t("services.checkDetailsBeforeSaving")
+              : t("services.createSubtitle")}
           </Text>
 
           {/* =========================================
@@ -376,7 +380,9 @@ export default function CreateServiceScreen() {
                       <View style={{ flex: 1 }}>
                         <Text style={[styles.carTitle, { color: theme.text }]}>
                           {selectedCar
-                            ? `${selectedCar.brand || ""} ${selectedCar.model || ""}`.trim()
+                            ? `${selectedCar.brand || ""} ${
+                                selectedCar.model || ""
+                              }`.trim()
                             : t("services.selectVehicle")}
                         </Text>
 
@@ -477,7 +483,7 @@ export default function CreateServiceScreen() {
                   {
                     backgroundColor: theme.card,
                     borderColor: theme.border,
-                    zIndex: 40, // Car dropdown'unun altında kalması için
+                    zIndex: 40,
                     elevation: 40,
                   },
                 ]}
@@ -549,7 +555,6 @@ export default function CreateServiceScreen() {
                 )}
               </View>
 
-              {/* ÇÖZÜM: Kategori menüsü açıkken kaydırma payı yaratır */}
               {showCategories && <View style={{ height: 260 }} />}
             </>
           )}
@@ -709,6 +714,66 @@ export default function CreateServiceScreen() {
           )}
 
           {/* =========================================
+              ADIM 4: ÖZET
+             ========================================= */}
+          {step === 4 && (
+            <View
+              style={[
+                styles.summaryCard,
+                { backgroundColor: theme.card, borderColor: theme.border },
+              ]}
+            >
+              <SummaryRow
+                theme={theme}
+                label={t("services.vehicle")}
+                value={
+                  selectedCar
+                    ? `${selectedCar.brand} ${selectedCar.model}`
+                    : "-"
+                }
+              />
+              <SummaryRow
+                theme={theme}
+                label={t("services.type")}
+                value={
+                  category === "OTHER"
+                    ? title
+                    : t(`serviceCategories.${category}`)
+                }
+              />
+              <SummaryRow
+                theme={theme}
+                label={t("services.mileageKm")}
+                value={`${mileageKm} km`}
+              />
+              <SummaryRow
+                theme={theme}
+                label={t("services.date")}
+                value={date}
+              />
+              <SummaryRow
+                theme={theme}
+                label={t("services.cost")}
+                value={cost ? `${cost}` : "-"}
+              />
+              <SummaryRow
+                theme={theme}
+                label={t("services.description")}
+                value={description || "-"}
+                isLast={attachments.length === 0}
+              />
+              {attachments.length > 0 && (
+                <SummaryRow
+                  theme={theme}
+                  label={t("services.addFile")}
+                  value={`${attachments.length} ${t("services.filesSelected")}`}
+                  isLast
+                />
+              )}
+            </View>
+          )}
+
+          {/* =========================================
               NAVİGASYON BUTONLARI (İLERİ/GERİ/KAYDET)
              ========================================= */}
           <View style={styles.navigationButtons}>
@@ -727,7 +792,7 @@ export default function CreateServiceScreen() {
               </TouchableOpacity>
             )}
 
-            {step < 3 ? (
+            {step < 4 ? (
               <TouchableOpacity
                 style={[
                   styles.button,
@@ -763,6 +828,38 @@ export default function CreateServiceScreen() {
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
+  );
+}
+
+// Özet görünümü için yardımcı bileşen
+function SummaryRow({
+  theme,
+  label,
+  value,
+  isLast = false,
+}: {
+  theme: any;
+  label: string;
+  value: string;
+  isLast?: boolean;
+}) {
+  return (
+    <View
+      style={[
+        styles.summaryRow,
+        !isLast && { borderBottomWidth: 1, borderBottomColor: theme.border },
+      ]}
+    >
+      <Text style={[styles.summaryLabel, { color: theme.mutedText }]}>
+        {label}
+      </Text>
+      <Text
+        style={[styles.summaryValue, { color: theme.text }]}
+        numberOfLines={3}
+      >
+        {value}
+      </Text>
+    </View>
   );
 }
 
@@ -816,6 +913,29 @@ const styles = StyleSheet.create({
     zIndex: 1,
     elevation: 1,
   },
+  summaryCard: {
+    borderWidth: 1,
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  summaryRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 14,
+  },
+  summaryLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    flex: 1,
+  },
+  summaryValue: {
+    fontSize: 14,
+    fontWeight: "800",
+    flex: 2,
+    textAlign: "right",
+  },
   label: {
     fontSize: 13,
     fontWeight: "700",
@@ -861,7 +981,7 @@ const styles = StyleSheet.create({
   },
   dropdownOverlay: {
     position: "absolute",
-    top: 72, // input yüksekliği + margin
+    top: 72,
     left: 0,
     right: 0,
     borderWidth: 1,

@@ -44,6 +44,7 @@ export type DocumentRecord = {
   fileUrl: string;
   expiresAt?: string | null;
   createdAt: string;
+  car: CarDetail
 };
 
 export type CarDetail = {

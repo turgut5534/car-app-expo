@@ -9,11 +9,10 @@ import { DocumentItem } from "./DocumentItem";
 
 type Props = {
   documents?: DocumentRecord[];
-  onSelectDocument: (document: DocumentRecord) => void;
   carId: string
 };
 
-export function DocumentsTab({ documents = [], onSelectDocument, carId }: Props) {
+export function DocumentsTab({ documents = [], carId }: Props) {
   const { t } = useTranslation();
   const { theme } = useAppTheme();
 
@@ -39,11 +38,6 @@ export function DocumentsTab({ documents = [], onSelectDocument, carId }: Props)
           <DocumentItem
             key={document.id}
             document={document}
-            disabled={!document.fileUrl}
-            onPress={() => {
-              if (!document.fileUrl) return;
-              onSelectDocument(document);
-            }}
           />
         ))
       ) : (

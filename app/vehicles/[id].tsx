@@ -14,7 +14,6 @@ import { ServicesTab } from "../../components/vehicles/detail/ServicesTab";
 import { FuelTab } from "../../components/vehicles/detail/FuelTab";
 import { DocumentsTab } from "../../components/vehicles/detail/DocumentsTab";
 import { ComingSoonTab } from "../../components/vehicles/detail/ComingSoonTab";
-import { DocumentPreviewModal } from "../../components/vehicles/detail/DocumentPreviewModal";
 
 export default function CarDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -30,8 +29,6 @@ export default function CarDetailScreen() {
     activeTab,
     changeTabAndLoadLazy,
     servicesLoading,
-    selectedDocument,
-    setSelectedDocument,
     documentsLoading,
     fuelsLoading,
     expensesLoading
@@ -103,7 +100,7 @@ export default function CarDetailScreen() {
           documentsLoading ? (
             <ActivityIndicator color={theme.primary} />
           ) : (
-            <DocumentsTab documents={documents} onSelectDocument={setSelectedDocument} carId={car.id}/>
+            <DocumentsTab documents={documents} carId={car.id}/>
           )
         ) : null}
 
@@ -116,10 +113,6 @@ export default function CarDetailScreen() {
         ) : null}
       </ScrollView>
 
-      <DocumentPreviewModal
-        document={selectedDocument}
-        onClose={() => setSelectedDocument(null)}
-      />
     </SafeAreaView>
   );
 }

@@ -1,7 +1,7 @@
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
-
+import { router } from "expo-router";
 import { useAppTheme } from "../../../context/ThemeContext";
 import { DocumentRecord } from "../../../types/car";
 import {
@@ -12,11 +12,10 @@ import {
 
 type Props = {
   document: DocumentRecord;
-  onPress: () => void;
   disabled?: boolean;
 };
 
-export function DocumentItem({ document, onPress, disabled }: Props) {
+export function DocumentItem({ document, disabled }: Props) {
   const { theme } = useAppTheme();
   const { t } = useTranslation();
 
@@ -37,8 +36,7 @@ export function DocumentItem({ document, onPress, disabled }: Props) {
         },
       ]}
       activeOpacity={0.85}
-      disabled={disabled}
-      onPress={onPress}
+      onPress={() => router.push(`/vehicles/documents/${document.id}/details`)}
     >
       <View style={styles.documentLeft}>
         <View style={[styles.documentIconBox, { backgroundColor: config.bg }]}>

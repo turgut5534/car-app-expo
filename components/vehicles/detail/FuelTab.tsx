@@ -4,18 +4,16 @@ import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 
 import { useAppTheme } from "../../../context/ThemeContext";
-import { CarDetail, FuelRecord } from "../../../types/car";
+import { FuelRecord, FuelResponse } from "../../../types/car";
 
 type Props = {
-  car: CarDetail;
+  fuelResponse?: FuelResponse | null;
+  carId: string
 };
 
-export function FuelTab({ car }: Props) {
+export function FuelTab({ fuelResponse, carId }: Props) {
   const { t } = useTranslation();
   const { theme } = useAppTheme();
-
-  const currency = car.owner?.currency || "";
-  const fuels = car.fuelRecords ?? [];
 
   return (
     <View style={styles.container}>
@@ -25,7 +23,7 @@ export function FuelTab({ car }: Props) {
           router.push({
             pathname: "/vehicles/fuels/create",
             params: {
-              carId: car.id,
+              carId
             },
           })
         }
@@ -62,12 +60,12 @@ export function FuelTab({ car }: Props) {
             </Text>
 
             <Text style={styles.greenValue}>
-              {car.averageFuelConsumption != null
-                ? Number(car.averageFuelConsumption).toFixed(1)
+              {fuelResponse?.averageFuelConsumption != null
+                ? Number(fuelResponse.averageFuelConsumption).toFixed(1)
                 : "-"}{" "}
               L / 100 km
             </Text>
-          </View>
+          </View> 
         </View>
 
         <View
@@ -97,10 +95,10 @@ export function FuelTab({ car }: Props) {
             </Text>
 
             <Text style={[styles.blackValue, { color: theme.text }]}>
-              {car.averageFuelConsumption != null
-                ? Number(car.averageFuelPrice).toFixed(2)
+              {fuelResponse?.averageFuelConsumption != null
+                ? Number(fuelResponse.averageFuelPrice).toFixed(2)
                 : "-"}{" "}
-              {car.owner?.currency}
+              {fuelResponse?.fuels[0]?.createdBy.currency}
             </Text>
           </View>
         </View>
@@ -110,13 +108,13 @@ export function FuelTab({ car }: Props) {
         {t("cars.fuelHistory")}
       </Text>
 
-      {fuels.length > 0 ? (
+      {fuelResponse.fuels.length > 0 ? (
         <View style={styles.fuelHistoryList}>
-          {fuels.map((fuel) => (
+          {fuelResponse.fuels.map((fuel) => (
             <FuelItem
               key={fuel.id}
               fuel={fuel}
-              currency={currency}
+              currency={fuel.createdBy.currency}
               consumption={t("cars.staticConsumptionExample")}
             />
           ))}

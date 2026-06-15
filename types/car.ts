@@ -1,15 +1,36 @@
 export type Service = {
   id: string;
   title: string;
+  carId: string;
+  createdBy: User;
   serviceDate: string;
   km: number;
   amount: string;
+  car: CarDetail;
+  category: ServiceCategory;
+};
+
+export type ServiceCategory =
+  | "OIL_CHANGE"
+  | "FILTER_CHANGE"
+  | "BRAKE"
+  | "TIRE"
+  | "BATTERY"
+  | "ENGINE"
+  | "TRANSMISSION"
+  | "SUSPENSION"
+  | "AC"
+  | "INSPECTION"
+  | "WASH"
+  | "OTHER";
+
+export type User = {
   currency: string;
-  type?: "oil" | "brake" | "filter" | "spark" | "coolant";
 };
 
 export type DocumentRecord = {
   id: string;
+  carId: string;
   type:
     | "REGISTRATION"
     | "INSURANCE"
@@ -38,8 +59,8 @@ export type CarDetail = {
   totalExpenses: string;
   services: Service[];
   documents: DocumentRecord[];
-  fuelType: string,
-  averageFuelPrice: number,
+  fuelType: string;
+  averageFuelPrice: number;
   owner?: {
     currency: string;
   };
@@ -54,7 +75,7 @@ export type CarDetail = {
   };
   averageFuelConsumption?: string;
   costPerKm?: string;
-  fuelRecords : FuelRecord,
+  fuelRecords: FuelRecord;
   expenses: ExpenseRecord[];
 };
 
@@ -69,18 +90,25 @@ export type CarEdit = {
   model: string;
   plate: string;
   currentKm: number;
-  year: number,
+  year: number;
   images: CarImage[];
 };
 
+export type FuelResponse = {
+  fuels: FuelRecord[];
+  averageFuelConsumption: number;
+  averageFuelPrice: number;
+};
 export type FuelRecord = {
   id: string;
+  carId: string;
+  createdBy: User;
   fuelDate: string;
   liters: number;
   pricePerLiter: string;
   totalAmount: string;
   km: number;
-  consumption: number
+  consumption: number;
 };
 
 export type ExpenseRecord = {
@@ -88,7 +116,7 @@ export type ExpenseRecord = {
   title: string;
   description: number;
   amount: number;
-  category: ExpenseCategory[]
+  category: ExpenseCategory[];
 };
 
 export enum ExpenseCategory {

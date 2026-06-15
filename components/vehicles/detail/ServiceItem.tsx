@@ -4,6 +4,7 @@ import { router } from "expo-router";
 
 import { useAppTheme } from "../../../context/ThemeContext";
 import { Service } from "../../../types/car";
+import { useTranslation } from "react-i18next";
 
 type Props = {
   service: Service;
@@ -12,16 +13,24 @@ type Props = {
 
 export function ServiceItem({ service, currency }: Props) {
   const { theme } = useAppTheme();
+  const { t } = useTranslation();
 
   const iconMap = {
-    oil: "water-outline",
-    brake: "disc-outline",
-    filter: "options-outline",
-    spark: "flash-outline",
-    coolant: "battery-charging-outline",
+    OIL_CHANGE: "water-outline",
+    FILTER_CHANGE: "options-outline",
+    BRAKE: "disc-outline",
+    TIRE: "car-outline",
+    BATTERY: "battery-charging-outline",
+    ENGINE: "build-outline",
+    TRANSMISSION: "cog-outline",
+    SUSPENSION: "git-branch-outline",
+    AC: "snow-outline",
+    INSPECTION: "checkmark-done-outline",
+    WASH: "water-outline",
+    OTHER: "help-circle-outline",
   } as const;
 
-  const iconName = iconMap[service.type ?? "oil"];
+  const iconName = iconMap[service.category];
 
   const handlePress = () => {
     router.push({
@@ -57,7 +66,7 @@ export function ServiceItem({ service, currency }: Props) {
 
         <View style={{ flex: 1 }}>
           <Text style={[styles.serviceTitle, { color: theme.text }]}>
-            {service.title}
+            {t(`serviceCategories.${service.category}`)}
           </Text>
 
           <Text style={[styles.serviceMeta, { color: theme.mutedText }]}>
@@ -73,11 +82,7 @@ export function ServiceItem({ service, currency }: Props) {
           {service.amount} {currency}
         </Text>
 
-        <Ionicons
-          name="chevron-forward"
-          size={20}
-          color={theme.mutedText}
-        />
+        <Ionicons name="chevron-forward" size={20} color={theme.mutedText} />
       </View>
     </Pressable>
   );
@@ -120,8 +125,8 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
   rightSide: {
-  alignItems: "flex-end",
-  justifyContent: "center",
-  gap: 6,
-},
+    alignItems: "flex-end",
+    justifyContent: "center",
+    gap: 6,
+  },
 });

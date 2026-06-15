@@ -8,11 +8,12 @@ import { CarDetail, DocumentRecord } from "../../../types/car";
 import { DocumentItem } from "./DocumentItem";
 
 type Props = {
-  car: CarDetail;
+  documents?: DocumentRecord[];
   onSelectDocument: (document: DocumentRecord) => void;
+  carId: string
 };
 
-export function DocumentsTab({ car, onSelectDocument }: Props) {
+export function DocumentsTab({ documents = [], onSelectDocument, carId }: Props) {
   const { t } = useTranslation();
   const { theme } = useAppTheme();
 
@@ -24,7 +25,7 @@ export function DocumentsTab({ car, onSelectDocument }: Props) {
           router.push({
             pathname: "/vehicles/documents/create",
             params: {
-              carId: car.id,
+              carId
             },
           })
         }
@@ -33,8 +34,8 @@ export function DocumentsTab({ car, onSelectDocument }: Props) {
         <Text style={styles.addButtonText}>{t("cars.addDocument")}</Text>
       </TouchableOpacity>
 
-      {car.documents.length > 0 ? (
-        car.documents.map((document) => (
+      {documents?.length > 0 ? (
+        documents.map((document) => (
           <DocumentItem
             key={document.id}
             document={document}

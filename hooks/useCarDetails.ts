@@ -5,12 +5,15 @@ import { useFocusEffect } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
 
 import { API_URL } from "../constants/api";
-import { CarDetail, CarTabKey, DocumentRecord } from "../types/car";
+import { CarDetail, CarTabKey, DocumentRecord, FuelResponse, Service } from "../types/car";
 
 export function useCarDetail(id?: string) {
   const { t } = useTranslation();
 
   const [car, setCar] = useState<CarDetail | null>(null);
+  const [services, setServices] = useState<Service[]>([]);
+  const [documents, setDocuments] = useState<DocumentRecord[]>([]);
+  const [fuels, setFuels] = useState<FuelResponse | null>(null)
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<CarTabKey>("overview");
   const [selectedDocument, setSelectedDocument] =
@@ -50,19 +53,13 @@ export function useCarDetail(id?: string) {
       });
 
       const data = await response.json();
+  
 
       if (!response.ok) {
         throw new Error(data?.message || "Services could not be loaded");
       }
-
-      setCar((prev) =>
-        prev
-          ? {
-              ...prev,
-              services: data,
-            }
-          : prev,
-      );
+      
+      setServices((data));
 
       setLoadedTabs((prev) => ({
         ...prev,
@@ -74,12 +71,14 @@ export function useCarDetail(id?: string) {
   }, [id, getToken]);
 
   const fetchDocuments = useCallback(async () => {
+
     if (!id) return;
 
     try {
       setDocumentsLoading(true);
 
       const token = await getToken();
+
       if (!token) return;
 
       const response = await fetch(`${API_URL}/documents?carId=${id}`, {
@@ -89,19 +88,12 @@ export function useCarDetail(id?: string) {
       });
 
       const data = await response.json();
-
+      
       if (!response.ok) {
         throw new Error(data?.message || "Documents could not be loaded");
       }
 
-      setCar((prev) =>
-        prev
-          ? {
-              ...prev,
-              documents: data,
-            }
-          : prev,
-      );
+      setDocuments(data)
 
       setLoadedTabs((prev) => ({
         ...prev,
@@ -133,14 +125,7 @@ export function useCarDetail(id?: string) {
         throw new Error(data?.message || "Fuels could not be loaded");
       }
 
-      setCar((prev) =>
-        prev
-          ? {
-              ...prev,
-              fuelRecords: data,
-            }
-          : prev,
-      );
+      setFuels(data)
 
       setLoadedTabs((prev) => ({
         ...prev,
@@ -254,12 +239,6 @@ export function useCarDetail(id?: string) {
 
       setCar((prev) => ({
         ...data,
-
-        services: prev?.services ?? data.services ?? [],
-        documents: prev?.documents ?? data.documents ?? [],
-        fuelRecords: prev?.fuelRecords ?? data.fuels ?? [],
-        expenses: prev?.expenses ?? data.expenses ?? [],
-
         averageFuelConsumption: data.averageFuelConsumption,
         averageFuelPrice: data.averageFuelPrice,
       }));
@@ -270,13 +249,19 @@ export function useCarDetail(id?: string) {
     }
   }, [id, t]);
 
-useFocusEffect(
+  useFocusEffect(
     useCallback(() => {
+
       fetchCar();
-    }, [fetchCar])
+      fetchServices();
+
+    }, [fetchCar]),
   );
   return {
     car,
+    services,
+    documents,
+    fuels,
     loading,
     activeTab,
     setActiveTab,

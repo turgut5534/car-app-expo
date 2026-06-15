@@ -4,14 +4,15 @@ import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 
 import { useAppTheme } from "../../../context/ThemeContext";
-import { CarDetail } from "../../../types/car";
+import { Service } from "../../../types/car";
 import { ServiceItem } from "./ServiceItem";
 
 type Props = {
-  car: CarDetail;
+  services?: Service[];
+  carId: string
 };
 
-export function ServicesTab({ car }: Props) {
+export function ServicesTab({ services = [], carId }: Props) {
   const { t } = useTranslation();
   const { theme } = useAppTheme();
 
@@ -23,7 +24,7 @@ export function ServicesTab({ car }: Props) {
           router.push({
             pathname: "/vehicles/services/create",
             params: {
-              carId: car.id,
+              carId
             },
           })
         }
@@ -32,12 +33,13 @@ export function ServicesTab({ car }: Props) {
         <Text style={styles.addButtonText}>{t("cars.addService")}</Text>
       </TouchableOpacity>
 
-      {car.services.length > 0 ? (
-        car.services.map((service) => (
+<Text>Count: {services.length}</Text>
+      {services.length > 0 ? (
+        services.map((service) => (
           <ServiceItem
             key={service.id}
             service={service}
-            currency={car.owner?.currency || service.createdBy.currency || ""}
+            currency={service.createdBy.currency || ""}
           />
         ))
       ) : (

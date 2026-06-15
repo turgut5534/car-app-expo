@@ -23,6 +23,9 @@ export default function CarDetailScreen() {
 
   const {
     car,
+    services,
+    documents,
+    fuels,
     loading,
     activeTab,
     changeTabAndLoadLazy,
@@ -76,7 +79,7 @@ export default function CarDetailScreen() {
           servicesLoading ? (
             <ActivityIndicator color={theme.primary} />
           ) : (
-            <ServicesTab car={car} />
+            <ServicesTab services={services} carId={car.id} />
           )
         ) : null}
 
@@ -84,7 +87,7 @@ export default function CarDetailScreen() {
           fuelsLoading ? (
             <ActivityIndicator color={theme.primary} />
           ) : (
-            <FuelTab car={car} />
+            <FuelTab fuelResponse={fuels} carId={car.id}/>
           )
         ) : null}
 {/* 
@@ -100,7 +103,7 @@ export default function CarDetailScreen() {
           documentsLoading ? (
             <ActivityIndicator color={theme.primary} />
           ) : (
-            <DocumentsTab car={car} onSelectDocument={setSelectedDocument} />
+            <DocumentsTab documents={documents} onSelectDocument={setSelectedDocument} carId={car.id}/>
           )
         ) : null}
 

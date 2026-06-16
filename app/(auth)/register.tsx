@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -49,7 +51,7 @@ export default function RegisterScreen() {
           body: JSON.stringify({
             email: email.trim().toLowerCase(),
           }),
-        }
+        },
       );
 
       const data = await response.json();
@@ -81,112 +83,123 @@ export default function RegisterScreen() {
       style={[styles.container, { backgroundColor: theme.background }]}
       edges={["top", "bottom"]}
     >
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()}>
-            <Text style={[styles.back, { color: theme.text }]}>‹</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={[styles.logo, { backgroundColor: theme.primary }]}>
-          <Text style={styles.logoText}>🚗</Text>
-        </View>
-
-        <Text style={[styles.title, { color: theme.text }]}>
-          {t("register.title")}
-        </Text>
-
-        <Text style={[styles.subtitle, { color: theme.mutedText }]}>
-          {t("register.subtitle")}
-        </Text>
-
-        <TouchableOpacity
-          style={[
-            styles.socialButton,
-            {
-              backgroundColor: theme.card,
-              borderColor: theme.border,
-            },
-          ]}
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={{ paddingBottom: 40 }}
         >
-          <Text style={[styles.socialText, { color: theme.text }]}>
-            {t("register.continueWithGoogle")}
+          <View style={styles.header}>
+            <TouchableOpacity onPress={() => router.back()}>
+              <Text style={[styles.back, { color: theme.text }]}>‹</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={[styles.logo, { backgroundColor: theme.primary }]}>
+            <Text style={styles.logoText}>🚗</Text>
+          </View>
+
+          <Text style={[styles.title, { color: theme.text }]}>
+            {t("register.title")}
           </Text>
-        </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[
-            styles.socialButton,
-            {
-              backgroundColor: theme.card,
-              borderColor: theme.border,
-            },
-          ]}
-        >
-          <Text style={[styles.socialText, { color: theme.text }]}>
-            {t("register.continueWithApple")}
+          <Text style={[styles.subtitle, { color: theme.mutedText }]}>
+            {t("register.subtitle")}
           </Text>
-        </TouchableOpacity>
 
-        <View style={styles.dividerContainer}>
-          <View style={[styles.divider, { backgroundColor: theme.border }]} />
-          <Text style={[styles.dividerText, { color: theme.mutedText }]}>
-            {t("register.or")}
-          </Text>
-          <View style={[styles.divider, { backgroundColor: theme.border }]} />
-        </View>
-
-        <Text style={[styles.label, { color: theme.text }]}>
-          {t("auth.email")}
-        </Text>
-
-        <TextInput
-          style={[
-            styles.input,
-            {
-              backgroundColor: theme.card,
-              borderColor: emailError ? "#DC2626" : theme.border,
-              color: theme.text,
-            },
-          ]}
-          value={email}
-          onChangeText={(value) => {
-            setEmail(value);
-            if (emailError) setEmailError("");
-          }}
-          placeholder={t("auth.emailPlaceholder")}
-          placeholderTextColor={theme.mutedText}
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
-
-        {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
-
-        <TouchableOpacity
-          style={[
-            styles.button,
-            { backgroundColor: theme.primary },
-            loading && styles.disabledButton,
-          ]}
-          onPress={continueWithEmail}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color="#FFFFFF" />
-          ) : (
-            <Text style={styles.buttonText}>{t("common.continue")}</Text>
-          )}
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={() => router.push("/(auth)/login")}>
-          <Text style={[styles.bottomText, { color: theme.mutedText }]}>
-            {t("register.haveAccount")}{" "}
-            <Text style={[styles.link, { color: theme.primary }]}>
-              {t("auth.login")}
+          <TouchableOpacity
+            style={[
+              styles.socialButton,
+              {
+                backgroundColor: theme.card,
+                borderColor: theme.border,
+              },
+            ]}
+          >
+            <Text style={[styles.socialText, { color: theme.text }]}>
+              {t("register.continueWithGoogle")}
             </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.socialButton,
+              {
+                backgroundColor: theme.card,
+                borderColor: theme.border,
+              },
+            ]}
+          >
+            <Text style={[styles.socialText, { color: theme.text }]}>
+              {t("register.continueWithApple")}
+            </Text>
+          </TouchableOpacity>
+
+          <View style={styles.dividerContainer}>
+            <View style={[styles.divider, { backgroundColor: theme.border }]} />
+            <Text style={[styles.dividerText, { color: theme.mutedText }]}>
+              {t("register.or")}
+            </Text>
+            <View style={[styles.divider, { backgroundColor: theme.border }]} />
+          </View>
+
+          <Text style={[styles.label, { color: theme.text }]}>
+            {t("auth.email")}
           </Text>
-        </TouchableOpacity>
-      </ScrollView>
+
+          <TextInput
+            style={[
+              styles.input,
+              {
+                backgroundColor: theme.card,
+                borderColor: emailError ? "#DC2626" : theme.border,
+                color: theme.text,
+              },
+            ]}
+            value={email}
+            onChangeText={(value) => {
+              setEmail(value);
+              if (emailError) setEmailError("");
+            }}
+            placeholder={t("auth.emailPlaceholder")}
+            placeholderTextColor={theme.mutedText}
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
+
+          {emailError ? (
+            <Text style={styles.errorText}>{emailError}</Text>
+          ) : null}
+
+          <TouchableOpacity
+            style={[
+              styles.button,
+              { backgroundColor: theme.primary },
+              loading && styles.disabledButton,
+            ]}
+            onPress={continueWithEmail}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <Text style={styles.buttonText}>{t("common.continue")}</Text>
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={() => router.push("/(auth)/login")}>
+            <Text style={[styles.bottomText, { color: theme.mutedText }]}>
+              {t("register.haveAccount")}{" "}
+              <Text style={[styles.link, { color: theme.primary }]}>
+                {t("auth.login")}
+              </Text>
+            </Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

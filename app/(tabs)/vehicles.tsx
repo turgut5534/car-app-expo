@@ -17,31 +17,19 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { useAppTheme } from "../../context/ThemeContext";
-
-type Vehicle = {
-  id: string;
-  name?: string;
-  brand?: string;
-  model?: string;
-  plate: string;
-  mileage?: string;
-  currentKm?: number;
-  imageUrl?: string;
-  owner?: {
-    distanceUnit?: "km" | "mi";
-  };
-};
-
-const API_URL = "http://192.168.0.10:3000/cars";
+import { CarDetail } from "@/types/car";
+import { API_URL } from "@/constants/api";
 
 export default function VehiclesScreen() {
   const { t } = useTranslation();
   const { theme } = useAppTheme();
 
-  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [vehicles, setVehicles] = useState<CarDetail[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+  const [selectedVehicle, setSelectedVehicle] = useState<CarDetail | null>(
+    null,
+  );
   const [actionModalVisible, setActionModalVisible] = useState(false);
   const [confirmDeleteVisible, setConfirmDeleteVisible] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -63,7 +51,7 @@ export default function VehiclesScreen() {
         return;
       }
 
-      const response = await fetch(API_URL, {
+      const response = await fetch(`${API_URL}/cars`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -79,9 +67,11 @@ export default function VehiclesScreen() {
         throw new Error(t("vehicles.fetchFailed"));
       }
 
-      const data: Vehicle[] = await response.json();
+      const data: CarDetail[] = await response.json();
+
       setVehicles(data);
     } catch (err) {
+      console.log(err);
       setError(
         err instanceof Error ? err.message : t("common.somethingWentWrong"),
       );
@@ -102,7 +92,7 @@ export default function VehiclesScreen() {
 
       const token = await AsyncStorage.getItem("token");
 
-      const response = await fetch(`${API_URL}/${selectedVehicle.id}`, {
+      const response = await fetch(`${API_URL}/cars/${selectedVehicle.id}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -127,7 +117,9 @@ export default function VehiclesScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={[styles.center, { backgroundColor: theme.background }]}>
+      <SafeAreaView
+        style={[styles.center, { backgroundColor: theme.background }]}
+      >
         <ActivityIndicator size="large" color={theme.primary} />
         <Text style={[styles.loadingText, { color: theme.mutedText }]}>
           {t("vehicles.loading")}
@@ -138,7 +130,9 @@ export default function VehiclesScreen() {
 
   if (error) {
     return (
-      <SafeAreaView style={[styles.center, { backgroundColor: theme.background }]}>
+      <SafeAreaView
+        style={[styles.center, { backgroundColor: theme.background }]}
+      >
         <Ionicons name="warning-outline" size={42} color="#DC2626" />
         <Text style={[styles.error, { color: theme.text }]}>
           {t("common.error")}
@@ -188,14 +182,26 @@ export default function VehiclesScreen() {
             activeOpacity={0.85}
             onPress={() => router.push(`/vehicles/${vehicle.id}`)}
           >
-            {vehicle.imageUrl ? (
-              <Image
-                source={{
-                  uri: `http://192.168.0.10:3000/uploads/cars/${vehicle.imageUrl}`,
-                }}
-                style={styles.vehicleImage}
-                resizeMode="contain"
-              />
+            {vehicle.photos?.length > 0 ? (
+              vehicles.map((vehicle) => {
+                const coverPhoto =
+                  vehicle.photos?.find((photo) => photo.is_cover) ??
+                  vehicle.photos?.[0];
+
+                return (
+                  <TouchableOpacity key={vehicle.id}>
+                    {coverPhoto && (
+                      <Image
+                        source={{
+                          uri: `${API_URL}/${coverPhoto.url}`,
+                        }}
+                        style={styles.vehicleImage}
+                        resizeMode="contain"
+                      />
+                    )}
+                  </TouchableOpacity>
+                );
+              })
             ) : (
               <View
                 style={[
@@ -307,7 +313,10 @@ export default function VehiclesScreen() {
               </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.cancelButton} onPress={closeActionModal}>
+            <TouchableOpacity
+              style={styles.cancelButton}
+              onPress={closeActionModal}
+            >
               <Text style={[styles.cancelText, { color: theme.mutedText }]}>
                 {t("common.cancel")}
               </Text>

@@ -90,6 +90,22 @@ export default function CreateVehicleScreen() {
       );
     } finally {
       setModelsLoading(false);
+    // const fuelStats = await this.prisma.fuelRecord.aggregate({
+    //   where: {
+    //     carId,
+    //   },
+    //   _avg: {
+    //     consumption: true,
+    //     pricePerLiter: true,
+    //   }
+    // });
+
+    // return {
+    //   ...car,
+    //   averageFuelConsumption: Number(fuelStats._avg.consumption ?? 0),
+    //   averageFuelPrice: Number(fuelStats._avg.pricePerLiter ?? 0),
+    // };
+
     }
   };
 

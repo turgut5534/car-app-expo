@@ -15,33 +15,8 @@ import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { useAppTheme } from "../../context/ThemeContext";
 import { useFocusEffect } from "@react-navigation/native";
-
-type Car = {
-  id: string;
-  brand?: string;
-  model?: string;
-  plate?: string;
-  thisMonthServiceTotal: number;
-};
-
-type Reminder = {
-  id: string;
-  title: string;
-  car: string;
-  date: string;
-};
-
-type HomeData = {
-  userName: string;
-  totalCars: number;
-  thisMonthExpenses: string;
-  expenseChange: string;
-  upcomingReminders: number;
-  ownedCars: Car[];
-  reminders: Reminder[];
-};
-
-const API_URL = "http://192.168.0.10:3000/dashboard/home";
+import { CarDetail, HomeData, Reminder } from "@/types/car";
+import { API_URL } from "@/constants/api";
 
 export default function HomeScreen() {
   const { t } = useTranslation();
@@ -63,7 +38,7 @@ export default function HomeScreen() {
         return;
       }
 
-      const response = await fetch(API_URL, {
+      const response = await fetch(`${API_URL}/dashboard/home`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -305,10 +280,10 @@ export default function HomeScreen() {
                   },
                 ]}
               >
-                {car.imageUrl ? (
+                {car.photos ? (
                   <Image
                     source={{
-                      uri: `http://192.168.0.10:3000/uploads/cars/${car.imageUrl}`,
+                      uri: `${API_URL}/uploads/cars/${car.photos[0].fileName}`,
                     }}
                     style={styles.carImage}
                     resizeMode="cover"

@@ -29,8 +29,8 @@ export type User = {
   email: string;
   name: string;
   distanceUnit: string;
-  theme: string,
-  language: string
+  theme: string;
+  language: string;
 };
 
 export type DocumentRecord = {
@@ -58,8 +58,8 @@ export type OverviewData = {
   lastService: Service;
   averageFuelConsumption: number;
   lastFuel: FuelRecord;
-  costPerKilometer: number
-}
+  costPerKilometer: number;
+};
 
 export type CarDetail = {
   id: string;
@@ -68,6 +68,7 @@ export type CarDetail = {
   model?: string;
   plate: string;
   imageUrl?: string;
+  photos: CarImage[];
   currentKm: number;
   monthlyExpenses: string;
   monthlyChangePercent: number;
@@ -78,6 +79,7 @@ export type CarDetail = {
   averageFuelPrice: number;
   owner?: {
     currency: string;
+    distanceUnit: string;
   };
   lastService?: {
     date: string;
@@ -92,21 +94,26 @@ export type CarDetail = {
   costPerKm?: string;
   fuelRecords: FuelRecord;
   expenses: ExpenseRecord[];
+  thisMonthServiceTotal: number;
 };
 
 export type CarImage = {
+  id: string;
   url?: string;
-  fileName: boolean;
+  fileName: string;
+  is_cover: boolean;
   mimeType?: string;
 };
 
 export type CarEdit = {
+  id: string;
   brand: string;
+  imageUrl: string;
   model: string;
   plate: string;
   currentKm: number;
   year: number;
-  images: CarImage[];
+  photos: CarImage[];
 };
 
 export type FuelResponse = {
@@ -146,6 +153,23 @@ export enum ExpenseCategory {
   DOCUMENT = "DOCUMENT",
   OTHER = "OTHER",
 }
+
+export type Reminder = {
+  id: string;
+  title: string;
+  car: string;
+  date: string;
+};
+
+export type HomeData = {
+  userName: string;
+  totalCars: number;
+  thisMonthExpenses: string;
+  expenseChange: string;
+  upcomingReminders: number;
+  ownedCars: CarDetail[];
+  reminders: Reminder[];
+};
 
 export type CarTabKey =
   | "overview"

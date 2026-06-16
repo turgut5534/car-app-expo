@@ -16,8 +16,8 @@ export function CarHero({ car }: Props) {
   return (
     <ImageBackground
       source={
-        car.imageUrl
-          ? { uri: `${API_URL}/uploads/cars/${car.imageUrl}` }
+        car.photos
+          ? { uri: `${API_URL}/uploads/cars/${car.photos[0].fileName}` }
           : require("../../../assets/images/image.png")
       }
       style={styles.hero}

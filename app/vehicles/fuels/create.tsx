@@ -21,17 +21,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as DocumentPicker from "expo-document-picker";
 import { useAppTheme } from "../../../context/ThemeContext";
 import { API_URL } from "@/constants/api";
-
-type CarInfo = {
-  id: string;
-  brand?: string;
-  model?: string;
-  plate?: string;
-  imageUrl?: string;
-  image?: string;
-  lastFuelPricePerLiter?: number | string | null;
-  currentKm: string;
-};
+import { CarDetail } from "@/types/car";
 
 export default function CreateFuelScreen() {
   const { carId } = useLocalSearchParams<{ carId: string }>();
@@ -52,7 +42,7 @@ export default function CreateFuelScreen() {
     DocumentPicker.DocumentPickerAsset[]
   >([]);
 
-  const [cars, setCars] = useState<CarInfo[]>([]);
+  const [cars, setCars] = useState<CarDetail[]>([]);
   const [selectedCarId, setSelectedCarId] = useState(carId);
   const [showCars, setShowCars] = useState(false);
   const [carsLoading, setCarsLoading] = useState(false);
@@ -70,7 +60,7 @@ export default function CreateFuelScreen() {
     }
   }, [totalCost, pricePerLiter]);
 
-  const applyCarLastFuelPrice = (car?: CarInfo) => {
+  const applyCarLastFuelPrice = (car?: CarDetail) => {
     if (!car?.lastFuelPricePerLiter) {
       setPricePerLiter("2.50");
       return;
@@ -108,7 +98,7 @@ export default function CreateFuelScreen() {
 
       const initialCarId = selectedCarId || carList[0]?.id;
       const initialCar = carList.find(
-        (car: CarInfo) => car.id === initialCarId
+        (car: CarDetail) => car.id === initialCarId
       );
 
       if (initialCarId) {
@@ -375,11 +365,11 @@ export default function CreateFuelScreen() {
                     <ActivityIndicator color={theme.primary} />
                   ) : (
                     <>
-                      {selectedCar?.imageUrl || selectedCar?.image ? (
+                      {selectedCar?.photos ? (
                         <Image
                           source={{
                             uri: `${API_URL}/uploads/cars/${
-                              selectedCar.imageUrl || selectedCar.image
+                              selectedCar.photos[0].fileName
                             }`,
                           }}
                           style={styles.carImage}
@@ -450,11 +440,11 @@ export default function CreateFuelScreen() {
                           setShowCars(false);
                         }}
                       >
-                        {item.imageUrl || item.image ? (
+                        {item.photos ? (
                           <Image
                             source={{
                               uri: `${API_URL}/uploads/cars/${
-                                item.imageUrl || item.image
+                                item.photos[0].fileName
                               }`,
                             }}
                             style={styles.carImage}

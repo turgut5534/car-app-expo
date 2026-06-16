@@ -140,8 +140,8 @@ export default function DocumentDetailsScreen() {
   const fileUrl = `${API_URL}/uploads/documents/${doc.fileUrl}`;
   // Araç resmi için yol (Backend'in image veya imageUrl döndürmesine göre değişebilir)
   const carImageUrl =
-    doc.car.imageUrl || (doc.car as any).image
-      ? `${API_URL}/uploads/cars/${doc.car.imageUrl || (doc.car as any).image}`
+    doc.car.photos || (doc.car as any).image
+      ? `${API_URL}/uploads/cars/${doc.car.photos[0].fileName || (doc.car as any).image}`
       : null;
 
   return (

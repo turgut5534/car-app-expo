@@ -24,6 +24,7 @@ import { WebView } from "react-native-webview";
 
 import { useAppTheme } from "@/context/ThemeContext";
 import { API_URL } from "@/constants/api";
+import { CarDetail } from "@/types/car";
 
 const { width } = Dimensions.get("window");
 
@@ -43,15 +44,7 @@ type ServiceDetails = {
   km: number;
   serviceDate: string;
   createdAt: string;
-
-  car: {
-    id: string;
-    brand: string;
-    model: string;
-    plate: string;
-    imageUrl?: string;
-  };
-
+  car: CarDetail;
   attachments: Attachment[];
 };
 
@@ -274,10 +267,10 @@ export default function ServiceDetailsScreen() {
             {t("services.vehicle")}
           </Text>
           <View style={styles.vehicleRow}>
-            {service.car.imageUrl ? (
+            {service.car.photos ? (
               <Image
                 source={{
-                  uri: `${API_URL}/../uploads/cars/${service.car.imageUrl}`,
+                  uri: `${API_URL}/../uploads/cars/${service.car.photos[0].fileName}`,
                 }}
                 style={styles.vehicleImage}
               />

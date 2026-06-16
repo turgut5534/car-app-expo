@@ -21,6 +21,7 @@ import * as DocumentPicker from "expo-document-picker";
 import { useAppTheme } from "../../../context/ThemeContext";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { API_URL } from "@/constants/api";
+import { CarDetail } from "@/types/car";
 
 type DocumentType =
   | "REGISTRATION"
@@ -43,15 +44,6 @@ const documentTypes: DocumentType[] = [
   "OTHER",
 ];
 
-type Car = {
-  id: string;
-  brand?: string;
-  model?: string;
-  plate?: string;
-  imageUrl?: string;
-  image?: string;
-};
-
 export default function CreateDocumentScreen() {
   const { carId } = useLocalSearchParams<{
     carId: string;
@@ -59,7 +51,6 @@ export default function CreateDocumentScreen() {
   const { t } = useTranslation();
   const { theme } = useAppTheme();
 
-  // Toplam adım sayısını 3'e çıkardık
   const [step, setStep] = useState(1);
 
   const [title, setTitle] = useState("");
@@ -72,7 +63,7 @@ export default function CreateDocumentScreen() {
   );
 
   const [loading, setLoading] = useState(false);
-  const [cars, setCars] = useState<Car[]>([]);
+  const [cars, setCars] = useState<CarDetail[]>([]);
   const [selectedCarId, setSelectedCarId] = useState(carId);
   const [showCars, setShowCars] = useState(false);
   const [carsLoading, setCarsLoading] = useState(false);
@@ -324,10 +315,10 @@ export default function CreateDocumentScreen() {
                     <ActivityIndicator color={theme.primary} />
                   ) : (
                     <>
-                      {selectedCar?.imageUrl || selectedCar?.image ? (
+                      {selectedCar?.photos  ? (
                         <Image
                           source={{
-                            uri: `${API_URL}/../uploads/cars/${selectedCar.imageUrl}`,
+                            uri: `${API_URL}/../uploads/cars/${selectedCar.photos[0].fileName}`,
                           }}
                           style={styles.carImage}
                         />
@@ -400,10 +391,10 @@ export default function CreateDocumentScreen() {
                           setShowCars(false);
                         }}
                       >
-                        {car.imageUrl || car.image ? (
+                        {car.photos ? (
                           <Image
                             source={{
-                              uri: `${API_URL}/../uploads/cars/${car.imageUrl}`,
+                              uri: `${API_URL}/../uploads/cars/${car.photos[0].fileName}`,
                             }}
                             style={styles.carImage}
                           />

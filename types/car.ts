@@ -95,6 +95,7 @@ export type CarDetail = {
   fuelRecords: FuelRecord;
   expenses: ExpenseRecord[];
   thisMonthServiceTotal: number;
+  lastFuelPricePerLiter?: number | string | null;
 };
 
 export type CarImage = {

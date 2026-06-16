@@ -20,6 +20,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAppTheme } from "../../../context/ThemeContext";
 import { API_URL } from "@/constants/api";
 import * as DocumentPicker from "expo-document-picker";
+import { CarDetail } from "@/types/car";
 
 export const SERVICE_CATEGORIES = [
   "OIL_CHANGE",
@@ -62,17 +63,8 @@ export default function CreateServiceScreen() {
     DocumentPicker.DocumentPickerAsset[]
   >([]);
 
-  type CarInfo = {
-    id: string;
-    brand: string;
-    model: string;
-    plate: string;
-    imageUrl?: string;
-    image?: string;
-    currentKm: string;
-  };
 
-  const [cars, setCars] = useState<CarInfo[]>([]);
+  const [cars, setCars] = useState<CarDetail[]>([]);
   const [selectedCarId, setSelectedCarId] = useState(carId);
   const [showCars, setShowCars] = useState(false);
   const [carsLoading, setCarsLoading] = useState(false);
@@ -119,7 +111,7 @@ export default function CreateServiceScreen() {
 
       const initialCarId = selectedCarId || carList[0]?.id;
       const initialCar = carList.find(
-        (car: CarInfo) => car.id === initialCarId,
+        (car: CarDetail) => car.id === initialCarId,
       );
 
       if (initialCar) {
@@ -355,10 +347,10 @@ export default function CreateServiceScreen() {
                     <ActivityIndicator color={theme.primary} />
                   ) : (
                     <>
-                      {selectedCar?.imageUrl || selectedCar?.image ? (
+                      {selectedCar?.photos  ? (
                         <Image
                           source={{
-                            uri: `${API_URL}/../uploads/cars/${selectedCar.imageUrl}`,
+                            uri: `${API_URL}/../uploads/cars/${selectedCar.photos[0].fileName}`,
                           }}
                           style={styles.carImage}
                         />
@@ -430,10 +422,10 @@ export default function CreateServiceScreen() {
                           setMileageKm(item.currentKm.toString());
                         }}
                       >
-                        {item.imageUrl || item.image ? (
+                        {item.photos ? (
                           <Image
                             source={{
-                              uri: `${API_URL}/../uploads/cars/${item.imageUrl}`,
+                              uri: `${API_URL}/../uploads/cars/${item.photos[0].fileName}`,
                             }}
                             style={styles.carImage}
                           />

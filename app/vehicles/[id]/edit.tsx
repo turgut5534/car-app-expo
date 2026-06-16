@@ -46,12 +46,12 @@ export default function VehicleEditScreen() {
   const [newImage, setNewImage] = useState<string | null>(null);
   const [selectedYear, setSelectedYear] = useState("");
   const [showYears, setShowYears] = useState(false);
-  const [toast, setToast] = useState({ visible: false, message: "" });
+  const [toast, setToast] = useState({ visible: false, message: "", type: "" });
 
   const [showBrands, setShowBrands] = useState(false);
   const [showModels, setShowModels] = useState(false);
   const [availableModels, setAvailableModels] = useState<CarModel[]>([]);
-  
+
   const [activeMenuIndex, setActiveMenuIndex] = useState<number | null>(null);
 
   const fetchCarInfo = async () => {
@@ -145,9 +145,12 @@ export default function VehicleEditScreen() {
         throw new Error(errData.message || "Failed to update");
       }
 
-      setToast({ visible: true, message: "Image added" });
-      setNewImage('')
-      fetchCarInfo(); 
+      setToast({ visible: false, message: "", type: "success" });
+      setTimeout(() => {
+        setToast({ visible: true, message: "Car updated", type: "success" });
+      }, 50);
+      setNewImage("");
+      fetchCarInfo();
     } catch (e: any) {
       Alert.alert(t("common.error", "Error"), e.message);
     }
@@ -159,7 +162,10 @@ export default function VehicleEditScreen() {
 
     Alert.alert(
       t("vehicles.confirmCoverTitle", "Set Cover Photo"),
-      t("vehicles.confirmCoverMessage", "Are you sure you want to set this image as the cover photo?"),
+      t(
+        "vehicles.confirmCoverMessage",
+        "Are you sure you want to set this image as the cover photo?",
+      ),
       [
         { text: t("common.cancel", "Cancel"), style: "cancel" },
         {
@@ -168,25 +174,35 @@ export default function VehicleEditScreen() {
             try {
               setLoading(true);
               const token = await AsyncStorage.getItem("token");
-              const res = await fetch(`${API_URL}/cars/${id}/cover/${photo.id}`, {
-                method: "PATCH",
-                headers: { Authorization: `Bearer ${token}` },
-              });
+              const res = await fetch(
+                `${API_URL}/cars/${id}/cover/${photo.id}`,
+                {
+                  method: "PATCH",
+                  headers: { Authorization: `Bearer ${token}` },
+                },
+              );
 
               if (!res.ok) {
                 const data = await res.json();
                 throw new Error(data.message || "Failed to set cover photo");
               }
 
-              setToast({ visible: true, message: "Cover updated" });
-              fetchCarInfo(); 
+              setToast({ visible: false, message: "", type: "success" });
+              setTimeout(() => {
+                setToast({
+                  visible: true,
+                  message: "Cover photo changed",
+                  type: "success",
+                });
+              }, 50);
+              fetchCarInfo();
             } catch (e: any) {
               Alert.alert(t("common.error", "Error"), e.message);
               setLoading(false);
             }
           },
         },
-      ]
+      ],
     );
   };
 
@@ -196,7 +212,10 @@ export default function VehicleEditScreen() {
 
     Alert.alert(
       t("vehicles.confirmDeleteTitle", "Delete Photo"),
-      t("vehicles.confirmDeleteMessage", "Are you sure you want to permanently delete this photo?"),
+      t(
+        "vehicles.confirmDeleteMessage",
+        "Are you sure you want to permanently delete this photo?",
+      ),
       [
         { text: t("common.cancel", "Cancel"), style: "cancel" },
         {
@@ -224,9 +243,15 @@ export default function VehicleEditScreen() {
                 });
               }
 
-              setToast({ visible: true, message: "Photo deleted" });
-              fetchCarInfo()
-
+              setToast({ visible: false, message: "", type: "success" });
+              setTimeout(() => {
+                setToast({
+                  visible: true,
+                  message: "Photo deleted",
+                  type: "success",
+                });
+              }, 50);
+              fetchCarInfo();
             } catch (e: any) {
               Alert.alert(t("common.error", "Error"), e.message);
             } finally {
@@ -234,7 +259,7 @@ export default function VehicleEditScreen() {
             }
           },
         },
-      ]
+      ],
     );
   };
 
@@ -293,15 +318,21 @@ export default function VehicleEditScreen() {
                         }}
                         style={styles.image}
                       />
-                      
+
                       {/* THREE DOTS BUTTON */}
                       <TouchableOpacity
                         style={styles.dotsButton}
                         onPress={() =>
-                          setActiveMenuIndex(activeMenuIndex === index ? null : index)
+                          setActiveMenuIndex(
+                            activeMenuIndex === index ? null : index,
+                          )
                         }
                       >
-                        <Ionicons name="ellipsis-vertical" size={20} color="#FFF" />
+                        <Ionicons
+                          name="ellipsis-vertical"
+                          size={20}
+                          color="#FFF"
+                        />
                       </TouchableOpacity>
 
                       {/* OPTIONS MENU */}
@@ -309,7 +340,10 @@ export default function VehicleEditScreen() {
                         <View
                           style={[
                             styles.photoMenu,
-                            { backgroundColor: theme.card, borderColor: theme.border },
+                            {
+                              backgroundColor: theme.card,
+                              borderColor: theme.border,
+                            },
                           ]}
                         >
                           <TouchableOpacity
@@ -325,7 +359,10 @@ export default function VehicleEditScreen() {
                           </TouchableOpacity>
 
                           <TouchableOpacity
-                            style={[styles.photoMenuItem, { borderBottomWidth: 0 }]}
+                            style={[
+                              styles.photoMenuItem,
+                              { borderBottomWidth: 0 },
+                            ]}
                             onPress={() => handleDeletePhoto(photo)}
                           >
                             <Text style={{ color: "#EF4444" }}>
@@ -517,12 +554,14 @@ export default function VehicleEditScreen() {
             </View>
 
             {/* YEAR SELECTION */}
-            <View style={{
+            <View
+              style={{
                 position: "relative",
                 zIndex: 10,
                 elevation: 10,
                 marginBottom: 12,
-              }}>
+              }}
+            >
               <Text style={{ color: theme.mutedText, marginBottom: 6 }}>
                 {t("vehicles.year", "Year")}
               </Text>
@@ -595,7 +634,11 @@ export default function VehicleEditScreen() {
             />
           </View>
         </ScrollView>
-         <Toast {...toast} />
+        <Toast
+          visible={toast.visible}
+          message={toast.message}
+          type={toast.type}
+        />
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

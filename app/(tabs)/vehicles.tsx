@@ -184,21 +184,16 @@ export default function VehiclesScreen() {
           >
             {vehicle.photos?.length > 0 ? (
               vehicles.map((vehicle) => {
-                const coverPhoto =
-                  vehicle.photos?.find((photo) => photo.is_cover) ??
-                  vehicle.photos?.[0];
 
                 return (
                   <TouchableOpacity key={vehicle.id}>
-                    {coverPhoto && (
                       <Image
                         source={{
-                          uri: `${API_URL}/${coverPhoto.url}`,
+                          uri: `${API_URL}/uploads/cars/${vehicle.photos[0].fileName}`,
                         }}
                         style={styles.vehicleImage}
                         resizeMode="contain"
                       />
-                    )}
                   </TouchableOpacity>
                 );
               })

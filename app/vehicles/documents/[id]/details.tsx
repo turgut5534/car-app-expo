@@ -221,20 +221,18 @@ export default function DocumentDetailsScreen() {
         {/* DETAILS */}
         <View style={[styles.card, { backgroundColor: theme.card }]}>
           <Info
-            label={t("documents.type", "Tip")}
-            value={doc.type}
+            label={t("documents.type", "Type")}
+            value={t(`documentTypes.${doc.type}`)}
             theme={theme}
           />
           <Info
             label={t("documents.createdAt", "Created")}
-            value={new Date(doc.createdAt).toLocaleDateString()}
+            value={new Date(doc.createdAt).toLocaleDateString("pl-PL")}
             theme={theme}
           />
           <Info
             label={t("documents.expiresAt", "Expires")}
-            value={
-              doc.expiresAt ? new Date(doc.expiresAt).toLocaleDateString() : "-"
-            }
+            value={doc.expiresAt ? new Date(doc.expiresAt).toLocaleDateString("pl-PL") : "-"}
             theme={theme}
             isLast
           />

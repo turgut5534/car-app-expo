@@ -170,7 +170,7 @@ export default function ProfileScreen() {
           <MenuItem
             icon="person-outline"
             title={t("profile.profileInformation")}
-            onPress={() => {}}
+            onPress={() => {router.push('/users/profile/me')}}
           />
 
           <MenuItem

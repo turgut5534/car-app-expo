@@ -185,7 +185,7 @@ export default function VehicleEditScreen() {
             setActiveIndex(index);
           }}
           renderItem={({ item }) => (
-            <Image source={{ uri: item.uri }} style={styles.image} />
+            <Image source={{ uri: `${API_URL}/uploads/cars/${item.imageUrl}` }} style={styles.image} />
           )}
         />
 

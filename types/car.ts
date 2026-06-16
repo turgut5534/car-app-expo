@@ -26,6 +26,11 @@ export type ServiceCategory =
 
 export type User = {
   currency: string;
+  email: string;
+  name: string;
+  distanceUnit: string;
+  theme: string,
+  language: string
 };
 
 export type DocumentRecord = {
@@ -44,8 +49,17 @@ export type DocumentRecord = {
   fileUrl: string;
   expiresAt?: string | null;
   createdAt: string;
-  car: CarDetail
+  car: CarDetail;
 };
+
+export type OverviewData = {
+  montlyExpenses: number;
+  totalExpenses: number;
+  lastService: Service;
+  averageFuelConsumption: number;
+  lastFuel: FuelRecord;
+  costPerKilometer: number
+}
 
 export type CarDetail = {
   id: string;

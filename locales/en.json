@@ -81,7 +81,8 @@
     "next": "Next",
     "back": "Back",
     "optional": "Optional",
-    "step": "Step"
+    "step": "Step",
+    "save": "Save"
   },
   "vehicles": {
     "title": "MY CARS",
@@ -155,7 +156,21 @@
     "logout": "Log Out",
     "loadFailed": "Profile could not be loaded.",
     "logoutTitle": "Log Out",
-    "logoutMessage": "Are you sure you want to log out?"
+    "logoutMessage": "Are you sure you want to log out?",
+    "editProfileTitle": "Edit Profile",
+    "changePhoto": "Change Photo",
+    "firstName": "First Name",
+    "firstNamePlaceholder": "Enter your first name",
+    "lastName": "Last Name",
+    "lastNamePlaceholder": "Enter your last name",
+    "email": "Email",
+    "phone": "Phone Number",
+    "fillRequired": "Please fill in the required fields.",
+    "updateSuccess": "Your profile has been updated successfully.",
+    "updateFailed": "Failed to update profile.",
+    "currency": "Currency",
+    "distanceUnit": "Distance Unit",
+    "dark": "Dark"
   },
   "theme": {
     "light": "Light",
@@ -236,7 +251,7 @@
     "type": "Service type",
     "details": "Service details",
     "files": "Files",
-      "deleteConfirm": "Are you sure you want to delete this service?"
+    "deleteConfirm": "Are you sure you want to delete this service?"
   },
   "serviceCategories": {
     "OIL_CHANGE": "Oil Change",

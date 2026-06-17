@@ -33,6 +33,9 @@ export default function CarDetailScreen() {
     documentsLoading,
     fuelsLoading,
     overviewLoading,
+    loadingMore,
+    hasMore,  
+    loadMore,
     expensesLoading,
   } = useCarDetail(id);
 
@@ -86,7 +89,7 @@ export default function CarDetailScreen() {
           servicesLoading ? (
             <ActivityIndicator color={theme.primary} />
           ) : (
-            <ServicesTab services={services} carId={car.id} />
+            <ServicesTab services={services} carId={car.id} loadMore={loadMore} loadingMore={loadingMore} hasMore={hasMore}  />
           )
         ) : null}
 

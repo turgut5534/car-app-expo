@@ -34,6 +34,9 @@ export function useCarDetail(id?: string) {
   const [documentsLoading, setDocumentsLoading] = useState(false);
   const [fuelsLoading, setFuelsLoading] = useState(false);
   const [expensesLoading, setExpensesLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   const getToken = useCallback(async () => {
     const token = await AsyncStorage.getItem("token");
@@ -78,37 +81,51 @@ export function useCarDetail(id?: string) {
     }
   }, [id, getToken]);
 
-  const fetchServices = useCallback(async () => {
-    if (!id) return;
+  const fetchServices = useCallback(
+    async (pageNumber = 1, append = false) => {
+      if (!id) return;
 
-    try {
-      setServicesLoading(true);
+      try {
+        if (pageNumber === 1) {
+          setServicesLoading(true);
+        } else {
+          setLoadingMore(true);
+        }
 
-      const token = await getToken();
-      if (!token) return;
+        const token = await getToken();
+        if (!token) return;
 
-      const response = await fetch(`${API_URL}/services?carId=${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+        const response = await fetch(
+          `${API_URL}/services?carId=${id}&page=${pageNumber}&limit=10`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          },
+        );
 
-      const data = await response.json();
+        const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(data?.message || "Services could not be loaded");
+        if (!response.ok) {
+          throw new Error(data?.message || "Services could not be loaded");
+        }
+
+        setServices((prev) => (append ? [...prev, ...data.items] : data.items));
+
+        setPage(pageNumber);
+        setHasMore(data.hasMore);
+        setLoadingMore(false);
+
+        setLoadedTabs((prev) => ({
+          ...prev,
+          services: true,
+        }));
+      } finally {
+        setServicesLoading(false);
       }
-
-      setServices(data);
-
-      setLoadedTabs((prev) => ({
-        ...prev,
-        services: true,
-      }));
-    } finally {
-      setServicesLoading(false);
-    }
-  }, [id, getToken]);
+    },
+    [id, getToken],
+  );
 
   const fetchDocuments = useCallback(async () => {
     if (!id) return;
@@ -293,11 +310,17 @@ export function useCarDetail(id?: string) {
     }
   }, [id, t]);
 
+  const loadMore = () => {
+    if (loadingMore || !hasMore) return;
+
+    fetchServices(page + 1, true);
+  };
+
   useFocusEffect(
     useCallback(() => {
       fetchCar();
-      fetchOverView()
-      fetchServices();
+      fetchOverView();
+      fetchServices(1, false);
     }, [fetchCar]),
   );
   return {
@@ -317,6 +340,9 @@ export function useCarDetail(id?: string) {
     refetch: fetchCar,
     fuelsLoading,
     expensesLoading,
-    overviewLoading
+    overviewLoading,
+    loadMore,
+    loadingMore,
+    hasMore,  
   };
 }

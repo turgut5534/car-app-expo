@@ -1,4 +1,10 @@
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  ActivityIndicator,
+} from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
@@ -9,10 +15,19 @@ import { ServiceItem } from "./ServiceItem";
 
 type Props = {
   services?: Service[];
-  carId: string
+  carId: string;
+  loadMore: () => void;
+  loadingMore: boolean;
+  hasMore: boolean;
 };
 
-export function ServicesTab({ services = [], carId }: Props) {
+export function ServicesTab({
+  services = [],
+  carId,
+  loadMore,
+  loadingMore,
+  hasMore,
+}: Props) {
   const { t } = useTranslation();
   const { theme } = useAppTheme();
 
@@ -24,7 +39,7 @@ export function ServicesTab({ services = [], carId }: Props) {
           router.push({
             pathname: "/vehicles/services/create",
             params: {
-              carId
+              carId,
             },
           })
         }
@@ -33,15 +48,37 @@ export function ServicesTab({ services = [], carId }: Props) {
         <Text style={styles.addButtonText}>{t("cars.addService")}</Text>
       </TouchableOpacity>
 
-<Text>Count: {services.length}</Text>
+      <Text>Count: {services.length}</Text>
+
       {services.length > 0 ? (
-        services.map((service) => (
-          <ServiceItem
-            key={service.id}
-            service={service}
-            currency={service.createdBy.currency || ""}
-          />
-        ))
+        <>
+          {services.map((service) => (
+            <ServiceItem
+              key={service.id}
+              service={service}
+              currency={service.createdBy.currency || ""}
+            />
+          ))}
+
+          {hasMore && (
+            <TouchableOpacity
+              onPress={loadMore}
+              disabled={loadingMore}
+              style={[
+                styles.loadMoreButton,
+                { borderColor: theme.border },
+              ]}
+            >
+              {loadingMore ? (
+                <ActivityIndicator color={theme.primary} />
+              ) : (
+                <Text style={{ color: theme.text }}>
+                  Load More
+                </Text>
+              )}
+            </TouchableOpacity>
+          )}
+        </>
       ) : (
         <View
           style={[
@@ -52,7 +89,9 @@ export function ServicesTab({ services = [], carId }: Props) {
             },
           ]}
         >
-          <Text style={{ color: theme.mutedText }}>{t("cars.noServices")}</Text>
+          <Text style={{ color: theme.mutedText }}>
+            {t("cars.noServices")}
+          </Text>
         </View>
       )}
     </View>
@@ -82,6 +121,13 @@ const styles = StyleSheet.create({
     padding: 24,
     borderRadius: 16,
     borderWidth: 1,
+    alignItems: "center",
+  },
+  loadMoreButton: {
+    marginTop: 16,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderRadius: 10,
     alignItems: "center",
   },
 });

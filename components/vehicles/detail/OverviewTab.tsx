@@ -2,15 +2,15 @@ import { View, StyleSheet } from "react-native";
 import { useTranslation } from "react-i18next";
 
 import { useAppTheme } from "../../../context/ThemeContext";
-import { CarDetail } from "../../../types/car";
+import { OverviewData } from "../../../types/car";
 import { StatCard } from "./StatCard";
 import { InfoCard } from "./InfoCard";
 
 type Props = {
-  car: CarDetail;
+  overview: OverviewData;
 };
 
-export function OverviewTab({ car }: Props) {
+export function OverviewTab({ overview }: Props) {
   const { t } = useTranslation();
   const { theme } = useAppTheme();
 
@@ -18,15 +18,19 @@ export function OverviewTab({ car }: Props) {
     <View style={styles.grid}>
       <StatCard
         title={t("cars.thisMonthExpenses")}
-        value={car.monthlyExpenses}
-        sub={`↑ ${car.monthlyChangePercent}% ${t("cars.vsLastMonth")}`}
+        value={
+          overview.montlyExpenses
+            ? overview.montlyExpenses.toLocaleString()
+            : ""
+        }
+        sub={`↑ ${overview.montlyExpenses ? overview.montlyExpenses.toLocaleString() : ""}% ${t("cars.vsLastMonth")}`}
         icon="trending-up-outline"
         accent="#16A34A"
       />
 
       <StatCard
         title={t("cars.totalExpenses")}
-        value={car.totalExpenses}
+        value={overview.totalExpenses.toLocaleString()}
         sub={t("cars.allTime")}
         icon="stats-chart-outline"
         accent={theme.primary}
@@ -35,30 +39,42 @@ export function OverviewTab({ car }: Props) {
       <InfoCard
         icon="construct-outline"
         title={t("cars.lastService")}
-        line1={car.lastService?.date || "-"}
-        line2={car.lastService?.title || "-"}
+        line1={
+          overview.lastService?.serviceDate
+            ? new Date(overview.lastService.serviceDate)
+                .toLocaleDateString("en-GB")
+                .replace(/\//g, ".")
+            : "-"
+        }
+        line2={overview.lastService?.title || "-"}
       />
 
       <InfoCard
         icon="document-text-outline"
         title={t("cars.averageFuelConsumption")}
-        line1={car.averageFuelConsumption || "-"}
+        line1={overview.averageFuelConsumption.toLocaleString() || "-"}
         line2=""
       />
 
       <InfoCard
         icon="water-outline"
         title={t("cars.lastFuel")}
-        line1={car.lastFuel?.date || "-"}
+        line1={
+          overview.lastFuel?.fuelDate
+            ? new Date(overview.lastFuel.fuelDate).toLocaleDateString("tr-TR")
+            : "-"
+        }
         line2={
-          car.lastFuel ? `${car.lastFuel.amount} / ${car.lastFuel.cost}` : "-"
+          overview.lastFuel
+            ? `${overview.lastFuel.liters} / ${overview.lastFuel.totalAmount}`
+            : "-"
         }
       />
 
       <InfoCard
         icon="speedometer-outline"
         title={t("cars.costPerKm")}
-        line1={car.costPerKm || "-"}
+        line1={overview.costPerKilometer.toLocaleString() || "-"}
         line2=""
       />
     </View>

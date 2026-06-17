@@ -23,6 +23,7 @@ export default function CarDetailScreen() {
   const {
     car,
     services,
+    overview,
     documents,
     fuels,
     loading,
@@ -31,7 +32,8 @@ export default function CarDetailScreen() {
     servicesLoading,
     documentsLoading,
     fuelsLoading,
-    expensesLoading
+    overviewLoading,
+    expensesLoading,
   } = useCarDetail(id);
 
   if (loading) {
@@ -70,7 +72,15 @@ export default function CarDetailScreen() {
 
         <CarTabs activeTab={activeTab} onChange={changeTabAndLoadLazy} />
 
-        {activeTab === "overview" ? <OverviewTab car={car} /> : null}
+        {activeTab === "overview" ? (
+          overviewLoading ? (
+            <ActivityIndicator color={theme.primary} />
+          ) : overview ? (
+            <OverviewTab overview={overview} />
+          ) : (
+            <Text>No overview data</Text>
+          )
+        ) : null}
 
         {activeTab === "services" ? (
           servicesLoading ? (
@@ -84,10 +94,10 @@ export default function CarDetailScreen() {
           fuelsLoading ? (
             <ActivityIndicator color={theme.primary} />
           ) : (
-            <FuelTab fuelResponse={fuels} carId={car.id}/>
+            <FuelTab fuelResponse={fuels} carId={car.id} />
           )
         ) : null}
-{/* 
+        {/* 
         {activeTab === "expenses" ? (
           expensesLoading ? (
             <ActivityIndicator color={theme.primary} />
@@ -100,7 +110,7 @@ export default function CarDetailScreen() {
           documentsLoading ? (
             <ActivityIndicator color={theme.primary} />
           ) : (
-            <DocumentsTab documents={documents} carId={car.id}/>
+            <DocumentsTab documents={documents} carId={car.id} />
           )
         ) : null}
 
@@ -112,7 +122,6 @@ export default function CarDetailScreen() {
           <ComingSoonTab />
         ) : null}
       </ScrollView>
-
     </SafeAreaView>
   );
 }

@@ -183,9 +183,6 @@ export default function VehiclesScreen() {
             onPress={() => router.push(`/vehicles/${vehicle.id}`)}
           >
             {vehicle.photos?.length > 0 ? (
-              vehicles.map((vehicle) => {
-
-                return (
                   <TouchableOpacity key={vehicle.id}>
                       <Image
                         source={{
@@ -195,8 +192,6 @@ export default function VehiclesScreen() {
                         resizeMode="contain"
                       />
                   </TouchableOpacity>
-                );
-              })
             ) : (
               <View
                 style={[

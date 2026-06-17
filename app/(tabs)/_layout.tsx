@@ -4,11 +4,13 @@ import { Tabs, router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { useAppTheme } from "../../context/ThemeContext";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function TabsLayout() {
   const { t } = useTranslation();
   const { theme } = useAppTheme();
   const [quickAddVisible, setQuickAddVisible] = useState(false);
+  const insets = useSafeAreaInsets();
 
   return (
     <>
@@ -20,7 +22,7 @@ export default function TabsLayout() {
           tabBarStyle: {
             backgroundColor: theme.card,
             borderTopColor: theme.border,
-            height: 72,
+            height: 72 + insets.bottom,
             paddingBottom: 8,
           },
         }}
@@ -225,8 +227,7 @@ const styles = StyleSheet.create({
     borderRadius: 31,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 30,
-    elevation: 8,
+    transform: [{ translateY: -18 }],
   },
   overlay: {
     flex: 1,

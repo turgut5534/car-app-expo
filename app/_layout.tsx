@@ -4,6 +4,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 
+
 import { initI18n } from "../i18n";
 import { AppThemeProvider, useAppTheme } from "../context/ThemeContext";
 

@@ -16,8 +16,7 @@ import { useTranslation } from "react-i18next";
 import { useAppTheme } from "../../context/ThemeContext";
 
 type User = {
-  firstName?: string;
-  lastName?: string;
+  name: string;
   email?: string;
   avatarUrl?: string;
   isPremium?: boolean;
@@ -123,10 +122,6 @@ export default function ProfileScreen() {
     );
   }
 
-  const fullName =
-    `${user?.firstName ?? ""} ${user?.lastName ?? ""}`.trim() ||
-    t("profile.guestUser");
-
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: theme.background }]}
@@ -143,7 +138,7 @@ export default function ProfileScreen() {
           </View>
 
           <View style={styles.profileInfo}>
-            <Text style={styles.name}>{fullName}</Text>
+            <Text style={styles.name}>{user?.name}</Text>
             <Text style={styles.email}>{user?.email}</Text>
 
             {user?.isPremium ? (

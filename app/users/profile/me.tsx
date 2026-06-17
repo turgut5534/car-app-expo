@@ -18,7 +18,6 @@ import { router } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as ImagePicker from "expo-image-picker";
 import { useTranslation } from "react-i18next";
-import { User } from "@/types/car";
 import { useAppTheme } from "@/context/ThemeContext";
 import { API_URL } from "@/constants/api";
 
@@ -99,8 +98,8 @@ export default function EditProfileScreen() {
         } as any);
       }
 
-      const response = await fetch(`${API_URL}/users/profile`, {
-        method: "PUT",
+      const response = await fetch(`${API_URL}/users`, {
+        method: "PATCH",
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });

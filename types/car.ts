@@ -113,6 +113,7 @@ export type CarEdit = {
   model: string;
   plate: string;
   currentKm: number;
+  fuelType: string;
   year: number;
   photos: CarImage[];
 };

@@ -33,6 +33,9 @@ type CarModel = {
   Model_Name: string;
 };
 
+const fuelTypes = ["PETROL", "DIESEL", "LPG", "ELECTRIC"] as const;
+type FuelType = (typeof fuelTypes)[number];
+
 export default function VehicleEditScreen() {
   const { t } = useTranslation();
   const { theme } = useAppTheme();
@@ -41,16 +44,17 @@ export default function VehicleEditScreen() {
     String(new Date().getFullYear() - i),
   );
 
+  const [selectedFuelType, setSelectedFuelType] = useState<FuelType | "">("");
   const [loading, setLoading] = useState(true);
   const [car, setCar] = useState<CarEdit | null>(null);
   const [newImage, setNewImage] = useState<string | null>(null);
-  const [selectedYear, setSelectedYear] = useState("");
   const [showYears, setShowYears] = useState(false);
   const [toast, setToast] = useState({ visible: false, message: "", type: "" });
 
   const [showBrands, setShowBrands] = useState(false);
   const [showModels, setShowModels] = useState(false);
   const [availableModels, setAvailableModels] = useState<CarModel[]>([]);
+  const [showFuelTypes, setShowFuelTypes] = useState(false);
 
   const [activeMenuIndex, setActiveMenuIndex] = useState<number | null>(null);
 
@@ -66,7 +70,6 @@ export default function VehicleEditScreen() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
 
-      setSelectedYear(data.year);
       setCar(data);
 
       if (data.brand) {
@@ -122,8 +125,9 @@ export default function VehicleEditScreen() {
       formData.append("carId", car.id);
       formData.append("brand", car.brand);
       formData.append("model", car.model);
-      formData.append("year", selectedYear);
+      formData.append("year", String(car.year));
       formData.append("plate", car.plate);
+      formData.append("fuelType", car.fuelType);
       formData.append("currentKm", String(car.currentKm));
 
       if (newImage) {
@@ -152,7 +156,14 @@ export default function VehicleEditScreen() {
       setNewImage("");
       fetchCarInfo();
     } catch (e: any) {
-      Alert.alert(t("common.error", "Error"), e.message);
+      setToast({ visible: false, message: "", type: "success" });
+      setTimeout(() => {
+        setToast({
+          visible: true,
+          message: e.message,
+          type: "error",
+        });
+      }, 50);
     }
   };
 
@@ -197,7 +208,14 @@ export default function VehicleEditScreen() {
               }, 50);
               fetchCarInfo();
             } catch (e: any) {
-              Alert.alert(t("common.error", "Error"), e.message);
+              setToast({ visible: false, message: "", type: "success" });
+              setTimeout(() => {
+                setToast({
+                  visible: true,
+                  message: e.message,
+                  type: "error",
+                });
+              }, 50);
               setLoading(false);
             }
           },
@@ -253,7 +271,14 @@ export default function VehicleEditScreen() {
               }, 50);
               fetchCarInfo();
             } catch (e: any) {
-              Alert.alert(t("common.error", "Error"), e.message);
+              setToast({ visible: false, message: "", type: "success" });
+              setTimeout(() => {
+                setToast({
+                  visible: true,
+                  message: e.message,
+                  type: "error",
+                });
+              }, 50);
             } finally {
               setLoading(false);
             }
@@ -574,15 +599,16 @@ export default function VehicleEditScreen() {
                   setShowYears(!showYears);
                   setShowBrands(false);
                   setShowModels(false);
+                  setShowFuelTypes(false)
                 }}
               >
                 <Text
                   style={[
                     styles.inputText,
-                    { color: selectedYear ? theme.text : theme.mutedText },
+                    { color: car.year ? theme.text : theme.mutedText },
                   ]}
                 >
-                  {selectedYear || t("vehicles.yearPlaceholder", "Select Year")}
+                  {car.year || t("vehicles.yearPlaceholder", "Select Year")}
                 </Text>
                 <Ionicons
                   name="chevron-down"
@@ -606,7 +632,7 @@ export default function VehicleEditScreen() {
                           { borderBottomColor: theme.border },
                         ]}
                         onPress={() => {
-                          setSelectedYear(year);
+                          updateField('year', year);
                           setShowYears(false);
                         }}
                       >
@@ -621,6 +647,76 @@ export default function VehicleEditScreen() {
                 </View>
               )}
             </View>
+
+            <View
+              style={{
+                position: "relative",
+                zIndex: 10,
+                elevation: 10,
+                marginBottom: 12,
+              }}
+            >
+              <Text style={{ color: theme.mutedText, marginBottom: 6 }}>
+                {t("vehicles.fuelType")}
+              </Text>
+              <TouchableOpacity
+                style={[
+                  styles.dropdownInput,
+                  { backgroundColor: theme.card, borderColor: theme.border },
+                ]}
+                onPress={() => {
+                  setShowFuelTypes(!showFuelTypes);
+                  setShowModels(false);
+                  setShowBrands(false);
+                  setShowYears(false);
+                }}
+              >
+                <Text
+                  style={[
+                    styles.inputText,
+                    { color: selectedFuelType ? theme.text : theme.mutedText },
+                  ]}
+                >
+                  {car.fuelType
+                    ? t(`vehicles.fuelTypes.${car.fuelType}`)
+                    : t("vehicles.fuelTypePlaceholder")}
+                </Text>
+                <Ionicons
+                  name="chevron-down"
+                  size={20}
+                  color={theme.mutedText}
+                />
+              </TouchableOpacity>
+              {showFuelTypes && (
+                <View
+                  style={[
+                    styles.dropdownOverlay,
+                    { backgroundColor: theme.card, borderColor: theme.border },
+                  ]}
+                >
+                  {fuelTypes.map((fuel) => (
+                    <TouchableOpacity
+                      key={fuel}
+                      style={[
+                        styles.dropdownItem,
+                        { borderBottomColor: theme.border },
+                      ]}
+                      onPress={() => {
+                        updateField("fuelType", fuel);
+                        setShowFuelTypes(false);
+                      }}
+                    >
+                      <Text
+                        style={[styles.dropdownText, { color: theme.text }]}
+                      >
+                        {t(`vehicles.fuelTypes.${fuel}`)}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+            </View>
+
             <Input
               label={t("vehicles.plate", "Plate")}
               value={car.plate}

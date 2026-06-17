@@ -8,6 +8,7 @@ export type Service = {
   amount: string;
   car: CarDetail;
   category: ServiceCategory;
+  createdAt: string;
 };
 
 export type ServiceCategory =

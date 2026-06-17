@@ -106,7 +106,14 @@ export function ServicesTab({
         </TouchableOpacity>
       </View>
 
-      <Text>Count: {filteredServices.length}</Text>
+      <Text
+        style={{
+          color: theme.mutedText,
+          marginBottom: 12,
+        }}
+      >
+        {t("services.totalServices")}: {filteredServices.length}{" "}
+      </Text>
 
       {services.length > 0 ? (
         <>

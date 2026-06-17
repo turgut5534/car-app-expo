@@ -251,7 +251,8 @@
     "type": "Service type",
     "details": "Service details",
     "files": "Files",
-    "deleteConfirm": "Are you sure you want to delete this service?"
+    "deleteConfirm": "Are you sure you want to delete this service?",
+    "totalServices": "Total Services"
   },
   "serviceCategories": {
     "OIL_CHANGE": "Oil Change",

@@ -16,7 +16,7 @@ export function FuelTab({ fuelResponse, carId }: Props) {
   const { t } = useTranslation();
   const { theme } = useAppTheme();
 
-  type FuelSortBy = "date" | "price" | "pricePerLiter";
+  type FuelSortBy = "date" | "price" | "consumption";
 
   const [sortBy, setSortBy] = useState<FuelSortBy>("date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
@@ -31,10 +31,10 @@ export function FuelTab({ fuelResponse, carId }: Props) {
             ? Number(b.totalAmount) - Number(a.totalAmount)
             : Number(a.totalAmount) - Number(b.totalAmount);
 
-        case "pricePerLiter":
+        case "consumption":
           return sortOrder === "desc"
-            ? Number(b.pricePerLiter) - Number(a.pricePerLiter)
-            : Number(a.pricePerLiter) - Number(b.pricePerLiter);
+            ? Number(b.consumption) - Number(a.consumption)
+            : Number(a.consumption) - Number(b.consumption);
 
         case "date":
         default:
@@ -151,32 +151,32 @@ export function FuelTab({ fuelResponse, carId }: Props) {
               styles.sortChip,
               {
                 backgroundColor:
-                  sortBy === "pricePerLiter" ? theme.primary : theme.card,
+                  sortBy === "consumption" ? theme.primary : theme.card,
                 borderColor: theme.border,
               },
             ]}
             onPress={() => {
-              if (sortBy === "pricePerLiter") {
+              if (sortBy === "consumption") {
                 setSortOrder((prev) => (prev === "desc" ? "asc" : "desc"));
               } else {
-                setSortBy("pricePerLiter");
+                setSortBy("consumption");
               }
             }}
           >
             <Ionicons
               name="speedometer-outline"
               size={16}
-              color={sortBy === "pricePerLiter" ? "#fff" : theme.text}
+              color={sortBy === "consumption" ? "#fff" : theme.text}
             />
             <Text
               style={{
-                color: sortBy === "pricePerLiter" ? "#fff" : theme.text,
+                color: sortBy === "consumption" ? "#fff" : theme.text,
               }}
             >
-              Litre Price
+              Consumption
             </Text>
 
-            {sortBy === "pricePerLiter" && (
+            {sortBy === "consumption" && (
               <Ionicons
                 name={sortOrder === "desc" ? "arrow-down" : "arrow-up"}
                 size={14}

@@ -1,21 +1,49 @@
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  TextInput,
+} from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 
 import { useAppTheme } from "../../../context/ThemeContext";
-import { CarDetail, DocumentRecord } from "../../../types/car";
+import { DocumentRecord } from "../../../types/car";
 import { DocumentItem } from "./DocumentItem";
+import { useMemo, useState } from "react";
 
 type Props = {
   documents?: DocumentRecord[];
-  carId: string
+  carId: string;
 };
 
 export function DocumentsTab({ documents = [], carId }: Props) {
   const { t } = useTranslation();
   const { theme } = useAppTheme();
+  const [search, setSearch] = useState("");
+  const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
 
+  const filteredDocuments = useMemo(() => {
+    let result = [...documents];
+
+    if (search.trim()) {
+      result = result.filter((service) =>
+        service.title?.toLowerCase().includes(search.toLowerCase()),
+      );
+    }
+
+    result.sort((a, b) => {
+      const dateA = new Date(a.createdAt).getTime();
+      const dateB = new Date(b.createdAt).getTime();
+
+      return sortOrder === "desc" ? dateB - dateA : dateA - dateB;
+    });
+
+    return result;
+  }, [documents, search, sortOrder]);
+  
   return (
     <View style={styles.tabContent}>
       <TouchableOpacity
@@ -24,7 +52,7 @@ export function DocumentsTab({ documents = [], carId }: Props) {
           router.push({
             pathname: "/vehicles/documents/create",
             params: {
-              carId
+              carId,
             },
           })
         }
@@ -33,12 +61,44 @@ export function DocumentsTab({ documents = [], carId }: Props) {
         <Text style={styles.addButtonText}>{t("cars.addDocument")}</Text>
       </TouchableOpacity>
 
-      {documents?.length > 0 ? (
-        documents.map((document) => (
-          <DocumentItem
-            key={document.id}
-            document={document}
+      <View style={styles.filtersRow}>
+        <TextInput
+          value={search}
+          onChangeText={setSearch}
+          placeholder="Search documents..."
+          placeholderTextColor={theme.mutedText}
+          style={[
+            styles.searchInput,
+            {
+              backgroundColor: theme.card,
+              borderColor: theme.border,
+              color: theme.text,
+            },
+          ]}
+        />
+
+        <TouchableOpacity
+          style={[
+            styles.sortButton,
+            {
+              borderColor: theme.border,
+            },
+          ]}
+          onPress={() =>
+            setSortOrder((prev) => (prev === "desc" ? "asc" : "desc"))
+          }
+        >
+          <Ionicons
+            name={sortOrder === "desc" ? "arrow-down" : "arrow-up"}
+            size={18}
+            color={theme.text}
           />
+        </TouchableOpacity>
+      </View>
+
+      {filteredDocuments?.length > 0 ? (
+        filteredDocuments.map((document) => (
+          <DocumentItem key={document.id} document={document} />
         ))
       ) : (
         <View
@@ -83,5 +143,27 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1,
     alignItems: "center",
+  },
+  filtersRow: {
+    flexDirection: "row",
+    gap: 8,
+    marginBottom: 16,
+  },
+
+  searchInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    height: 44,
+  },
+
+  sortButton: {
+    width: 44,
+    height: 44,
+    borderWidth: 1,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });

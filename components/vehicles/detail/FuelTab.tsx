@@ -5,15 +5,47 @@ import { useTranslation } from "react-i18next";
 
 import { useAppTheme } from "../../../context/ThemeContext";
 import { FuelRecord, FuelResponse } from "../../../types/car";
+import { useMemo, useState } from "react";
 
 type Props = {
   fuelResponse?: FuelResponse | null;
-  carId: string
+  carId: string;
 };
 
 export function FuelTab({ fuelResponse, carId }: Props) {
   const { t } = useTranslation();
   const { theme } = useAppTheme();
+
+  type FuelSortBy = "date" | "price" | "pricePerLiter";
+
+  const [sortBy, setSortBy] = useState<FuelSortBy>("date");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+
+  const sortedFuels = useMemo(() => {
+    const result = [...(fuelResponse?.fuels ?? [])];
+
+    result.sort((a, b) => {
+      switch (sortBy) {
+        case "price":
+          return sortOrder === "desc"
+            ? Number(b.totalAmount) - Number(a.totalAmount)
+            : Number(a.totalAmount) - Number(b.totalAmount);
+
+        case "pricePerLiter":
+          return sortOrder === "desc"
+            ? Number(b.pricePerLiter) - Number(a.pricePerLiter)
+            : Number(a.pricePerLiter) - Number(b.pricePerLiter);
+
+        case "date":
+        default:
+          return sortOrder === "desc"
+            ? new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            : new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      }
+    });
+
+    return result;
+  }, [fuelResponse, sortBy, sortOrder]);
 
   return (
     <View style={styles.container}>
@@ -23,7 +55,7 @@ export function FuelTab({ fuelResponse, carId }: Props) {
           router.push({
             pathname: "/vehicles/fuels/create",
             params: {
-              carId
+              carId,
             },
           })
         }
@@ -31,6 +63,129 @@ export function FuelTab({ fuelResponse, carId }: Props) {
         <Ionicons name="water" size={22} color="#fff" />
         <Text style={styles.addButtonText}>{t("cars.addFuel")}</Text>
       </TouchableOpacity>
+
+      <View style={styles.filtersRow}>
+        <View style={styles.sortContainer}>
+          {/* DATE */}
+          <TouchableOpacity
+            style={[
+              styles.sortChip,
+              {
+                backgroundColor: sortBy === "date" ? theme.primary : theme.card,
+                borderColor: theme.border,
+              },
+            ]}
+            onPress={() => {
+              if (sortBy === "date") {
+                setSortOrder((prev) => (prev === "desc" ? "asc" : "desc"));
+              } else {
+                setSortBy("date");
+              }
+            }}
+          >
+            <Ionicons
+              name="calendar-outline"
+              size={16}
+              color={sortBy === "date" ? "#fff" : theme.text}
+            />
+            <Text
+              style={{
+                color: sortBy === "date" ? "#fff" : theme.text,
+              }}
+            >
+              Date
+            </Text>
+
+            {sortBy === "date" && (
+              <Ionicons
+                name={sortOrder === "desc" ? "arrow-down" : "arrow-up"}
+                size={14}
+                color="#fff"
+              />
+            )}
+          </TouchableOpacity>
+
+          {/* PRICE */}
+          <TouchableOpacity
+            style={[
+              styles.sortChip,
+              {
+                backgroundColor:
+                  sortBy === "price" ? theme.primary : theme.card,
+                borderColor: theme.border,
+              },
+            ]}
+            onPress={() => {
+              if (sortBy === "price") {
+                setSortOrder((prev) => (prev === "desc" ? "asc" : "desc"));
+              } else {
+                setSortBy("price");
+              }
+            }}
+          >
+            <Ionicons
+              name="cash-outline"
+              size={16}
+              color={sortBy === "price" ? "#fff" : theme.text}
+            />
+            <Text
+              style={{
+                color: sortBy === "price" ? "#fff" : theme.text,
+              }}
+            >
+              Price
+            </Text>
+
+            {sortBy === "price" && (
+              <Ionicons
+                name={sortOrder === "desc" ? "arrow-down" : "arrow-up"}
+                size={14}
+                color="#fff"
+              />
+            )}
+          </TouchableOpacity>
+
+          {/* PRICE PER LITER */}
+          <TouchableOpacity
+            style={[
+              styles.sortChip,
+              {
+                backgroundColor:
+                  sortBy === "pricePerLiter" ? theme.primary : theme.card,
+                borderColor: theme.border,
+              },
+            ]}
+            onPress={() => {
+              if (sortBy === "pricePerLiter") {
+                setSortOrder((prev) => (prev === "desc" ? "asc" : "desc"));
+              } else {
+                setSortBy("pricePerLiter");
+              }
+            }}
+          >
+            <Ionicons
+              name="speedometer-outline"
+              size={16}
+              color={sortBy === "pricePerLiter" ? "#fff" : theme.text}
+            />
+            <Text
+              style={{
+                color: sortBy === "pricePerLiter" ? "#fff" : theme.text,
+              }}
+            >
+              Litre Price
+            </Text>
+
+            {sortBy === "pricePerLiter" && (
+              <Ionicons
+                name={sortOrder === "desc" ? "arrow-down" : "arrow-up"}
+                size={14}
+                color="#fff"
+              />
+            )}
+          </TouchableOpacity>
+        </View>
+      </View>
 
       <View style={styles.statsRow}>
         <View
@@ -65,7 +220,7 @@ export function FuelTab({ fuelResponse, carId }: Props) {
                 : "-"}{" "}
               L / 100 km
             </Text>
-          </View> 
+          </View>
         </View>
 
         <View
@@ -108,9 +263,9 @@ export function FuelTab({ fuelResponse, carId }: Props) {
         {t("cars.fuelHistory")}
       </Text>
 
-      {fuelResponse.fuels.length > 0 ? (
+      {sortedFuels.length > 0 ? (
         <View style={styles.fuelHistoryList}>
-          {fuelResponse.fuels.map((fuel) => (
+          {sortedFuels.map((fuel) => (
             <FuelItem
               key={fuel.id}
               fuel={fuel}
@@ -485,5 +640,28 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontSize: 13,
     fontWeight: "600",
+  },
+  sortContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 8,
+    flexWrap: "wrap",
+  },
+
+  sortChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 999,
+    borderWidth: 1,
+  },
+  filtersRow: {
+    width: "100%",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 16,
   },
 });

@@ -134,6 +134,7 @@ export type FuelRecord = {
   totalAmount: string;
   km: number;
   consumption: number;
+  createdAt: string;
 };
 
 export type ExpenseRecord = {

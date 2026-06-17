@@ -135,7 +135,11 @@ export default function EditProfileScreen() {
     } catch (error) {
       setToast({ visible: false, message: "", type: "error" });
       setTimeout(() => {
-        setToast({ visible: true, message: "Profile update failed", type: "error" });
+        setToast({
+          visible: true,
+          message: "Profile update failed",
+          type: "error",
+        });
       }, 50);
     } finally {
       setSaving(false);
@@ -249,6 +253,37 @@ export default function EditProfileScreen() {
                 keyboardType="email-address"
               />
             </View>
+
+            <TouchableOpacity
+              onPress={() => router.push("/users/profile/change-pasword")}
+              style={[
+                styles.passwordButton,
+                {
+                  backgroundColor: theme.card,
+                  borderColor: theme.border,
+                },
+              ]}
+              activeOpacity={0.7}
+            >
+              <View style={styles.passwordButtonLeft}>
+                <Ionicons
+                  name="lock-closed-outline"
+                  size={20}
+                  color={theme.primary}
+                />
+                <Text
+                  style={[styles.passwordButtonText, { color: theme.text }]}
+                >
+                  Change Password
+                </Text>
+              </View>
+
+              <Ionicons
+                name="chevron-forward"
+                size={18}
+                color={theme.mutedText}
+              />
+            </TouchableOpacity>
           </View>
         </ScrollView>
 
@@ -335,4 +370,25 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   buttonText: { color: "#FFF", fontSize: 16, fontWeight: "800" },
+  passwordButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 14,
+    borderWidth: 1,
+    marginTop: 20,
+  },
+
+  passwordButtonLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+
+  passwordButtonText: {
+    fontSize: 15,
+    fontWeight: "700",
+  },
 });

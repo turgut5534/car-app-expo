@@ -52,7 +52,11 @@ export function OverviewTab({ overview }: Props) {
       <InfoCard
         icon="document-text-outline"
         title={t("cars.averageFuelConsumption")}
-        line1={overview.averageFuelConsumption.toLocaleString() || "-"}
+        line1={
+          overview.averageFuelConsumption != null
+            ? Number(overview.averageFuelConsumption).toFixed(2)+'L / 100km'
+            : "-"
+        }
         line2=""
       />
 
@@ -66,7 +70,7 @@ export function OverviewTab({ overview }: Props) {
         }
         line2={
           overview.lastFuel
-            ? `${overview.lastFuel.liters} / ${overview.lastFuel.totalAmount}`
+            ? `${overview.lastFuel.liters} L / ${overview.lastFuel.totalAmount} ${overview.currency}`
             : "-"
         }
       />

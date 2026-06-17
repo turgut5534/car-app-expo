@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -8,7 +8,7 @@ import {
   Alert,
   Modal,
 } from "react-native";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -108,9 +108,11 @@ export default function ProfileScreen() {
     ]);
   };
 
-  useEffect(() => {
+useFocusEffect(
+  useCallback(() => {
     fetchProfile();
-  }, []);
+  }, [])
+);
 
   if (loading) {
     return (

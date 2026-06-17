@@ -60,6 +60,7 @@ export type OverviewData = {
   averageFuelConsumption: number;
   lastFuel: FuelRecord;
   costPerKilometer: number;
+  currency: string;
 };
 
 export type CarDetail = {

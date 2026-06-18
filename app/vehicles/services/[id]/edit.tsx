@@ -94,23 +94,22 @@ export default function EditServiceScreen() {
 
       // Populate states from API data
       const s = data.service || data;
-      
-      setCategory(s.category as ServiceCategory || "OTHER");
+
+      setCategory((s.category as ServiceCategory) || "OTHER");
       setTitle(s.title || "");
       setMileageKm(s.km ? s.km.toString() : "");
-      
+
       // Ensure date format is readable in inputs (e.g., YYYY-MM-DD)
       const formattedDate = s.serviceDate ? s.serviceDate.split("T")[0] : "";
       setDate(formattedDate);
-      
+
       setCost(s.amount ? s.amount.toString() : "");
       setDescription(s.description || "");
-      setExistingFiles(s.files || []);
-
+      setExistingFiles(s.attachments || []);
     } catch (error) {
       Alert.alert(
         t("common.error"),
-        error instanceof Error ? error.message : t("services.loadFailed")
+        error instanceof Error ? error.message : t("services.loadFailed"),
       );
       router.back();
     } finally {
@@ -144,21 +143,24 @@ export default function EditServiceScreen() {
           style: "destructive",
           onPress: () => deleteExistingFile(fileId),
         },
-      ]
+      ],
     );
   };
 
   const deleteExistingFile = async (fileId: string) => {
     try {
       const token = await AsyncStorage.getItem("token");
-      
-      // Adjust the DELETE endpoint based on your actual backend architecture
-      const response = await fetch(`${API_URL}/services/${id}/files/${fileId}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
+
+    
+      const response = await fetch(
+        `${API_URL}/services/${id}/files/${fileId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         },
-      });
+      );
 
       if (!response.ok) {
         const data = await response.json();
@@ -170,7 +172,7 @@ export default function EditServiceScreen() {
     } catch (error) {
       Alert.alert(
         t("common.error"),
-        error instanceof Error ? error.message : t("common.error")
+        error instanceof Error ? error.message : t("common.error"),
       );
     }
   };
@@ -215,7 +217,7 @@ export default function EditServiceScreen() {
       }
 
       const response = await fetch(`${API_URL}/services/${id}`, {
-        method: "PUT", // or PATCH, depending on your API
+        method: "PATCH", 
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -232,7 +234,7 @@ export default function EditServiceScreen() {
     } catch (error) {
       Alert.alert(
         t("common.error"),
-        error instanceof Error ? error.message : t("services.updateFailed")
+        error instanceof Error ? error.message : t("services.updateFailed"),
       );
     } finally {
       setSaving(false);
@@ -290,11 +292,7 @@ export default function EditServiceScreen() {
               },
             ]}
           >
-            <Ionicons
-              name="create-outline"
-              size={56}
-              color={theme.primary}
-            />
+            <Ionicons name="create-outline" size={56} color={theme.primary} />
           </View>
 
           <Text style={[styles.title, { color: theme.text }]}>
@@ -306,7 +304,12 @@ export default function EditServiceScreen() {
           </Text>
 
           {/* Form Fields */}
-          <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: theme.card, borderColor: theme.border },
+            ]}
+          >
             <Text style={[styles.label, { color: theme.text }]}>
               {t("services.type")}
             </Text>
@@ -342,7 +345,10 @@ export default function EditServiceScreen() {
                   },
                 ]}
               >
-                <ScrollView nestedScrollEnabled={true} style={{ maxHeight: 240 }}>
+                <ScrollView
+                  nestedScrollEnabled={true}
+                  style={{ maxHeight: 240 }}
+                >
                   {SERVICE_CATEGORIES.map((item) => (
                     <TouchableOpacity
                       key={item}
@@ -356,7 +362,9 @@ export default function EditServiceScreen() {
                         if (item !== "OTHER") setTitle("");
                       }}
                     >
-                      <Text style={[styles.dropdownText, { color: theme.text }]}>
+                      <Text
+                        style={[styles.dropdownText, { color: theme.text }]}
+                      >
                         {t(`serviceCategories.${item}`)}
                       </Text>
                     </TouchableOpacity>
@@ -367,7 +375,9 @@ export default function EditServiceScreen() {
 
             {category === "OTHER" && (
               <>
-                <Text style={[styles.label, { color: theme.text, marginTop: 16 }]}>
+                <Text
+                  style={[styles.label, { color: theme.text, marginTop: 16 }]}
+                >
                   {t("services.serviceName")}
                 </Text>
                 <TextInput
@@ -467,33 +477,86 @@ export default function EditServiceScreen() {
           </View>
 
           {/* Files Management Section */}
-          <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border, marginTop: 16 }]}>
-            
+          <View
+            style={[
+              styles.card,
+              {
+                backgroundColor: theme.card,
+                borderColor: theme.border,
+                marginTop: 16,
+              },
+            ]}
+          >
             {/* Existing Files */}
             {existingFiles.length > 0 && (
               <View style={{ marginBottom: 16 }}>
                 <Text style={[styles.label, { color: theme.text }]}>
                   {t("services.attachedFiles")}
                 </Text>
-                {existingFiles.map((file) => (
-                  <View 
-                    key={file.id} 
-                    style={[styles.fileCard, { backgroundColor: theme.background, borderColor: theme.border }]}
-                  >
-                    <View style={styles.fileInfo}>
-                      <Ionicons name="document-text-outline" size={24} color={theme.primary} />
-                      <Text style={[styles.fileName, { color: theme.text }]} numberOfLines={1}>
-                        {file.originalName || file.fileName}
-                      </Text>
-                    </View>
-                    <TouchableOpacity
-                      style={styles.deleteButton}
-                      onPress={() => confirmDeleteExistingFile(file.id)}
+
+                {existingFiles.map((file) => {
+                  const imageUrl = `${API_URL}/uploads/services/${file.fileName}`;
+
+                  const isImage =
+                    file.mimeType?.startsWith("image/") ||
+                    /\.(jpg|jpeg|png|gif|webp)$/i.test(
+                      file.originalName || file.fileName || "",
+                    );
+
+                  return (
+                    <View
+                      key={file.id}
+                      style={[
+                        styles.fileCard,
+                        {
+                          backgroundColor: theme.background,
+                          borderColor: theme.border,
+                        },
+                      ]}
                     >
-                      <Ionicons name="trash-outline" size={20} color="#EF4444" />
-                    </TouchableOpacity>
-                  </View>
-                ))}
+                      {isImage && imageUrl ? (
+                        <Image
+                          source={{ uri: imageUrl }}
+                          style={{
+                            width: "100%",
+                            height: 180,
+                            borderRadius: 8,
+                            marginBottom: 8,
+                          }}
+                          resizeMode="cover"
+                        />
+                      ) : (
+                        <View style={styles.fileInfo}>
+                          <Ionicons
+                            name="document-text-outline"
+                            size={24}
+                            color={theme.primary}
+                          />
+                        </View>
+                      )}
+
+                      <View style={styles.fileInfo}>
+                        <Text
+                          style={[styles.fileName, { color: theme.text }]}
+                          numberOfLines={1}
+                        >
+                          {file.originalName || file.fileName}
+                        </Text>
+                      </View>
+
+                      <TouchableOpacity
+                        style={styles.deleteButton}
+                        onPress={() => confirmDeleteExistingFile(file.id)}
+                      >
+                        <Ionicons
+                          name="trash-outline"
+                          size={20}
+                          color="#EF4444"
+                        />
+                      </TouchableOpacity>
+                    </View>
+                  );
+                })}
               </View>
             )}
 
@@ -504,13 +567,26 @@ export default function EditServiceScreen() {
                   {t("services.newFiles")}
                 </Text>
                 {newAttachments.map((file, index) => (
-                  <View 
-                    key={`new-${index}`} 
-                    style={[styles.fileCard, { backgroundColor: theme.background, borderColor: theme.border }]}
+                  <View
+                    key={`new-${index}`}
+                    style={[
+                      styles.fileCard,
+                      {
+                        backgroundColor: theme.background,
+                        borderColor: theme.border,
+                      },
+                    ]}
                   >
                     <View style={styles.fileInfo}>
-                      <Ionicons name="add-circle-outline" size={24} color={theme.primary} />
-                      <Text style={[styles.fileName, { color: theme.text }]} numberOfLines={1}>
+                      <Ionicons
+                        name="add-circle-outline"
+                        size={24}
+                        color={theme.primary}
+                      />
+                      <Text
+                        style={[styles.fileName, { color: theme.text }]}
+                        numberOfLines={1}
+                      >
                         {file.name}
                       </Text>
                     </View>
@@ -518,7 +594,11 @@ export default function EditServiceScreen() {
                       style={styles.deleteButton}
                       onPress={() => removeNewAttachment(index)}
                     >
-                      <Ionicons name="close-circle" size={22} color={theme.mutedText} />
+                      <Ionicons
+                        name="close-circle"
+                        size={22}
+                        color={theme.mutedText}
+                      />
                     </TouchableOpacity>
                   </View>
                 ))}
@@ -547,7 +627,8 @@ export default function EditServiceScreen() {
                   fontWeight: "600",
                 }}
               >
-                <Ionicons name="cloud-upload-outline" size={16} /> {t("services.uploadFiles")}
+                <Ionicons name="cloud-upload-outline" size={16} />{" "}
+                {t("services.uploadFiles")}
               </Text>
             </TouchableOpacity>
           </View>
@@ -572,7 +653,6 @@ export default function EditServiceScreen() {
               )}
             </TouchableOpacity>
           </View>
-
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>

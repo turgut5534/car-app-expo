@@ -58,9 +58,7 @@ export default function CreateDocumentScreen() {
   const [expiresAt, setExpiresAt] = useState<Date | null>(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTypes, setShowTypes] = useState(false);
-  const [file, setFile] = useState<DocumentPicker.DocumentPickerAsset | null>(
-    null
-  );
+  const [files, setFiles] = useState<DocumentPicker.DocumentPickerAsset[]>([]);
 
   const [loading, setLoading] = useState(false);
   const [cars, setCars] = useState<CarDetail[]>([]);
@@ -101,7 +99,7 @@ export default function CreateDocumentScreen() {
       } catch (error) {
         Alert.alert(
           t("common.error"),
-          error instanceof Error ? error.message : "Araçlar yüklenemedi"
+          error instanceof Error ? error.message : "Araçlar yüklenemedi",
         );
       } finally {
         setCarsLoading(false);
@@ -130,10 +128,11 @@ export default function CreateDocumentScreen() {
     const result = await DocumentPicker.getDocumentAsync({
       type: ["application/pdf", "image/*"],
       copyToCacheDirectory: true,
+      multiple: true,
     });
 
     if (!result.canceled) {
-      setFile(result.assets[0]);
+      setFiles(result.assets);
     }
   };
 
@@ -141,7 +140,9 @@ export default function CreateDocumentScreen() {
     if (step === 1 && type === "OTHER" && !title.trim()) {
       Alert.alert(
         t("common.error"),
-        t("documents.fillTitle", { defaultValue: "Lütfen belge başlığını girin." })
+        t("documents.fillTitle", {
+          defaultValue: "Lütfen belge başlığını girin.",
+        }),
       );
       return;
     }
@@ -183,13 +184,13 @@ export default function CreateDocumentScreen() {
         formData.append("expiresAt", formatDateForApi(expiresAt));
       }
 
-      if (file) {
-        formData.append("file", {
+      files.forEach((file) => {
+        formData.append("files", {
           uri: file.uri,
           name: file.name,
           type: file.mimeType || "application/octet-stream",
         } as any);
-      }
+      });
 
       const response = await fetch(`${API_URL}/documents`, {
         method: "POST",
@@ -216,7 +217,7 @@ export default function CreateDocumentScreen() {
     } catch (error) {
       Alert.alert(
         t("common.error"),
-        error instanceof Error ? error.message : t("documents.createFailed")
+        error instanceof Error ? error.message : t("documents.createFailed"),
       );
     } finally {
       setLoading(false);
@@ -250,7 +251,9 @@ export default function CreateDocumentScreen() {
             </TouchableOpacity>
 
             <View style={styles.stepIndicatorContainer}>
-              <Text style={[styles.stepIndicatorText, { color: theme.primary }]}>
+              <Text
+                style={[styles.stepIndicatorText, { color: theme.primary }]}
+              >
                 {t("common.step", { defaultValue: "Adım" })} {step}/3
               </Text>
             </View>
@@ -276,7 +279,10 @@ export default function CreateDocumentScreen() {
 
           <Text style={[styles.subtitle, { color: theme.mutedText }]}>
             {step === 3
-              ? t("documents.checkDetailsBeforeSaving", { defaultValue: "Kaydetmeden önce belge detaylarını kontrol edin." })
+              ? t("documents.checkDetailsBeforeSaving", {
+                  defaultValue:
+                    "Kaydetmeden önce belge detaylarını kontrol edin.",
+                })
               : t("documents.createSubtitle")}
           </Text>
 
@@ -296,7 +302,9 @@ export default function CreateDocumentScreen() {
                   },
                 ]}
               >
-                <Text style={[styles.label, { color: theme.text, marginTop: 0 }]}>
+                <Text
+                  style={[styles.label, { color: theme.text, marginTop: 0 }]}
+                >
                   {t("documents.car", { defaultValue: "Araç" })}
                 </Text>
 
@@ -315,7 +323,7 @@ export default function CreateDocumentScreen() {
                     <ActivityIndicator color={theme.primary} />
                   ) : (
                     <>
-                      {selectedCar?.photos  ? (
+                      {selectedCar?.photos ? (
                         <Image
                           source={{
                             uri: `${API_URL}/../uploads/cars/${selectedCar.photos[0].fileName}`,
@@ -414,7 +422,9 @@ export default function CreateDocumentScreen() {
                         )}
 
                         <View style={{ flex: 1 }}>
-                          <Text style={[styles.carTitle, { color: theme.text }]}>
+                          <Text
+                            style={[styles.carTitle, { color: theme.text }]}
+                          >
                             {`${car.brand || ""} ${car.model || ""}`.trim() ||
                               t("documents.car", { defaultValue: "Araç" })}
                           </Text>
@@ -445,7 +455,9 @@ export default function CreateDocumentScreen() {
                   },
                 ]}
               >
-                <Text style={[styles.label, { color: theme.text, marginTop: 0 }]}>
+                <Text
+                  style={[styles.label, { color: theme.text, marginTop: 0 }]}
+                >
                   {t("documents.type")}
                 </Text>
 
@@ -604,11 +616,17 @@ export default function CreateDocumentScreen() {
                 ]}
               >
                 <View style={styles.optionalLabelRow}>
-                  <Text style={[styles.label, { color: theme.text, marginTop: 0 }]}>
+                  <Text
+                    style={[styles.label, { color: theme.text, marginTop: 0 }]}
+                  >
                     {t("documents.file")}
                   </Text>
-                  <Text style={[styles.optionalText, { color: theme.mutedText }]}>
-                    {t("documents.optional", { defaultValue: "(İsteğe Bağlı)" })}
+                  <Text
+                    style={[styles.optionalText, { color: theme.mutedText }]}
+                  >
+                    {t("documents.optional", {
+                      defaultValue: "(İsteğe Bağlı)",
+                    })}
                   </Text>
                 </View>
 
@@ -629,11 +647,25 @@ export default function CreateDocumentScreen() {
                   />
 
                   <View style={{ flex: 1 }}>
-                    <Text style={[styles.fileTitle, { color: theme.text }]}>
-                      {file ? file.name : t("documents.chooseFile")}
-                    </Text>
+                    {files.length > 0 ? (
+                      files.map((file, index) => (
+                        <Text
+                          key={index}
+                          style={[styles.fileTitle, { color: theme.text }]}
+                          numberOfLines={1}
+                        >
+                          • {file.name}
+                        </Text>
+                      ))
+                    ) : (
+                      <Text style={[styles.fileTitle, { color: theme.text }]}>
+                        {t("documents.chooseFile")}
+                      </Text>
+                    )}
 
-                    <Text style={[styles.fileSubtitle, { color: theme.mutedText }]}>
+                    <Text
+                      style={[styles.fileSubtitle, { color: theme.mutedText }]}
+                    >
                       {t("documents.fileHint")}
                     </Text>
                   </View>
@@ -677,9 +709,9 @@ export default function CreateDocumentScreen() {
                 theme={theme}
                 label={t("documents.file")}
                 value={
-                  file
-                    ? file.name
-                    : t("common.none", { defaultValue: "Eklenmedi" })
+                  files.length > 0
+                    ? `${files.length} file(s)`
+                    : t("common.none", { defaultValue: "Not added" })
                 }
                 isLast
               />
@@ -707,7 +739,10 @@ export default function CreateDocumentScreen() {
 
             {step < 3 ? (
               <TouchableOpacity
-                style={[styles.button, { backgroundColor: theme.primary, flex: 1 }]}
+                style={[
+                  styles.button,
+                  { backgroundColor: theme.primary, flex: 1 },
+                ]}
                 onPress={handleNext}
               >
                 <Text style={styles.buttonText}>
@@ -734,7 +769,7 @@ export default function CreateDocumentScreen() {
               </TouchableOpacity>
             )}
           </View>
-          
+
           <View style={{ height: 40 }} />
         </ScrollView>
       </KeyboardAvoidingView>

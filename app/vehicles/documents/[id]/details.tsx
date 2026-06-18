@@ -10,7 +10,8 @@ import {
   Image,
   Alert,
   Modal,
-  Platform,
+  FlatList,
+  Dimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -22,6 +23,7 @@ import { useTranslation } from "react-i18next";
 import { useAppTheme } from "@/context/ThemeContext";
 import { API_URL } from "@/constants/api";
 import { DocumentRecord } from "@/types/car";
+const { width } = Dimensions.get("window");
 
 export default function DocumentDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -31,6 +33,8 @@ export default function DocumentDetailsScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [doc, setDoc] = useState<DocumentRecord | null>(null);
+  const [selectedFile, setSelectedFile] = useState<string | null>(null);
+  const [selectedIsPdf, setSelectedIsPdf] = useState(false);
 
   const [previewOpen, setPreviewOpen] = useState(false);
 
@@ -73,7 +77,6 @@ export default function DocumentDetailsScreen() {
 
   // Düzenleme Fonksiyonu
   const handleEdit = () => {
-    // Kendi dosya yapına göre rotayı ayarlayabilirsin
     router.push(`/vehicles/documents/${id}/edit` as any);
   };
 
@@ -115,8 +118,6 @@ export default function DocumentDetailsScreen() {
     );
   };
 
-  const isPdf = doc?.fileUrl?.toLowerCase().endsWith(".pdf");
-
   if (loading) {
     return (
       <SafeAreaView
@@ -137,8 +138,6 @@ export default function DocumentDetailsScreen() {
     );
   }
 
-  const fileUrl = `${API_URL}/uploads/documents/${doc.fileUrl}`;
-  // Araç resmi için yol (Backend'in image veya imageUrl döndürmesine göre değişebilir)
   const carImageUrl =
     doc.car.photos || (doc.car as any).image
       ? `${API_URL}/uploads/cars/${doc.car.photos[0].fileName || (doc.car as any).image}`
@@ -232,47 +231,81 @@ export default function DocumentDetailsScreen() {
           />
           <Info
             label={t("documents.expiresAt", "Expires")}
-            value={doc.expiresAt ? new Date(doc.expiresAt).toLocaleDateString("pl-PL") : "-"}
+            value={
+              doc.expiresAt
+                ? new Date(doc.expiresAt).toLocaleDateString("pl-PL")
+                : "-"
+            }
             theme={theme}
             isLast
           />
         </View>
 
-        {doc.fileUrl ? (
+        {/* HORIZONTAL FILES SCROLL */}
+        {doc.attachments?.length > 0 && (
           <View style={[styles.card, { backgroundColor: theme.card }]}>
             <Text style={[styles.sectionTitle, { color: theme.text }]}>
-              {t("documents.file", "File")}
+              {t("documents.files", "Files")}  ({doc.attachments.length})
             </Text>
 
-            <TouchableOpacity
-              activeOpacity={0.8}
-              onPress={() => setPreviewOpen(true)}
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.attachmentScrollContent}
             >
-              {isPdf ? (
-                <View
-                  style={[styles.pdfBox, { backgroundColor: theme.background }]}
-                >
-                  <Ionicons name="document-text" size={48} color="#EF4444" />
-                  <Text
-                    style={{
-                      color: theme.text,
-                      marginTop: 12,
-                      fontWeight: "600",
+              {doc.attachments.map((attachment) => {
+                const fileUrl = `${API_URL}/uploads/documents/${attachment.fileName}`;
+                const isPdf = attachment.fileName
+                  .toLowerCase()
+                  .endsWith(".pdf");
+
+                return (
+                  <TouchableOpacity
+                    key={attachment.id}
+                    activeOpacity={0.8}
+                    onPress={() => {
+                      setSelectedFile(fileUrl);
+                      setSelectedIsPdf(isPdf);
+                      setPreviewOpen(true);
                     }}
+                    style={[
+                      styles.attachmentThumbnail,
+                      {
+                        backgroundColor: theme.background,
+                        borderColor: theme.border,
+                      },
+                    ]}
                   >
-                    {t("documents.tapToOpen", "PDF'i Açmak İçin Dokun")}
-                  </Text>
-                </View>
-              ) : (
-                <Image
-                  source={{ uri: fileUrl }}
-                  style={{ width: "100%", height: 220, borderRadius: 12 }}
-                  resizeMode="cover"
-                />
-              )}
-            </TouchableOpacity>
+                    {isPdf ? (
+                      <View style={styles.pdfThumbnailBox}>
+                        <Ionicons
+                          name="document-text"
+                          size={40}
+                          color="#EF4444"
+                        />
+                        <Text
+                          style={[
+                            styles.pdfThumbnailText,
+                            { color: theme.text },
+                          ]}
+                          numberOfLines={2}
+                        >
+                          {attachment.originalName}
+                        </Text>
+                      </View>
+                    ) : (
+                      <Image
+                        source={{ uri: fileUrl }}
+                        style={styles.imageThumbnail}
+                        resizeMode="cover"
+                      />
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
           </View>
-        ) : null}
+        )}
       </ScrollView>
 
       {/* IN-APP PREVIEW MODAL */}
@@ -295,18 +328,30 @@ export default function DocumentDetailsScreen() {
             </TouchableOpacity>
           </View>
 
-          {isPdf ? (
-            <WebView
-              source={{ uri: fileUrl }}
-              style={{ flex: 1, backgroundColor: theme.background }}
-            />
-          ) : (
-            <Image
-              source={{ uri: fileUrl }}
-              style={{ flex: 1, width: "100%" }}
-              resizeMode="contain"
-            />
-          )}
+          <FlatList
+            data={doc.attachments}
+            horizontal
+            pagingEnabled
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => {
+              const fileUrl = `${API_URL}/uploads/documents/${item.fileName}`;
+              const isPdf = item.fileName.toLowerCase().endsWith(".pdf");
+
+              return (
+                <View style={{ width, flex: 1 }}>
+                  {isPdf ? (
+                    <WebView source={{ uri: fileUrl }} style={{ flex: 1 }} />
+                  ) : (
+                    <Image
+                      source={{ uri: fileUrl }}
+                      style={{ flex: 1, width: "100%" }}
+                      resizeMode="contain"
+                    />
+                  )}
+                </View>
+              );
+            }}
+          />
         </SafeAreaView>
       </Modal>
     </SafeAreaView>
@@ -365,7 +410,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
 
-  // Yeni eklenen araç kartı stilleri
   carCard: {
     flexDirection: "row",
     alignItems: "center",
@@ -397,14 +441,33 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingVertical: 12,
   },
-  pdfBox: {
+
+  // Files Layout Styles
+  attachmentScrollContent: {
+    gap: 12,
+  },
+  attachmentThumbnail: {
+    width: 140,
     height: 180,
-    justifyContent: "center",
-    alignItems: "center",
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "rgba(0,0,0,0.05)",
-    borderStyle: "dashed",
+    overflow: "hidden",
+  },
+  imageThumbnail: {
+    width: "100%",
+    height: "100%",
+  },
+  pdfThumbnailBox: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 12,
+  },
+  pdfThumbnailText: {
+    marginTop: 8,
+    fontWeight: "600",
+    fontSize: 12,
+    textAlign: "center",
   },
 
   modalHeader: {

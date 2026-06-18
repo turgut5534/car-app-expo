@@ -21,20 +21,45 @@ import { useTranslation } from "react-i18next";
 
 import { useAppTheme } from "@/context/ThemeContext";
 import { API_URL } from "@/constants/api";
-import { DocumentRecord } from "@/types/car";
 
-export default function DocumentDetailsScreen() {
+// Kendi projenizdeki tiplere göre güncelleyebilirsiniz
+type FuelFile = {
+  id: string;
+  fileName: string;
+  originalName?: string;
+  mimeType?: string;
+};
+
+type FuelRecord = {
+  id: string;
+  liter: number;
+  pricePerLiter: number;
+  totalAmount: number;
+  km: number;
+  createdAt: string;
+  car: {
+    id: string;
+    brand: string;
+    model: string;
+    plate: string;
+    photos?: any[];
+    image?: string;
+  };
+  files?: FuelFile[];
+};
+
+export default function FuelDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { theme } = useAppTheme();
   const { t } = useTranslation();
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [doc, setDoc] = useState<DocumentRecord | null>(null);
+  const [fuel, setFuel] = useState<FuelRecord | null>(null);
 
-  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewFile, setPreviewFile] = useState<FuelFile | null>(null);
 
-  const fetchDocument = async () => {
+  const fetchFuel = async () => {
     try {
       const token = await AsyncStorage.getItem("token");
       if (!token) {
@@ -42,7 +67,7 @@ export default function DocumentDetailsScreen() {
         return;
       }
 
-      const res = await fetch(`${API_URL}/documents/${id}`, {
+      const res = await fetch(`${API_URL}/fuels/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -50,11 +75,12 @@ export default function DocumentDetailsScreen() {
 
       if (!res.ok) throw new Error(data.message);
 
-      setDoc(data);
+      // Backend'in yapısına göre data.fuel veya doğrudan data olabilir
+      setFuel(data.fuel || data);
     } catch (e) {
       Alert.alert(
         t("common.error"),
-        t("documents.loadFailed", "Belge yüklenemedi."),
+        t("fuel.loadFailed", "Yakıt bilgileri yüklenemedi.")
       );
     } finally {
       setLoading(false);
@@ -63,28 +89,23 @@ export default function DocumentDetailsScreen() {
   };
 
   useEffect(() => {
-    fetchDocument();
-  }, []);
+    fetchFuel();
+  }, [id]);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    fetchDocument();
-  }, []);
+    fetchFuel();
+  }, [id]);
 
-  // Düzenleme Fonksiyonu
   const handleEdit = () => {
-    // Kendi dosya yapına göre rotayı ayarlayabilirsin
-    router.push(`/vehicles/documents/${id}/edit` as any);
+    // Kendi dosya yapınıza göre yolu güncelleyin
+    router.push(`/vehicles/fuels/${id}/edit` as any);
   };
 
-  // Silme Fonksiyonu
   const handleDelete = () => {
     Alert.alert(
       t("common.delete", "Sil"),
-      t(
-        "documents.deleteConfirm",
-        "Bu belgeyi silmek istediğinize emin misiniz?",
-      ),
+      t("fuel.deleteConfirm", "Bu yakıt kaydını silmek istediğinize emin misiniz?"),
       [
         { text: t("common.cancel", "İptal"), style: "cancel" },
         {
@@ -94,7 +115,7 @@ export default function DocumentDetailsScreen() {
             try {
               setLoading(true);
               const token = await AsyncStorage.getItem("token");
-              const res = await fetch(`${API_URL}/documents/${id}`, {
+              const res = await fetch(`${API_URL}/fuels/${id}`, {
                 method: "DELETE",
                 headers: { Authorization: `Bearer ${token}` },
               });
@@ -105,53 +126,47 @@ export default function DocumentDetailsScreen() {
             } catch (e) {
               Alert.alert(
                 t("common.error"),
-                t("documents.deleteFailed", "Belge silinemedi."),
+                t("fuel.deleteFailed", "Yakıt kaydı silinemedi.")
               );
               setLoading(false);
             }
           },
         },
-      ],
+      ]
     );
   };
 
-  const isPdf = doc?.fileUrl?.toLowerCase().endsWith(".pdf");
-
   if (loading) {
     return (
-      <SafeAreaView
-        style={[styles.center, { backgroundColor: theme.background }]}
-      >
+      <SafeAreaView style={[styles.center, { backgroundColor: theme.background }]}>
         <ActivityIndicator size="large" color={theme.primary} />
       </SafeAreaView>
     );
   }
 
-  if (!doc) {
+  if (!fuel) {
     return (
-      <SafeAreaView
-        style={[styles.center, { backgroundColor: theme.background }]}
-      >
-        <Text style={{ color: theme.text }}>{t("documents.notFound")}</Text>
+      <SafeAreaView style={[styles.center, { backgroundColor: theme.background }]}>
+        <Text style={{ color: theme.text }}>
+          {t("fuel.notFound", "Yakıt kaydı bulunamadı.")}
+        </Text>
       </SafeAreaView>
     );
   }
 
-  const fileUrl = `${API_URL}/uploads/documents/${doc.fileUrl}`;
-  // Araç resmi için yol (Backend'in image veya imageUrl döndürmesine göre değişebilir)
   const carImageUrl =
-    doc.car.photos || (doc.car as any).image
-      ? `${API_URL}/uploads/cars/${doc.car.photos[0].fileName || (doc.car as any).image}`
+    fuel.car?.photos?.[0]?.fileName || fuel.car?.image
+      ? `${API_URL}/uploads/cars/${fuel.car.photos?.[0]?.fileName || fuel.car.image}`
       : null;
 
+  // Önizleme için seçilen dosyanın yolunu belirleme
+  const getFileUrl = (fileName: string) => `${API_URL}/uploads/fuels/${fileName}`;
+  const isPreviewPdf = previewFile?.fileName.toLowerCase().endsWith(".pdf") || previewFile?.mimeType === "application/pdf";
+
   return (
-    <SafeAreaView
-      style={[styles.container, { backgroundColor: theme.background }]}
-    >
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <ScrollView
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
         {/* HEADER */}
         <View style={styles.header}>
@@ -160,7 +175,7 @@ export default function DocumentDetailsScreen() {
           </TouchableOpacity>
 
           <Text style={[styles.title, { color: theme.text }]} numberOfLines={1}>
-            {doc.title || t(`documentTypes.${doc.type}`)}
+            {t("fuel.detailsTitle", "Yakıt Detayı")}
           </Text>
 
           {/* DÜZENLE VE SİL BUTONLARI */}
@@ -175,9 +190,7 @@ export default function DocumentDetailsScreen() {
         </View>
 
         {/* CAR INFO */}
-        <View
-          style={[styles.card, styles.carCard, { backgroundColor: theme.card }]}
-        >
+        <View style={[styles.card, styles.carCard, { backgroundColor: theme.card }]}>
           {carImageUrl ? (
             <Image
               source={{ uri: carImageUrl }}
@@ -185,127 +198,119 @@ export default function DocumentDetailsScreen() {
               resizeMode="cover"
             />
           ) : (
-            <View
-              style={[
-                styles.carImagePlaceholder,
-                { backgroundColor: theme.background },
-              ]}
-            >
+            <View style={[styles.carImagePlaceholder, { backgroundColor: theme.background }]}>
               <Ionicons name="car-outline" size={28} color={theme.mutedText} />
             </View>
           )}
 
           <View style={styles.carDetails}>
-            <Text
-              style={{ color: theme.mutedText, fontSize: 12, marginBottom: 4 }}
-            >
+            <Text style={{ color: theme.mutedText, fontSize: 12, marginBottom: 4 }}>
               {t("cars.vehicle")}
             </Text>
-            <Text
-              style={{ color: theme.text, fontWeight: "800", fontSize: 16 }}
-            >
-              {doc.car.brand} {doc.car.model}
+            <Text style={{ color: theme.text, fontWeight: "800", fontSize: 16 }}>
+              {fuel.car?.brand} {fuel.car?.model}
             </Text>
-            <Text
-              style={{
-                color: theme.mutedText,
-                fontWeight: "600",
-                marginTop: 2,
-              }}
-            >
-              {doc.car.plate}
+            <Text style={{ color: theme.mutedText, fontWeight: "600", marginTop: 2 }}>
+              {fuel.car?.plate}
             </Text>
           </View>
         </View>
 
-        {/* DETAILS */}
+        {/* FUEL DETAILS */}
         <View style={[styles.card, { backgroundColor: theme.card }]}>
           <Info
-            label={t("documents.type", "Type")}
-            value={t(`documentTypes.${doc.type}`)}
+            label={t("common.date", "Tarih")}
+            value={new Date(fuel.createdAt).toLocaleDateString("pl-PL")}
             theme={theme}
           />
           <Info
-            label={t("documents.createdAt", "Created")}
-            value={new Date(doc.createdAt).toLocaleDateString("pl-PL")}
+            label={t("fuel.pricePerLiter", "Litre Fiyatı")}
+            value={`${Number(fuel.pricePerLiter).toFixed(2)}`}
             theme={theme}
           />
           <Info
-            label={t("documents.expiresAt", "Expires")}
-            value={doc.expiresAt ? new Date(doc.expiresAt).toLocaleDateString("pl-PL") : "-"}
+            label={t("common.liter", "Litre")}
+            value={`${Number(fuel.liter).toFixed(2)} L`}
+            theme={theme}
+          />
+          <Info
+            label={t("fuel.totalCost", "Toplam Tutar")}
+            value={`${Number(fuel.totalAmount).toFixed(2)}`}
+            theme={theme}
+          />
+          <Info
+            label={t("fuel.mileageKm", "Kilometre")}
+            value={`${fuel.km} km`}
             theme={theme}
             isLast
           />
         </View>
 
-        {doc.fileUrl ? (
+        {/* ATTACHMENTS / FILES */}
+        {fuel.files && fuel.files.length > 0 ? (
           <View style={[styles.card, { backgroundColor: theme.card }]}>
             <Text style={[styles.sectionTitle, { color: theme.text }]}>
-              {t("documents.file", "File")}
+              {t("fuel.files", "Eklenen Dosyalar")}
             </Text>
 
-            <TouchableOpacity
-              activeOpacity={0.8}
-              onPress={() => setPreviewOpen(true)}
-            >
-              {isPdf ? (
-                <View
-                  style={[styles.pdfBox, { backgroundColor: theme.background }]}
-                >
-                  <Ionicons name="document-text" size={48} color="#EF4444" />
-                  <Text
-                    style={{
-                      color: theme.text,
-                      marginTop: 12,
-                      fontWeight: "600",
-                    }}
+            <View style={styles.filesGrid}>
+              {fuel.files.map((file) => {
+                const isPdf = file.fileName.toLowerCase().endsWith(".pdf") || file.mimeType === "application/pdf";
+                
+                return (
+                  <TouchableOpacity
+                    key={file.id}
+                    activeOpacity={0.8}
+                    style={[styles.fileThumbnail, { backgroundColor: theme.background, borderColor: theme.border }]}
+                    onPress={() => setPreviewFile(file)}
                   >
-                    {t("documents.tapToOpen", "PDF'i Açmak İçin Dokun")}
-                  </Text>
-                </View>
-              ) : (
-                <Image
-                  source={{ uri: fileUrl }}
-                  style={{ width: "100%", height: 220, borderRadius: 12 }}
-                  resizeMode="cover"
-                />
-              )}
-            </TouchableOpacity>
+                    {isPdf ? (
+                      <View style={styles.pdfThumbnailBox}>
+                        <Ionicons name="document-text" size={32} color="#EF4444" />
+                        <Text style={[styles.fileThumbnailText, { color: theme.text }]} numberOfLines={1}>
+                          {file.originalName || file.fileName}
+                        </Text>
+                      </View>
+                    ) : (
+                      <Image
+                        source={{ uri: getFileUrl(file.fileName) }}
+                        style={styles.imageThumbnail}
+                        resizeMode="cover"
+                      />
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
           </View>
         ) : null}
       </ScrollView>
 
       {/* IN-APP PREVIEW MODAL */}
-      <Modal visible={previewOpen} animationType="slide" transparent={false}>
+      <Modal visible={!!previewFile} animationType="slide" transparent={false}>
         <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
-          <View
-            style={[styles.modalHeader, { borderBottomColor: theme.border }]}
-          >
-            <Text
-              style={[styles.modalTitle, { color: theme.text }]}
-              numberOfLines={1}
-            >
-              {doc.title || t(`documentTypes.${doc.type}`)}
+          <View style={[styles.modalHeader, { borderBottomColor: theme.border }]}>
+            <Text style={[styles.modalTitle, { color: theme.text }]} numberOfLines={1}>
+              {previewFile?.originalName || previewFile?.fileName}
             </Text>
-            <TouchableOpacity
-              onPress={() => setPreviewOpen(false)}
-              style={styles.closeButton}
-            >
+            <TouchableOpacity onPress={() => setPreviewFile(null)} style={styles.closeButton}>
               <Ionicons name="close" size={28} color={theme.text} />
             </TouchableOpacity>
           </View>
 
-          {isPdf ? (
-            <WebView
-              source={{ uri: fileUrl }}
-              style={{ flex: 1, backgroundColor: theme.background }}
-            />
-          ) : (
-            <Image
-              source={{ uri: fileUrl }}
-              style={{ flex: 1, width: "100%" }}
-              resizeMode="contain"
-            />
+          {previewFile && (
+            isPreviewPdf ? (
+              <WebView
+                source={{ uri: getFileUrl(previewFile.fileName) }}
+                style={{ flex: 1, backgroundColor: theme.background }}
+              />
+            ) : (
+              <Image
+                source={{ uri: getFileUrl(previewFile.fileName) }}
+                style={{ flex: 1, width: "100%" }}
+                resizeMode="contain"
+              />
+            )
           )}
         </SafeAreaView>
       </Modal>
@@ -313,6 +318,7 @@ export default function DocumentDetailsScreen() {
   );
 }
 
+// Info Row Component
 function Info({ label, value, theme, isLast = false }: any) {
   return (
     <View
@@ -365,7 +371,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
 
-  // Yeni eklenen araç kartı stilleri
   carCard: {
     flexDirection: "row",
     alignItems: "center",
@@ -397,14 +402,34 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingVertical: 12,
   },
-  pdfBox: {
-    height: 180,
-    justifyContent: "center",
-    alignItems: "center",
+
+  filesGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 12,
+  },
+  fileThumbnail: {
+    width: "48%",
+    height: 120,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "rgba(0,0,0,0.05)",
-    borderStyle: "dashed",
+    overflow: "hidden",
+  },
+  imageThumbnail: {
+    width: "100%",
+    height: "100%",
+  },
+  pdfThumbnailBox: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 10,
+  },
+  fileThumbnailText: {
+    fontSize: 11,
+    fontWeight: "600",
+    marginTop: 8,
+    textAlign: "center",
   },
 
   modalHeader: {

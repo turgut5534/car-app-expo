@@ -197,10 +197,7 @@ export default function ServiceDetailsScreen() {
             {/* EDIT */}
             <TouchableOpacity
               onPress={() =>
-                router.push({
-                  pathname: "/vehicles/services/edit",
-                  params: { id: service.id },
-                })
+                router.push(`/vehicles/services/${service.id}/edit`)
               }
               style={styles.actionBtn}
             >

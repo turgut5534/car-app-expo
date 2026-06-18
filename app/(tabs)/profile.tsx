@@ -7,6 +7,7 @@ import {
   ScrollView,
   Alert,
   Modal,
+  Image,
 } from "react-native";
 import { router, useFocusEffect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -14,11 +15,12 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import { useAppTheme } from "../../context/ThemeContext";
+import { API_URL } from "@/constants/api";
 
 type User = {
   name: string;
   email?: string;
-  avatarUrl?: string;
+  picture?: string;
   isPremium?: boolean;
 };
 
@@ -108,11 +110,11 @@ export default function ProfileScreen() {
     ]);
   };
 
-useFocusEffect(
-  useCallback(() => {
-    fetchProfile();
-  }, [])
-);
+  useFocusEffect(
+    useCallback(() => {
+      fetchProfile();
+    }, []),
+  );
 
   if (loading) {
     return (
@@ -136,7 +138,12 @@ useFocusEffect(
 
         <View style={styles.profileCard}>
           <View style={styles.avatarCircle}>
-            <Ionicons name="person" size={42} color="#FFFFFF" />
+            <Image
+              source={{
+                uri: `${API_URL}/../uploads/users/${user?.picture}`,
+              }}
+              style={styles.avatarImage}
+            />
           </View>
 
           <View style={styles.profileInfo}>
@@ -167,7 +174,9 @@ useFocusEffect(
           <MenuItem
             icon="person-outline"
             title={t("profile.profileInformation")}
-            onPress={() => {router.push('/users/profile/me')}}
+            onPress={() => {
+              router.push("/users/profile/me");
+            }}
           />
 
           <MenuItem
@@ -487,4 +496,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "700",
   },
+  avatarImage: { width: "100%", height: "100%", borderRadius: 60 },
 });

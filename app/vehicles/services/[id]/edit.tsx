@@ -20,6 +20,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAppTheme } from "../../../../context/ThemeContext";
 import { API_URL } from "@/constants/api";
 import * as DocumentPicker from "expo-document-picker";
+import DateTimePicker from "@react-native-community/datetimepicker";
 
 export const SERVICE_CATEGORIES = [
   "OIL_CHANGE",
@@ -52,11 +53,11 @@ export default function EditServiceScreen() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-
+  const [showDatePicker, setShowDatePicker] = useState(false);
   // Form States
   const [title, setTitle] = useState("");
   const [mileageKm, setMileageKm] = useState("");
-  const [date, setDate] = useState("");
+  const [date, setDate] = useState<Date | null>(null);
   const [cost, setCost] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState<ServiceCategory>("OIL_CHANGE");
@@ -99,9 +100,7 @@ export default function EditServiceScreen() {
       setTitle(s.title || "");
       setMileageKm(s.km ? s.km.toString() : "");
 
-      // Ensure date format is readable in inputs (e.g., YYYY-MM-DD)
-      const formattedDate = s.serviceDate ? s.serviceDate.split("T")[0] : "";
-      setDate(formattedDate);
+      setDate(new Date(s.serviceDate));
 
       setCost(s.amount ? s.amount.toString() : "");
       setDescription(s.description || "");
@@ -151,7 +150,6 @@ export default function EditServiceScreen() {
     try {
       const token = await AsyncStorage.getItem("token");
 
-    
       const response = await fetch(
         `${API_URL}/services/${id}/files/${fileId}`,
         {
@@ -180,8 +178,7 @@ export default function EditServiceScreen() {
   const updateService = async () => {
     if (
       (category === "OTHER" && !title.trim()) ||
-      !mileageKm.trim() ||
-      !date.trim()
+      !mileageKm.trim() 
     ) {
       Alert.alert(t("common.error"), t("services.fillAllFields"));
       return;
@@ -201,7 +198,10 @@ export default function EditServiceScreen() {
 
       formData.append("title", finalTitle.trim());
       formData.append("km", String(Number(mileageKm)));
-      formData.append("serviceDate", date);
+      formData.append(
+        "serviceDate",
+        date ? date.toISOString().split("T")[0] : "",
+      );
       formData.append("amount", String(Number(finalAmount)));
       formData.append("category", category);
       formData.append("description", description);
@@ -217,7 +217,7 @@ export default function EditServiceScreen() {
       }
 
       const response = await fetch(`${API_URL}/services/${id}`, {
-        method: "PATCH", 
+        method: "PATCH",
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -419,20 +419,31 @@ export default function EditServiceScreen() {
             <Text style={[styles.label, { color: theme.text, marginTop: 16 }]}>
               {t("services.date")}
             </Text>
-            <TextInput
-              style={[
-                styles.input,
-                {
-                  backgroundColor: theme.card,
-                  borderColor: theme.border,
-                  color: theme.text,
-                },
-              ]}
-              value={date}
-              onChangeText={setDate}
-              placeholder="YYYY-MM-DD"
-              placeholderTextColor={theme.mutedText}
-            />
+            <TouchableOpacity
+              style={[styles.input, { borderColor: theme.border }]}
+              onPress={() => setShowDatePicker(true)}
+            >
+              <Text style={{ color: date ? theme.text : theme.mutedText }}>
+                {date
+                  ? date.toLocaleDateString("pl-PL")
+                  : t("documents.noExpirationDate")}
+              </Text>
+              <Ionicons
+                name="calendar-outline"
+                size={20}
+                color={theme.mutedText}
+              />
+            </TouchableOpacity>
+            {showDatePicker && (
+              <DateTimePicker
+                value={date ?? new Date()}
+                mode="date"
+                onChange={(_, d) => {
+                  setShowDatePicker(false);
+                  if (d) setDate(d);
+                }}
+              />
+            )}
 
             <Text style={[styles.label, { color: theme.text, marginTop: 16 }]}>
               {t("services.cost")} ({t("common.optional")})

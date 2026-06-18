@@ -21,6 +21,7 @@ import { useAppTheme } from "../../../context/ThemeContext";
 import { API_URL } from "@/constants/api";
 import * as DocumentPicker from "expo-document-picker";
 import { CarDetail } from "@/types/car";
+import DateTimePicker from "@react-native-community/datetimepicker";
 
 export const SERVICE_CATEGORIES = [
   "OIL_CHANGE",
@@ -52,17 +53,17 @@ export default function CreateServiceScreen() {
 
   const [title, setTitle] = useState("");
   const [mileageKm, setMileageKm] = useState("");
-  const [date, setDate] = useState(today);
+  const [date, setDate] = useState<Date | null>(null);
   const [cost, setCost] = useState("");
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
   const [category, setCategory] = useState<ServiceCategory>("OIL_CHANGE");
   const [showCategories, setShowCategories] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   const [attachments, setAttachments] = useState<
     DocumentPicker.DocumentPickerAsset[]
   >([]);
-
 
   const [cars, setCars] = useState<CarDetail[]>([]);
   const [selectedCarId, setSelectedCarId] = useState(carId);
@@ -136,11 +137,7 @@ export default function CreateServiceScreen() {
   }, []);
 
   const createService = async () => {
-    if (
-      (category === "OTHER" && !title.trim()) ||
-      !mileageKm.trim() ||
-      !date.trim()
-    ) {
+    if ((category === "OTHER" && !title.trim()) || !mileageKm.trim()) {
       Alert.alert(t("common.error"), t("services.fillAllFields"));
       return;
     }
@@ -165,7 +162,10 @@ export default function CreateServiceScreen() {
       formData.append("title", finalTitle.trim());
       formData.append("carId", selectedCarId);
       formData.append("km", String(Number(mileageKm)));
-      formData.append("serviceDate", date);
+      formData.append(
+        "serviceDate",
+        date ? date.toISOString().split("T")[0] : "",
+      );
       formData.append("amount", String(Number(finalAmount)));
       formData.append("category", category);
       formData.append("description", description);
@@ -208,8 +208,8 @@ export default function CreateServiceScreen() {
   const isStep1Valid = !!selectedCarId && !!category;
   const isStep2Valid =
     category === "OTHER"
-      ? !!title.trim() && !!mileageKm.trim() && !!date.trim()
-      : !!mileageKm.trim() && !!date.trim();
+      ? !!title.trim() && !!mileageKm.trim()
+      : !!mileageKm.trim();
 
   const handleNext = () => {
     if (step === 1 && !isStep1Valid) {
@@ -347,7 +347,7 @@ export default function CreateServiceScreen() {
                     <ActivityIndicator color={theme.primary} />
                   ) : (
                     <>
-                      {selectedCar?.photos  ? (
+                      {selectedCar?.photos ? (
                         <Image
                           source={{
                             uri: `${API_URL}/../uploads/cars/${selectedCar.photos[0].fileName}`,
@@ -604,23 +604,36 @@ export default function CreateServiceScreen() {
                 keyboardType="numeric"
               />
 
-              <Text style={[styles.label, { color: theme.text }]}>
+              <Text
+                style={[styles.label, { color: theme.text, marginTop: 16 }]}
+              >
                 {t("services.date")}
               </Text>
-              <TextInput
-                style={[
-                  styles.input,
-                  {
-                    backgroundColor: theme.card,
-                    borderColor: theme.border,
-                    color: theme.text,
-                  },
-                ]}
-                value={date}
-                onChangeText={setDate}
-                placeholder="YYYY-MM-DD"
-                placeholderTextColor={theme.mutedText}
-              />
+              <TouchableOpacity
+                style={[styles.input, { borderColor: theme.border }]}
+                onPress={() => setShowDatePicker(true)}
+              >
+                <Text style={{ color: date ? theme.text : theme.mutedText }}>
+                  {date
+                    ? date.toLocaleDateString("pl-PL")
+                    : t("documents.noExpirationDate")}
+                </Text>
+                <Ionicons
+                  name="calendar-outline"
+                  size={20}
+                  color={theme.mutedText}
+                />
+              </TouchableOpacity>
+              {showDatePicker && (
+                <DateTimePicker
+                  value={date ?? new Date()}
+                  mode="date"
+                  onChange={(_, d) => {
+                    setShowDatePicker(false);
+                    if (d) setDate(d);
+                  }}
+                />
+              )}
             </View>
           )}
 
@@ -741,7 +754,7 @@ export default function CreateServiceScreen() {
               <SummaryRow
                 theme={theme}
                 label={t("services.date")}
-                value={date}
+                value={date?.toLocaleDateString("pl-PL") || "-"}
               />
               <SummaryRow
                 theme={theme}

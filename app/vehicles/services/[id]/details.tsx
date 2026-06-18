@@ -46,6 +46,11 @@ type ServiceDetails = {
   createdAt: string;
   car: CarDetail;
   attachments: Attachment[];
+  createdBy: {
+    id: string;
+    name: string;
+    currency: string;
+  };
 };
 
 export default function ServiceDetailsScreen() {
@@ -311,7 +316,7 @@ export default function ServiceDetailsScreen() {
           <View style={[styles.divider, { backgroundColor: theme.border }]} />
           <InfoRow
             label={t("services.date")}
-            value={serviceDate}
+            value={new Date(service.serviceDate).toLocaleDateString("pl-PL")}
             theme={theme}
           />
           <View style={[styles.divider, { backgroundColor: theme.border }]} />

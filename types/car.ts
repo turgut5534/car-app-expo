@@ -51,6 +51,14 @@ export type DocumentRecord = {
   expiresAt?: string | null;
   createdAt: string;
   car: CarDetail;
+  attachments: DocumentAttachment[];
+};
+
+export type DocumentAttachment = {
+  id: string;
+  fileName: string;
+  mimeType: string;
+  url: string;
 };
 
 export type OverviewData = {

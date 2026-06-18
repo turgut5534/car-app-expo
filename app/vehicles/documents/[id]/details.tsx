@@ -295,7 +295,7 @@ export default function DocumentDetailsScreen() {
                           ]}
                           numberOfLines={2}
                         >
-                          {attachment.originalName}
+                          {attachment.fileName}
                         </Text>
                       </View>
                     ) : (

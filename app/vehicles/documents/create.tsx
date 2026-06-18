@@ -492,26 +492,28 @@ export default function CreateDocumentScreen() {
                       },
                     ]}
                   >
-                    {documentTypes.map((item) => (
-                      <TouchableOpacity
-                        key={item}
-                        style={[
-                          styles.dropdownItem,
-                          { borderBottomColor: theme.border },
-                        ]}
-                        onPress={() => {
-                          setType(item);
-                          setShowTypes(false);
-                          if (item !== "OTHER") setTitle("");
-                        }}
-                      >
-                        <Text
-                          style={[styles.dropdownText, { color: theme.text }]}
+                    <ScrollView nestedScrollEnabled>
+                      {documentTypes.map((item) => (
+                        <TouchableOpacity
+                          key={item}
+                          style={[
+                            styles.dropdownItem,
+                            { borderBottomColor: theme.border },
+                          ]}
+                          onPress={() => {
+                            setType(item);
+                            setShowTypes(false);
+                            if (item !== "OTHER") setTitle("");
+                          }}
                         >
-                          {t(`documentTypes.${item}`)}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
+                          <Text
+                            style={[styles.dropdownText, { color: theme.text }]}
+                          >
+                            {t(`documentTypes.${item}`)}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </ScrollView>
                   </View>
                 )}
 
@@ -994,9 +996,9 @@ const styles = StyleSheet.create({
     top: 80,
     left: 18,
     right: 18,
+    maxHeight: 250,
     borderWidth: 1,
     borderRadius: 14,
-    overflow: "hidden",
     zIndex: 999,
     elevation: 999,
   },

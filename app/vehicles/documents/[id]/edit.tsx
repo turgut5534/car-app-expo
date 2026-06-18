@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -8,18 +8,21 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
+  FlatList,
+  Image,
+  Modal,
+  Dimensions,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import * as DocumentPicker from "expo-document-picker";
-import { useAppTheme } from "../../../../context/ThemeContext";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import { useAppTheme } from "@/context/ThemeContext";
 import { API_URL } from "@/constants/api";
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 type DocumentType =
   | "REGISTRATION"
@@ -42,12 +45,6 @@ const documentTypes: DocumentType[] = [
   "OTHER",
 ];
 
-type ExistingFile = {
-  id: string;
-  fileName: string;
-  originalName?: string;
-};
-
 export default function EditDocumentScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { t } = useTranslation();
@@ -64,8 +61,19 @@ export default function EditDocumentScreen() {
   const [showTypes, setShowTypes] = useState(false);
 
   // File States
-  const [existingFile, setExistingFile] = useState<ExistingFile | null>(null);
-  const [newFile, setNewFile] = useState<DocumentPicker.DocumentPickerAsset | null>(null);
+  const [existingFiles, setExistingFiles] = useState<any[]>([]);
+  const [newFiles, setNewFiles] = useState<any[]>([]);
+
+  // Viewer States
+  const [viewerVisible, setViewerVisible] = useState(false);
+  const [initialViewerIndex, setInitialViewerIndex] = useState(0);
+  const viewerRef = useRef<FlatList>(null);
+
+  // Combined array for displaying and swiping
+  const allCombinedFiles = [
+    ...existingFiles.map((f) => ({ ...f, fileType: "existing" })),
+    ...newFiles.map((f, i) => ({ ...f, fileType: "new", newIndex: i })),
+  ];
 
   useEffect(() => {
     fetchDocumentDetails();
@@ -74,585 +82,295 @@ export default function EditDocumentScreen() {
   const fetchDocumentDetails = async () => {
     try {
       const token = await AsyncStorage.getItem("token");
-      if (!token) {
-        router.replace("/(auth)/login");
-        return;
-      }
-
-      const response = await fetch(`${API_URL}/documents/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const res = await fetch(`${API_URL}/documents/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || t("documents.loadFailed"));
-      }
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
 
       const doc = data.document || data;
-
-      setType((doc.type as DocumentType) || "OTHER");
+      setType(doc.type || "OTHER");
       setTitle(doc.title || "");
-      
-      if (doc.expiresAt) {
-        setExpiresAt(new Date(doc.expiresAt));
-      }
-
-      // If your API returns the file attached to the document directly
-      if (doc.file || doc.fileName) {
-        setExistingFile({
-          id: doc.fileId || doc.id,
-          fileName: doc.fileName || doc.file,
-          originalName: doc.originalName || doc.fileName || doc.file,
-        });
-      }
-
-    } catch (error) {
-      Alert.alert(
-        t("common.error"),
-        error instanceof Error ? error.message : t("documents.loadFailed")
-      );
+      if (doc.expiresAt) setExpiresAt(new Date(doc.expiresAt));
+      if (doc.attachments) setExistingFiles(doc.attachments);
+    } catch (e) {
+      Alert.alert(t("common.error"), t("documents.loadFailed"));
       router.back();
     } finally {
       setLoading(false);
     }
   };
 
-  const formatDate = (date: Date | null) => {
-    if (!date) return t("documents.noExpirationDate");
-
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const year = date.getFullYear();
-
-    return `${day}.${month}.${year}`;
-  };
-
-  const formatDateForApi = (date: Date | null) => {
-    if (!date) return "";
-    return date.toISOString().split("T")[0];
-  };
-
-  const pickFile = async () => {
-    const result = await DocumentPicker.getDocumentAsync({
-      type: ["application/pdf", "image/*"],
-      copyToCacheDirectory: true,
-    });
-
-    if (!result.canceled) {
-      setNewFile(result.assets[0]);
-    }
-  };
-
-  const removeNewFile = () => {
-    setNewFile(null);
-  };
-
-  const confirmDeleteExistingFile = () => {
+  const deleteExistingFile = (fileId: string) => {
     Alert.alert(
-      t("common.confirmDelete"),
-      t("documents.deleteFileConfirmation", { defaultValue: "Bu dosyayı silmek istediğinize emin misiniz?" }),
+      t("common.confirm", "Emin misiniz?"),
+      t("documents.confirmDelete", "Bu dosyayı silmek istediğinize emin misiniz?"),
       [
-        { text: t("common.cancel"), style: "cancel" },
+        { text: t("common.cancel", "İptal"), style: "cancel" },
         {
-          text: t("common.delete"),
+          text: t("common.delete", "Sil"),
           style: "destructive",
-          onPress: deleteExistingFile,
+          onPress: async () => {
+            try {
+              const token = await AsyncStorage.getItem("token");
+              // UPDATE THIS ENDPOINT IF NECESSARY based on your backend routes
+              const res = await fetch(`${API_URL}/documents/${id}/attachments/${fileId}`, {
+                method: "DELETE",
+                headers: { Authorization: `Bearer ${token}` },
+              });
+              
+              if (!res.ok) throw new Error("Delete failed");
+              
+              setExistingFiles((prev) => prev.filter((f) => f._id !== fileId && f.id !== fileId));
+            } catch (error) {
+              Alert.alert(t("common.error"), t("documents.deleteError", "Dosya silinemedi."));
+            }
+          },
         },
       ]
     );
-  };
-
-  const deleteExistingFile = async () => {
-    try {
-      const token = await AsyncStorage.getItem("token");
-      
-      const response = await fetch(`${API_URL}/documents/${id}/file`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || t("common.error"));
-      }
-
-      setExistingFile(null);
-    } catch (error) {
-      Alert.alert(
-        t("common.error"),
-        error instanceof Error ? error.message : t("common.error")
-      );
-    }
   };
 
   const updateDocument = async () => {
     if (type === "OTHER" && !title.trim()) {
       Alert.alert(
         t("common.error"),
-        t("documents.fillTitle", { defaultValue: "Lütfen belge başlığını girin." })
+        t("documents.fillTitle", "Lütfen başlık girin.")
       );
       return;
     }
+    setSaving(true);
+    const token = await AsyncStorage.getItem("token");
+    const formData = new FormData();
+    formData.append("type", type);
+    formData.append("title", type === "OTHER" ? title.trim() : type);
+    formData.append(
+      "expiresAt",
+      expiresAt ? expiresAt.toISOString().split("T")[0] : ""
+    );
+    newFiles.forEach((f) =>
+      formData.append("files", {
+        uri: f.uri,
+        name: f.name,
+        type: f.mimeType || "application/octet-stream",
+      } as any)
+    );
 
-    try {
-      setSaving(true);
-      const token = await AsyncStorage.getItem("token");
-
-      const formData = new FormData();
-
-      formData.append("type", type);
-
-      if (type === "OTHER" && title.trim() !== "") {
-        formData.append("title", title.trim());
-      } else {
-        formData.append("title", type);
-      }
-
-      // Appending empty string if date was cleared
-      formData.append("expiresAt", formatDateForApi(expiresAt));
-
-      if (newFile) {
-        formData.append("file", {
-          uri: newFile.uri,
-          name: newFile.name,
-          type: newFile.mimeType || "application/octet-stream",
-        } as any);
-      }
-
-      const response = await fetch(`${API_URL}/documents/${id}`, {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-      });
-
-      const text = await response.text();
-      let data: any = null;
-
-      try {
-        data = text ? JSON.parse(text) : null;
-      } catch {
-        data = { message: text };
-      }
-
-      if (!response.ok) {
-        throw new Error(data?.message || t("documents.updateFailed", { defaultValue: "Belge güncellenemedi." }));
-      }
-
-      router.back();
-    } catch (error) {
-      Alert.alert(
-        t("common.error"),
-        error instanceof Error ? error.message : t("documents.updateFailed", { defaultValue: "Belge güncellenemedi." })
-      );
-    } finally {
-      setSaving(false);
-    }
+    const res = await fetch(`${API_URL}/documents/${id}`, {
+      method: "PUT",
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+    });
+    setSaving(false);
+    if (res.ok) router.back();
+    else Alert.alert(t("common.error"), t("documents.updateFailed"));
   };
 
-  if (loading) {
+  if (loading)
     return (
-      <SafeAreaView
-        style={[
-          styles.container,
-          {
-            backgroundColor: theme.background,
-            justifyContent: "center",
-            alignItems: "center",
-          },
-        ]}
-      >
+      <SafeAreaView style={styles.center}>
         <ActivityIndicator size="large" color={theme.primary} />
-        <Text style={{ color: theme.mutedText, marginTop: 12 }}>
-          {t("common.loading")}
-        </Text>
       </SafeAreaView>
     );
-  }
 
   return (
-    <SafeAreaView
-      style={[styles.container, { backgroundColor: theme.background }]}
-      edges={["top", "bottom"]}
-    >
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-      >
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-          contentContainerStyle={{ flexGrow: 1 }}
-        >
-          {/* Header */}
-          <View style={styles.headerRow}>
-            <TouchableOpacity style={styles.exitButton} onPress={router.back}>
-              <Ionicons name="close" size={26} color={theme.text} />
-            </TouchableOpacity>
-          </View>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
+        <View style={styles.headerRow}>
+          <TouchableOpacity onPress={router.back}>
+            <Ionicons name="close" size={26} color={theme.text} />
+          </TouchableOpacity>
+        </View>
 
-          <View
-            style={[
-              styles.iconCircle,
-              {
-                backgroundColor:
-                  theme.activeMode === "dark" ? "#172554" : "#EEF4FF",
-              },
-            ]}
+        <Text style={[styles.title, { color: theme.text }]}>
+          {t("documents.editTitle", "Belgeyi Düzenle")}
+        </Text>
+
+        {/* Form Fields Card */}
+        <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
+          <Text style={[styles.label, { color: theme.text }]}>{t("documents.type")}</Text>
+          <TouchableOpacity
+            style={[styles.input, { borderColor: theme.border }]}
+            onPress={() => setShowTypes(!showTypes)}
           >
-            <Ionicons name="create-outline" size={56} color={theme.primary} />
-          </View>
+            <Text style={{ color: theme.text }}>{t(`documentTypes.${type}`)}</Text>
+            <Ionicons name={showTypes ? "chevron-up" : "chevron-down"} size={18} color={theme.mutedText} />
+          </TouchableOpacity>
+          {showTypes && (
+            <View style={[styles.dropdown, { backgroundColor: theme.card, borderColor: theme.border }]}>
+              {documentTypes.map((item) => (
+                <TouchableOpacity
+                  key={item}
+                  style={styles.dropdownItem}
+                  onPress={() => {
+                    setType(item);
+                    setShowTypes(false);
+                  }}
+                >
+                  <Text style={{ color: theme.text }}>{t(`documentTypes.${item}`)}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
 
-          <Text style={[styles.title, { color: theme.text }]}>
-            {t("documents.editTitle", { defaultValue: "Belgeyi Düzenle" })}
-          </Text>
-
-          <Text style={[styles.subtitle, { color: theme.mutedText }]}>
-            {t("documents.editSubtitle", { defaultValue: "Belge detaylarını aşağıdan güncelleyebilirsiniz." })}
-          </Text>
-
-          {/* Form Fields Card */}
-          <View
-            style={[
-              styles.card,
-              {
-                backgroundColor: theme.card,
-                borderColor: theme.border,
-                zIndex: 50,
-              },
-            ]}
-          >
-            <Text style={[styles.label, { color: theme.text, marginTop: 0 }]}>
-              {t("documents.type")}
-            </Text>
-
-            <TouchableOpacity
-              style={[
-                styles.input,
-                {
-                  backgroundColor: theme.card,
-                  borderColor: theme.border,
-                },
-              ]}
-              onPress={() => setShowTypes(!showTypes)}
-            >
-              <Text style={[styles.inputText, { color: theme.text }]}>
-                {t(`documentTypes.${type}`)}
-              </Text>
-
-              <Ionicons
-                name={showTypes ? "chevron-up" : "chevron-down"}
-                size={18}
-                color={theme.mutedText}
+          {type === "OTHER" && (
+            <>
+              <Text style={[styles.label, { color: theme.text, marginTop: 16 }]}>{t("documents.title")}</Text>
+              <TextInput
+                style={[styles.input, { borderColor: theme.border, color: theme.text }]}
+                value={title}
+                onChangeText={setTitle}
+                placeholder="Title..."
+                placeholderTextColor={theme.mutedText}
               />
-            </TouchableOpacity>
+            </>
+          )}
 
-            {showTypes && (
-              <View
-                style={[
-                  styles.dropdownOverlayType,
-                  {
-                    backgroundColor: theme.card,
-                    borderColor: theme.border,
-                  },
-                ]}
-              >
-                {documentTypes.map((item) => (
+          <Text style={[styles.label, { color: theme.text, marginTop: 16 }]}>{t("documents.expiresAt")}</Text>
+          <TouchableOpacity
+            style={[styles.input, { borderColor: theme.border }]}
+            onPress={() => setShowDatePicker(true)}
+          >
+            <Text style={{ color: expiresAt ? theme.text : theme.mutedText }}>
+              {expiresAt ? expiresAt.toLocaleDateString("pl-PL") : t("documents.noExpirationDate")}
+            </Text>
+            <Ionicons name="calendar-outline" size={20} color={theme.mutedText} />
+          </TouchableOpacity>
+          {showDatePicker && (
+            <DateTimePicker
+              value={expiresAt ?? new Date()}
+              mode="date"
+              onChange={(_, d) => {
+                setShowDatePicker(false);
+                if (d) setExpiresAt(d);
+              }}
+            />
+          )}
+        </View>
+
+        {/* File Management */}
+        <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border, marginTop: 16 }]}>
+          <Text style={[styles.label, { color: theme.text }]}>{t("documents.files", "Dosyalar")}</Text>
+          <FlatList
+            horizontal
+            data={allCombinedFiles}
+            keyExtractor={(_, i) => i.toString()}
+            renderItem={({ item, index }) => {
+              const isPdf = item.fileName?.endsWith(".pdf") || item.name?.endsWith(".pdf");
+              const uri = item.fileType === "existing"
+                  ? `${API_URL}/uploads/documents/${item.fileName}`
+                  : item.uri;
+
+              return (
+                <View style={styles.thumbnailWrapper}>
                   <TouchableOpacity
-                    key={item}
-                    style={[
-                      styles.dropdownItem,
-                      { borderBottomColor: theme.border },
-                    ]}
+                    style={[styles.slideContent, { backgroundColor: theme.background, borderColor: theme.border }]}
                     onPress={() => {
-                      setType(item);
-                      setShowTypes(false);
-                      if (item !== "OTHER") setTitle("");
+                      setInitialViewerIndex(index);
+                      setViewerVisible(true);
                     }}
                   >
-                    <Text style={[styles.dropdownText, { color: theme.text }]}>
-                      {t(`documentTypes.${item}`)}
-                    </Text>
+                    {isPdf ? (
+                      <Ionicons name="document-text" size={40} color="#EF4444" />
+                    ) : (
+                      <Image source={{ uri }} style={styles.imageThumbnail} />
+                    )}
                   </TouchableOpacity>
-                ))}
-              </View>
-            )}
-
-            {type === "OTHER" && (
-              <>
-                <Text style={[styles.label, { color: theme.text, marginTop: 16 }]}>
-                  {t("documents.title", { defaultValue: "Belge Başlığı" })}
-                </Text>
-
-                <TextInput
-                  style={[
-                    styles.input,
-                    {
-                      backgroundColor: theme.card,
-                      borderColor: theme.border,
-                      color: theme.text,
-                    },
-                  ]}
-                  value={title}
-                  onChangeText={setTitle}
-                  placeholder={t("documents.titlePlaceholder", {
-                    defaultValue: "Belge adı girin...",
-                  })}
-                  placeholderTextColor={theme.mutedText}
-                />
-              </>
-            )}
-
-            <Text style={[styles.label, { color: theme.text, marginTop: 16 }]}>
-              {t("documents.expiresAt")}
-            </Text>
-
-            <TouchableOpacity
-              style={[
-                styles.input,
-                {
-                  backgroundColor: theme.card,
-                  borderColor: theme.border,
-                },
-              ]}
-              onPress={() => setShowDatePicker(true)}
-            >
-              <Text
-                style={{
-                  color: expiresAt ? theme.text : theme.mutedText,
-                  fontWeight: "600",
-                }}
-              >
-                {formatDate(expiresAt)}
-              </Text>
-
-              <Ionicons name="calendar-outline" size={20} color={theme.mutedText} />
-            </TouchableOpacity>
-
-            {showDatePicker && (
-              <DateTimePicker
-                value={expiresAt ?? new Date()}
-                mode="date"
-                display="default"
-                onChange={(_, selectedDate) => {
-                  setShowDatePicker(false);
-                  if (selectedDate) {
-                    setExpiresAt(selectedDate);
-                  }
-                }}
-              />
-            )}
-
-            {expiresAt ? (
-              <TouchableOpacity
-                style={styles.clearDateButton}
-                onPress={() => setExpiresAt(null)}
-              >
-                <Text style={[styles.clearDateText, { color: theme.mutedText }]}>
-                  {t("documents.clearExpirationDate")}
-                </Text>
-              </TouchableOpacity>
-            ) : null}
-          </View>
-
-          {/* File Management Card */}
-          <View
-            style={[
-              styles.card,
-              {
-                backgroundColor: theme.card,
-                borderColor: theme.border,
-                marginTop: 16,
-                zIndex: 1,
-              },
-            ]}
-          >
-            {/* Existing File Display */}
-            {existingFile && (
-              <View style={{ marginBottom: 16 }}>
-                <Text style={[styles.label, { color: theme.text, marginTop: 0 }]}>
-                  {t("documents.currentFile", { defaultValue: "Mevcut Dosya" })}
-                </Text>
-                <View
-                  style={[
-                    styles.fileCard,
-                    { backgroundColor: theme.background, borderColor: theme.border },
-                  ]}
-                >
-                  <View style={styles.fileInfo}>
-                    <Ionicons name="document-text-outline" size={24} color={theme.primary} />
-                    <Text style={[styles.fileName, { color: theme.text }]} numberOfLines={1}>
-                      {existingFile.originalName || existingFile.fileName}
-                    </Text>
-                  </View>
+                  
+                  {/* Delete Button overlaid on the image wrapper */}
                   <TouchableOpacity
-                    style={styles.deleteButton}
-                    onPress={confirmDeleteExistingFile}
+                    style={styles.removeButton}
+                    onPress={() => {
+                      if (item.fileType === "existing") {
+                        deleteExistingFile(item._id || item.id);
+                      } else {
+                        setNewFiles(newFiles.filter((_, i) => i !== item.newIndex));
+                      }
+                    }}
                   >
-                    <Ionicons name="trash-outline" size={20} color="#EF4444" />
+                    <Ionicons name="trash" size={16} color="#FFF" />
                   </TouchableOpacity>
                 </View>
-              </View>
-            )}
+              );
+            }}
+          />
+        </View>
 
-            {/* New File Display */}
-            {newFile && (
-              <View style={{ marginBottom: 16 }}>
-                <Text style={[styles.label, { color: theme.text, marginTop: 0 }]}>
-                  {t("documents.newFile", { defaultValue: "Yeni Dosya" })}
-                </Text>
-                <View
-                  style={[
-                    styles.fileCard,
-                    { backgroundColor: theme.background, borderColor: theme.border },
-                  ]}
-                >
-                  <View style={styles.fileInfo}>
-                    <Ionicons name="add-circle-outline" size={24} color={theme.primary} />
-                    <Text style={[styles.fileName, { color: theme.text }]} numberOfLines={1}>
-                      {newFile.name}
-                    </Text>
-                  </View>
-                  <TouchableOpacity
-                    style={styles.deleteButton}
-                    onPress={removeNewFile}
-                  >
-                    <Ionicons name="close-circle" size={22} color={theme.mutedText} />
-                  </TouchableOpacity>
-                </View>
-              </View>
-            )}
+        <TouchableOpacity
+          style={[styles.button, { backgroundColor: theme.primary }]}
+          onPress={updateDocument}
+          disabled={saving}
+        >
+          {saving ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.buttonText}>{t("common.save")}</Text>
+          )}
+        </TouchableOpacity>
+      </ScrollView>
 
-            {/* Pick File Button */}
-            {(!existingFile && !newFile) || (existingFile && !newFile) ? (
-              <>
-                <View style={styles.optionalLabelRow}>
-                  <Text style={[styles.label, { color: theme.text, marginTop: existingFile ? 0 : 0 }]}>
-                    {existingFile
-                      ? t("documents.replaceFile", { defaultValue: "Dosyayı Değiştir" })
-                      : t("documents.file")}
-                  </Text>
-                  <Text style={[styles.optionalText, { color: theme.mutedText }]}>
-                    {t("documents.optional", { defaultValue: "(İsteğe Bağlı)" })}
-                  </Text>
-                </View>
-
-                <TouchableOpacity
-                  style={[
-                    styles.fileBox,
-                    {
-                      backgroundColor: theme.background,
-                      borderColor: theme.border,
-                      borderStyle: "dashed",
-                    },
-                  ]}
-                  onPress={pickFile}
-                >
-                  <Ionicons name="cloud-upload-outline" size={28} color={theme.primary} />
-                  <View style={{ flex: 1 }}>
-                    <Text style={[styles.fileTitle, { color: theme.text }]}>
-                      {t("documents.chooseFile")}
-                    </Text>
-                    <Text style={[styles.fileSubtitle, { color: theme.mutedText }]}>
-                      {t("documents.fileHint")}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              </>
-            ) : null}
-          </View>
-
-          {/* Action Buttons */}
-          <View style={styles.navigationButtons}>
-            <TouchableOpacity
-              style={[
-                styles.button,
-                { backgroundColor: theme.primary, flex: 1 },
-                saving && styles.disabledButton,
-              ]}
-              onPress={updateDocument}
-              disabled={saving}
-            >
-              {saving ? (
-                <ActivityIndicator color="#FFFFFF" />
-              ) : (
-                <Text style={styles.buttonText}>
-                  {t("documents.updateDocument", { defaultValue: "Belgeyi Güncelle" })}
-                </Text>
-              )}
+      {/* Full-Screen Image / Document Swiper Modal */}
+      <Modal visible={viewerVisible} transparent={true} animationType="fade">
+        <View style={styles.viewerContainer}>
+          <SafeAreaView style={styles.viewerHeader}>
+            <TouchableOpacity onPress={() => setViewerVisible(false)} style={styles.closeViewerBtn}>
+              <Ionicons name="close" size={32} color="#fff" />
             </TouchableOpacity>
-          </View>
+          </SafeAreaView>
 
-          <View style={{ height: 40 }} />
-        </ScrollView>
-      </KeyboardAvoidingView>
+          <FlatList
+            ref={viewerRef}
+            data={allCombinedFiles}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            initialScrollIndex={initialViewerIndex}
+            getItemLayout={(data, index) => ({ length: SCREEN_WIDTH, offset: SCREEN_WIDTH * index, index })}
+            keyExtractor={(_, i) => i.toString()}
+            renderItem={({ item }) => {
+              const isPdf = item.fileName?.endsWith(".pdf") || item.name?.endsWith(".pdf");
+              const uri = item.fileType === "existing"
+                  ? `${API_URL}/uploads/documents/${item.fileName}`
+                  : item.uri;
+
+              return (
+                <View style={[styles.viewerItem, { width: SCREEN_WIDTH }]}>
+                  {isPdf ? (
+                    <View style={styles.pdfPlaceholder}>
+                      <Ionicons name="document-text" size={100} color="#EF4444" />
+                      <Text style={styles.pdfText}>{item.fileName || item.name}</Text>
+                    </View>
+                  ) : (
+                    <Image source={{ uri }} style={styles.viewerImage} resizeMode="contain" />
+                  )}
+                </View>
+              );
+            }}
+          />
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingHorizontal: 24,
-  },
+  container: { flex: 1, paddingHorizontal: 24 },
+  center: { flex: 1, justifyContent: "center", alignItems: "center" },
   headerRow: {
     flexDirection: "row",
-    alignItems: "center",
     justifyContent: "flex-end",
-    marginTop: 8,
-    marginBottom: 10,
-  },
-  exitButton: {
-    padding: 4,
-  },
-  iconCircle: {
-    width: 112,
-    height: 112,
-    borderRadius: 56,
-    justifyContent: "center",
-    alignItems: "center",
-    alignSelf: "center",
-    marginBottom: 24,
+    paddingVertical: 10,
   },
   title: {
-    fontSize: 28,
-    fontWeight: "900",
+    fontSize: 24,
+    fontWeight: "800",
     textAlign: "center",
-    marginBottom: 8,
+    marginBottom: 20,
   },
-  subtitle: {
-    textAlign: "center",
-    lineHeight: 22,
-    marginBottom: 26,
-  },
-  card: {
-    borderWidth: 1,
-    borderRadius: 18,
-    padding: 18,
-  },
-  label: {
-    fontSize: 13,
-    fontWeight: "700",
-    marginBottom: 7,
-  },
-  optionalLabelRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 7,
-  },
-  optionalText: {
-    fontSize: 12,
-    fontWeight: "600",
-  },
+  card: { padding: 18, borderRadius: 16, borderWidth: 1 },
+  label: { fontSize: 13, fontWeight: "700", marginBottom: 8 },
   input: {
-    minHeight: 50,
+    height: 50,
     borderWidth: 1,
     borderRadius: 12,
     paddingHorizontal: 14,
@@ -660,93 +378,85 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
   },
-  inputText: {
-    fontWeight: "600",
-  },
-  dropdownOverlayType: {
+  dropdown: {
     position: "absolute",
     top: 80,
     left: 18,
     right: 18,
     borderWidth: 1,
-    borderRadius: 14,
-    overflow: "hidden",
-    zIndex: 999,
-    elevation: 999,
-  },
-  dropdownItem: {
-    paddingVertical: 13,
-    paddingHorizontal: 14,
-    borderBottomWidth: 1,
-  },
-  dropdownText: {
-    fontWeight: "600",
-  },
-  fileBox: {
-    minHeight: 72,
-    borderWidth: 1,
-    borderRadius: 14,
-    padding: 14,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  fileTitle: {
-    fontSize: 15,
-    fontWeight: "800",
-  },
-  fileSubtitle: {
-    marginTop: 4,
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  fileCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    borderWidth: 1,
     borderRadius: 12,
-    padding: 12,
+    zIndex: 10,
   },
-  fileInfo: {
-    flexDirection: "row",
+  dropdownItem: { padding: 14, borderBottomWidth: 1, borderColor: "#ccc" },
+  thumbnailWrapper: {
+    position: "relative",
+    marginHorizontal: 6,
+  },
+  slideContent: {
+    width: 120,
+    height: 120,
+    borderRadius: 12,
+    borderWidth: 1,
     alignItems: "center",
-    flex: 1,
-    gap: 10,
+    justifyContent: "center",
+    overflow: "hidden",
   },
-  fileName: {
-    fontSize: 14,
-    fontWeight: "600",
-    flex: 1,
-  },
-  deleteButton: {
-    padding: 4,
-  },
-  navigationButtons: {
-    flexDirection: "row",
-    gap: 12,
-    marginTop: 24,
+  imageThumbnail: { width: "100%", height: "100%" },
+  removeButton: {
+    position: "absolute",
+    top: -6,
+    right: -6,
+    backgroundColor: "#EF4444",
+    padding: 6,
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: "#fff",
+    elevation: 3,
   },
   button: {
     height: 56,
     borderRadius: 14,
     justifyContent: "center",
     alignItems: "center",
+    marginTop: 24,
   },
-  disabledButton: {
-    opacity: 0.6,
+  buttonText: { color: "#fff", fontWeight: "700" },
+  
+  // Viewer Styles
+  viewerContainer: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.95)",
   },
-  buttonText: {
-    color: "#FFFFFF",
-    fontWeight: "800",
+  viewerHeader: {
+    position: "absolute",
+    top: 0,
+    width: "100%",
+    zIndex: 10,
+    alignItems: "flex-end",
+    padding: 16,
+  },
+  closeViewerBtn: {
+    padding: 8,
+  },
+  viewerItem: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  viewerImage: {
+    width: "100%",
+    height: "80%",
+  },
+  pdfPlaceholder: {
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 20,
+  },
+  pdfText: {
+    color: "#FFF",
+    marginTop: 16,
     fontSize: 16,
-  },
-  clearDateButton: {
-    marginTop: 8,
-    alignSelf: "flex-start",
-  },
-  clearDateText: {
-    fontSize: 13,
-    fontWeight: "700",
+    fontWeight: "bold",
+    textAlign: "center",
   },
 });

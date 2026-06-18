@@ -61,7 +61,7 @@ export default function EditProfileScreen() {
 
       setName(data.name || "");
       setEmail(data.email || "");
-      setCurrentAvatarUrl(data.user?.avatar || null);
+      setCurrentAvatarUrl(data.picture);
     } catch (error) {
       Alert.alert(
         t("common.error", "Hata"),
@@ -105,7 +105,7 @@ export default function EditProfileScreen() {
       formData.append("email", email.trim());
 
       if (newAvatar) {
-        formData.append("avatar", {
+        formData.append("file", {
           uri:
             Platform.OS === "android"
               ? newAvatar.uri
@@ -158,7 +158,7 @@ export default function EditProfileScreen() {
   const displayAvatar = newAvatar
     ? { uri: newAvatar.uri }
     : currentAvatarUrl
-      ? { uri: `${API_URL}/uploads/avatars/${currentAvatarUrl}` }
+      ? { uri: `${API_URL}/uploads/users/${currentAvatarUrl}` }
       : null;
 
   return (

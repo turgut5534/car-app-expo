@@ -21,6 +21,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useAppTheme } from "@/context/ThemeContext";
 import { API_URL } from "@/constants/api";
+import * as DocumentPicker from "expo-document-picker";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -63,6 +64,9 @@ export default function EditDocumentScreen() {
   // File States
   const [existingFiles, setExistingFiles] = useState<any[]>([]);
   const [newFiles, setNewFiles] = useState<any[]>([]);
+  const [newAttachments, setNewAttachments] = useState<
+    DocumentPicker.DocumentPickerAsset[]
+  >([]);
 
   // Viewer States
   const [viewerVisible, setViewerVisible] = useState(false);
@@ -74,6 +78,17 @@ export default function EditDocumentScreen() {
     ...existingFiles.map((f) => ({ ...f, fileType: "existing" })),
     ...newFiles.map((f, i) => ({ ...f, fileType: "new", newIndex: i })),
   ];
+
+  const pickFile = async () => {
+    const result = await DocumentPicker.getDocumentAsync({
+      type: ["image/*", "application/pdf"],
+      multiple: true,
+    });
+
+    if (!result.canceled) {
+      setNewAttachments((prev) => [...prev, ...result.assets]);
+    }
+  };
 
   useEffect(() => {
     fetchDocumentDetails();
@@ -101,12 +116,19 @@ export default function EditDocumentScreen() {
     }
   };
 
+  const removeNewAttachment = (index: number) => {
+    setNewAttachments((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const deleteExistingFile = (fileId: string) => {
     Alert.alert(
       t("common.confirm", "Emin misiniz?"),
-      t("documents.confirmDelete", "Bu dosyayı silmek istediğinize emin misiniz?"),
+      t(
+        "documents.confirmDelete",
+        "Bu dosyayı silmek istediğinize emin misiniz?",
+      ),
       [
-        { text: t("common.cancel", "İptal"), style: "cancel" },
+        { text: t("common.cancel", "Cancel"), style: "cancel" },
         {
           text: t("common.delete", "Sil"),
           style: "destructive",
@@ -114,56 +136,78 @@ export default function EditDocumentScreen() {
             try {
               const token = await AsyncStorage.getItem("token");
               // UPDATE THIS ENDPOINT IF NECESSARY based on your backend routes
-              const res = await fetch(`${API_URL}/documents/${id}/attachments/${fileId}`, {
-                method: "DELETE",
-                headers: { Authorization: `Bearer ${token}` },
-              });
-              
+              const res = await fetch(
+                `${API_URL}/documents/${id}/attachments/${fileId}`,
+                {
+                  method: "DELETE",
+                  headers: { Authorization: `Bearer ${token}` },
+                },
+              );
+
               if (!res.ok) throw new Error("Delete failed");
-              
-              setExistingFiles((prev) => prev.filter((f) => f._id !== fileId && f.id !== fileId));
+
+              setExistingFiles((prev) =>
+                prev.filter((f) => f._id !== fileId && f.id !== fileId),
+              );
             } catch (error) {
-              Alert.alert(t("common.error"), t("documents.deleteError", "Dosya silinemedi."));
+              Alert.alert(
+                t("common.error"),
+                t("documents.deleteError", "Dosya silinemedi."),
+              );
             }
           },
         },
-      ]
+      ],
     );
   };
 
   const updateDocument = async () => {
+
     if (type === "OTHER" && !title.trim()) {
       Alert.alert(
         t("common.error"),
-        t("documents.fillTitle", "Lütfen başlık girin.")
+        t("documents.fillTitle", "Lütfen başlık girin."),
       );
       return;
     }
-    setSaving(true);
-    const token = await AsyncStorage.getItem("token");
-    const formData = new FormData();
-    formData.append("type", type);
-    formData.append("title", type === "OTHER" ? title.trim() : type);
-    formData.append(
-      "expiresAt",
-      expiresAt ? expiresAt.toISOString().split("T")[0] : ""
-    );
-    newFiles.forEach((f) =>
-      formData.append("files", {
-        uri: f.uri,
-        name: f.name,
-        type: f.mimeType || "application/octet-stream",
-      } as any)
-    );
+    try {
+      setSaving(true);
+      const token = await AsyncStorage.getItem("token");
+      const formData = new FormData();
+      formData.append("type", type);
+      formData.append("title", type === "OTHER" ? title.trim() : type);
+      formData.append(
+        "expiresAt",
+        expiresAt ? expiresAt.toISOString().split("T")[0] : "",
+      );
 
-    const res = await fetch(`${API_URL}/documents/${id}`, {
-      method: "PUT",
-      headers: { Authorization: `Bearer ${token}` },
-      body: formData,
-    });
-    setSaving(false);
-    if (res.ok) router.back();
-    else Alert.alert(t("common.error"), t("documents.updateFailed"));
+      if (newAttachments.length > 0) {
+        newAttachments.forEach((file) => {
+          formData.append("files", {
+            uri: file.uri,
+            name: file.name ?? "file",
+            type: file.mimeType || "application/octet-stream",
+          } as any);
+        });
+      }
+
+      const res = await fetch(`${API_URL}/documents/${id}`, {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+
+      const data = await res.json();
+
+      console.log("Update response:", data);
+      setSaving(false);
+      if (res.ok) router.back();
+      else Alert.alert(t("common.error"), t("documents.updateFailed"));
+    } catch (error) {
+      setSaving(false);
+      console.error("Update error:", error);
+      Alert.alert(t("common.error"), t("documents.updateFailed"));
+    }
   };
 
   if (loading)
@@ -174,8 +218,13 @@ export default function EditDocumentScreen() {
     );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: theme.background }]}
+    >
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 40 }}
+      >
         <View style={styles.headerRow}>
           <TouchableOpacity onPress={router.back}>
             <Ionicons name="close" size={26} color={theme.text} />
@@ -187,17 +236,35 @@ export default function EditDocumentScreen() {
         </Text>
 
         {/* Form Fields Card */}
-        <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <Text style={[styles.label, { color: theme.text }]}>{t("documents.type")}</Text>
+        <View
+          style={[
+            styles.card,
+            { backgroundColor: theme.card, borderColor: theme.border },
+          ]}
+        >
+          <Text style={[styles.label, { color: theme.text }]}>
+            {t("documents.type")}
+          </Text>
           <TouchableOpacity
             style={[styles.input, { borderColor: theme.border }]}
             onPress={() => setShowTypes(!showTypes)}
           >
-            <Text style={{ color: theme.text }}>{t(`documentTypes.${type}`)}</Text>
-            <Ionicons name={showTypes ? "chevron-up" : "chevron-down"} size={18} color={theme.mutedText} />
+            <Text style={{ color: theme.text }}>
+              {t(`documentTypes.${type}`)}
+            </Text>
+            <Ionicons
+              name={showTypes ? "chevron-up" : "chevron-down"}
+              size={18}
+              color={theme.mutedText}
+            />
           </TouchableOpacity>
           {showTypes && (
-            <View style={[styles.dropdown, { backgroundColor: theme.card, borderColor: theme.border }]}>
+            <View
+              style={[
+                styles.dropdown,
+                { backgroundColor: theme.card, borderColor: theme.border },
+              ]}
+            >
               {documentTypes.map((item) => (
                 <TouchableOpacity
                   key={item}
@@ -207,7 +274,9 @@ export default function EditDocumentScreen() {
                     setShowTypes(false);
                   }}
                 >
-                  <Text style={{ color: theme.text }}>{t(`documentTypes.${item}`)}</Text>
+                  <Text style={{ color: theme.text }}>
+                    {t(`documentTypes.${item}`)}
+                  </Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -215,9 +284,16 @@ export default function EditDocumentScreen() {
 
           {type === "OTHER" && (
             <>
-              <Text style={[styles.label, { color: theme.text, marginTop: 16 }]}>{t("documents.title")}</Text>
+              <Text
+                style={[styles.label, { color: theme.text, marginTop: 16 }]}
+              >
+                {t("documents.title")}
+              </Text>
               <TextInput
-                style={[styles.input, { borderColor: theme.border, color: theme.text }]}
+                style={[
+                  styles.input,
+                  { borderColor: theme.border, color: theme.text },
+                ]}
                 value={title}
                 onChangeText={setTitle}
                 placeholder="Title..."
@@ -226,15 +302,23 @@ export default function EditDocumentScreen() {
             </>
           )}
 
-          <Text style={[styles.label, { color: theme.text, marginTop: 16 }]}>{t("documents.expiresAt")}</Text>
+          <Text style={[styles.label, { color: theme.text, marginTop: 16 }]}>
+            {t("documents.expiresAt")}
+          </Text>
           <TouchableOpacity
             style={[styles.input, { borderColor: theme.border }]}
             onPress={() => setShowDatePicker(true)}
           >
             <Text style={{ color: expiresAt ? theme.text : theme.mutedText }}>
-              {expiresAt ? expiresAt.toLocaleDateString("pl-PL") : t("documents.noExpirationDate")}
+              {expiresAt
+                ? expiresAt.toLocaleDateString("pl-PL")
+                : t("documents.noExpirationDate")}
             </Text>
-            <Ionicons name="calendar-outline" size={20} color={theme.mutedText} />
+            <Ionicons
+              name="calendar-outline"
+              size={20}
+              color={theme.mutedText}
+            />
           </TouchableOpacity>
           {showDatePicker && (
             <DateTimePicker
@@ -249,34 +333,57 @@ export default function EditDocumentScreen() {
         </View>
 
         {/* File Management */}
-        <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border, marginTop: 16 }]}>
-          <Text style={[styles.label, { color: theme.text }]}>{t("documents.files", "Dosyalar")}</Text>
+        <View
+          style={[
+            styles.card,
+            {
+              backgroundColor: theme.card,
+              borderColor: theme.border,
+              marginTop: 16,
+            },
+          ]}
+        >
+          <Text style={[styles.label, { color: theme.text }]}>
+            {t("documents.files", "Dosyalar")}
+          </Text>
           <FlatList
             horizontal
             data={allCombinedFiles}
             keyExtractor={(_, i) => i.toString()}
             renderItem={({ item, index }) => {
-              const isPdf = item.fileName?.endsWith(".pdf") || item.name?.endsWith(".pdf");
-              const uri = item.fileType === "existing"
+              const isPdf =
+                item.fileName?.endsWith(".pdf") || item.name?.endsWith(".pdf");
+              const uri =
+                item.fileType === "existing"
                   ? `${API_URL}/uploads/documents/${item.fileName}`
                   : item.uri;
 
               return (
                 <View style={styles.thumbnailWrapper}>
                   <TouchableOpacity
-                    style={[styles.slideContent, { backgroundColor: theme.background, borderColor: theme.border }]}
+                    style={[
+                      styles.slideContent,
+                      {
+                        backgroundColor: theme.background,
+                        borderColor: theme.border,
+                      },
+                    ]}
                     onPress={() => {
                       setInitialViewerIndex(index);
                       setViewerVisible(true);
                     }}
                   >
                     {isPdf ? (
-                      <Ionicons name="document-text" size={40} color="#EF4444" />
+                      <Ionicons
+                        name="document-text"
+                        size={40}
+                        color="#EF4444"
+                      />
                     ) : (
                       <Image source={{ uri }} style={styles.imageThumbnail} />
                     )}
                   </TouchableOpacity>
-                  
+
                   {/* Delete Button overlaid on the image wrapper */}
                   <TouchableOpacity
                     style={styles.removeButton}
@@ -284,7 +391,9 @@ export default function EditDocumentScreen() {
                       if (item.fileType === "existing") {
                         deleteExistingFile(item._id || item.id);
                       } else {
-                        setNewFiles(newFiles.filter((_, i) => i !== item.newIndex));
+                        setNewFiles(
+                          newFiles.filter((_, i) => i !== item.newIndex),
+                        );
                       }
                     }}
                   >
@@ -294,6 +403,77 @@ export default function EditDocumentScreen() {
               );
             }}
           />
+
+          {newAttachments.length > 0 && (
+            <View style={{ marginBottom: 16 }}>
+              <Text style={[styles.label, { color: theme.text }]}>
+                {t("services.newFiles")}
+              </Text>
+              {newAttachments.map((file, index) => (
+                <View
+                  key={`new-${index}`}
+                  style={[
+                    styles.fileCard,
+                    {
+                      backgroundColor: theme.background,
+                      borderColor: theme.border,
+                    },
+                  ]}
+                >
+                  <View style={styles.fileInfo}>
+                    <Ionicons
+                      name="add-circle-outline"
+                      size={24}
+                      color={theme.primary}
+                    />
+                    <Text
+                      style={[styles.fileName, { color: theme.text }]}
+                      numberOfLines={1}
+                    >
+                      {file.name}
+                    </Text>
+                  </View>
+                  <TouchableOpacity
+                    style={styles.deleteButton}
+                    onPress={() => removeNewAttachment(index)}
+                  >
+                    <Ionicons
+                      name="close-circle"
+                      size={22}
+                      color={theme.mutedText}
+                    />
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </View>
+          )}
+
+          <Text style={[styles.label, { color: theme.text, marginTop: 16 }]}>
+            {t("services.addNewFiles")} ({t("common.optional")})
+          </Text>
+          <TouchableOpacity
+            onPress={pickFile}
+            style={[
+              styles.input,
+              {
+                backgroundColor: theme.background,
+                borderColor: theme.border,
+                justifyContent: "center",
+                borderStyle: "dashed",
+              },
+            ]}
+          >
+            <Text
+              style={{
+                color: theme.primary,
+                textAlign: "center",
+                fontWeight: "600",
+              }}
+            >
+              <Ionicons name="cloud-upload-outline" size={16} />{" "}
+              {t("services.uploadFiles")}
+            </Text>
+          </TouchableOpacity>
         </View>
 
         <TouchableOpacity
@@ -313,7 +493,10 @@ export default function EditDocumentScreen() {
       <Modal visible={viewerVisible} transparent={true} animationType="fade">
         <View style={styles.viewerContainer}>
           <SafeAreaView style={styles.viewerHeader}>
-            <TouchableOpacity onPress={() => setViewerVisible(false)} style={styles.closeViewerBtn}>
+            <TouchableOpacity
+              onPress={() => setViewerVisible(false)}
+              style={styles.closeViewerBtn}
+            >
               <Ionicons name="close" size={32} color="#fff" />
             </TouchableOpacity>
           </SafeAreaView>
@@ -325,11 +508,17 @@ export default function EditDocumentScreen() {
             pagingEnabled
             showsHorizontalScrollIndicator={false}
             initialScrollIndex={initialViewerIndex}
-            getItemLayout={(data, index) => ({ length: SCREEN_WIDTH, offset: SCREEN_WIDTH * index, index })}
+            getItemLayout={(data, index) => ({
+              length: SCREEN_WIDTH,
+              offset: SCREEN_WIDTH * index,
+              index,
+            })}
             keyExtractor={(_, i) => i.toString()}
             renderItem={({ item }) => {
-              const isPdf = item.fileName?.endsWith(".pdf") || item.name?.endsWith(".pdf");
-              const uri = item.fileType === "existing"
+              const isPdf =
+                item.fileName?.endsWith(".pdf") || item.name?.endsWith(".pdf");
+              const uri =
+                item.fileType === "existing"
                   ? `${API_URL}/uploads/documents/${item.fileName}`
                   : item.uri;
 
@@ -337,11 +526,21 @@ export default function EditDocumentScreen() {
                 <View style={[styles.viewerItem, { width: SCREEN_WIDTH }]}>
                   {isPdf ? (
                     <View style={styles.pdfPlaceholder}>
-                      <Ionicons name="document-text" size={100} color="#EF4444" />
-                      <Text style={styles.pdfText}>{item.fileName || item.name}</Text>
+                      <Ionicons
+                        name="document-text"
+                        size={100}
+                        color="#EF4444"
+                      />
+                      <Text style={styles.pdfText}>
+                        {item.fileName || item.name}
+                      </Text>
                     </View>
                   ) : (
-                    <Image source={{ uri }} style={styles.viewerImage} resizeMode="contain" />
+                    <Image
+                      source={{ uri }}
+                      style={styles.viewerImage}
+                      resizeMode="contain"
+                    />
                   )}
                 </View>
               );
@@ -421,7 +620,7 @@ const styles = StyleSheet.create({
     marginTop: 24,
   },
   buttonText: { color: "#fff", fontWeight: "700" },
-  
+
   // Viewer Styles
   viewerContainer: {
     flex: 1,
@@ -458,5 +657,29 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     textAlign: "center",
+  },
+  fileInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+    gap: 10,
+  },
+  fileName: {
+    fontSize: 14,
+    fontWeight: "600",
+    flex: 1,
+  },
+  deleteButton: {
+    padding: 4,
+  },
+
+  fileCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 10,
   },
 });

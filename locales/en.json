@@ -258,6 +258,7 @@
     "updateService": "Update Service",
     "updateFailed": "Service could not be updated.",
     "addNewFile": "Add new file",
+    "addNewFiles": "Add new files",
     "removeFile": "Remove file",
     "noFiles": "No files uploaded",
     "noFilesDescription": "No files have been uploaded for this service yet.",

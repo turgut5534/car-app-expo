@@ -225,6 +225,11 @@ export default function DocumentDetailsScreen() {
             theme={theme}
           />
           <Info
+            label={t("documents.title", "Title")}
+            value={doc.title || t(`documentTypes.${doc.type}`)}
+            theme={theme}
+          />
+          <Info
             label={t("documents.createdAt", "Created")}
             value={new Date(doc.createdAt).toLocaleDateString("pl-PL")}
             theme={theme}
@@ -245,7 +250,7 @@ export default function DocumentDetailsScreen() {
         {doc.attachments?.length > 0 && (
           <View style={[styles.card, { backgroundColor: theme.card }]}>
             <Text style={[styles.sectionTitle, { color: theme.text }]}>
-              {t("documents.files", "Files")}  ({doc.attachments.length})
+              {t("documents.files", "Files")} ({doc.attachments.length})
             </Text>
 
             <ScrollView

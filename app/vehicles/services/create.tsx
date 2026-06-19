@@ -109,6 +109,7 @@ export default function CreateServiceScreen() {
       const carList = Array.isArray(data) ? data : data?.cars || [];
 
       setCars(carList);
+      setDate(today ? new Date(today) : null);
 
       const initialCarId = selectedCarId || carList[0]?.id;
       const initialCar = carList.find(

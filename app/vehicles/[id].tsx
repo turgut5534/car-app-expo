@@ -36,6 +36,7 @@ export default function CarDetailScreen() {
     loadingMore,
     hasMore,  
     loadMore,
+    refreshing,
     expensesLoading,
   } = useCarDetail(id);
 
@@ -79,7 +80,7 @@ export default function CarDetailScreen() {
           overviewLoading ? (
             <ActivityIndicator color={theme.primary} />
           ) : overview ? (
-            <OverviewTab overview={overview} />
+            <OverviewTab overview={overview} refreshing={refreshing} />
           ) : (
             <Text>No overview data</Text>
           )

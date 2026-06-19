@@ -18,7 +18,7 @@ export function useCarDetail(id?: string) {
   const { t } = useTranslation();
 
   const [car, setCar] = useState<CarDetail | null>(null);
-  const [overview, setOverview] = useState<OverviewData>();
+  const [overview, setOverview] = useState<OverviewData[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [documents, setDocuments] = useState<DocumentRecord[]>([]);
   const [fuels, setFuels] = useState<FuelResponse | null>(null);
@@ -37,6 +37,7 @@ export function useCarDetail(id?: string) {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const getToken = useCallback(async () => {
     const token = await AsyncStorage.getItem("token");
@@ -126,6 +127,10 @@ export function useCarDetail(id?: string) {
     },
     [id, getToken],
   );
+
+  const onRefresh = useCallback(() => {
+    fetchOverView();
+  }, [id]);
 
   const fetchDocuments = useCallback(async () => {
     if (!id) return;
@@ -344,6 +349,7 @@ export function useCarDetail(id?: string) {
     overviewLoading,
     loadMore,
     loadingMore,
-    hasMore,  
+    hasMore,
+    refreshing,
   };
 }

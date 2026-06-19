@@ -61,13 +61,16 @@ export type DocumentAttachment = {
   url: string;
 };
 
+export type HistoryType = "SERVICE" | "FUEL" | "EXPENSE" | "DOCUMENT";
+
 export type OverviewData = {
-  montlyExpenses: number;
-  totalExpenses: number;
-  lastService: Service;
-  averageFuelConsumption: number;
-  lastFuel: FuelRecord;
-  costPerKilometer: number;
+  id: string;
+  type: HistoryType;
+  title: string;
+  description: string;
+  date: string;
+  mileage?: number;
+  amount?: number;
   currency: string;
 };
 

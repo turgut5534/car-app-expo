@@ -202,6 +202,8 @@
     "detailLoadFailed": "Car details could not be loaded.",
     "detailTitleServices": "CAR DETAIL - SERVICES",
     "addService": "Add Service",
+    "addExpense": "Add Expense",
+    "searchExpense": "Search expenses",
     "noServices": "No service records yet",
     "noExpenses": "No expense records yet",
     "addDocument": "Add Document",
@@ -344,5 +346,37 @@
     "fillAllFields": "Please fill in all fields.",
     "selectCar": "Please select a vehicle.",
     "createFailed": "Fuel record could not be created."
+  },
+  "expenses": {
+    "totalExpenses": "Total Expenses",
+    "createSubtitle": "Keep track of your vehicle costs",
+    "checkDetailsBeforeSaving": "Review your expense details",
+    "vehicle": "Vehicle",
+    "selectVehicle": "Select Vehicle",
+    "vehicleFallback": "Unknown Vehicle",
+    "type": "Category",
+    "expenseName": "Expense Name",
+    "expenseNamePlaceholder": "E.g. Traffic fine",
+    "mileageKm": "Mileage (km)",
+    "date": "Date",
+    "cost": "Amount",
+    "description": "Description",
+    "addFile": "Add Attachments",
+    "filesSelected": "files selected",
+    "fillAllFields": "Please fill all required fields.",
+    "createFailed": "Failed to create expense",
+    "saveExpense": "Save Expense"
+  },
+  "expenseCategories": {
+    "FUEL": "Fuel",
+    "SERVICE": "Service & Maintenance",
+    "INSURANCE": "Insurance",
+    "TAX": "Tax & Fees",
+    "PARKING": "Parking",
+    "CAR_WASH": "Car Wash",
+    "TOLL": "Toll Road / Highway",
+    "TIRE": "Tires",
+    "DOCUMENT": "Documents & Registration",
+    "OTHER": "Other"
   }
 }

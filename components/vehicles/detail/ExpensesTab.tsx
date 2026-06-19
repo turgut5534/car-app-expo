@@ -68,14 +68,14 @@ export function ExpensesTab({
         }
       >
         <Ionicons name="add" size={20} color="#fff" />
-        <Text style={styles.addButtonText}>{t("cars.addService")}</Text>
+        <Text style={styles.addButtonText}>{t("cars.addExpense")}</Text>
       </TouchableOpacity>
 
       <View style={styles.filtersRow}>
         <TextInput
           value={search}
           onChangeText={setSearch}
-          placeholder="Search services..."
+          placeholder={t("cars.searchExpense")}
           placeholderTextColor={theme.mutedText}
           style={[
             styles.searchInput,
@@ -112,7 +112,7 @@ export function ExpensesTab({
           marginBottom: 12,
         }}
       >
-        {t("services.totalServices")}: {filteredExpenses.length}{" "}
+        {t("expenses.totalExpenses")}: {filteredExpenses.length}{" "}
       </Text>
 
       {expenses.length > 0 ? (

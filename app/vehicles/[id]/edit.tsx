@@ -371,17 +371,19 @@ export default function VehicleEditScreen() {
                             },
                           ]}
                         >
-                          <TouchableOpacity
-                            style={[
-                              styles.photoMenuItem,
-                              { borderBottomColor: theme.border },
-                            ]}
-                            onPress={() => handleSetCoverPhoto(photo)}
-                          >
-                            <Text style={{ color: theme.text }}>
-                              {t("vehicles.setCover", "Set as Cover Photo")}
-                            </Text>
-                          </TouchableOpacity>
+                          {!photo.is_cover && (
+                            <TouchableOpacity
+                              style={[
+                                styles.photoMenuItem,
+                                { borderBottomColor: theme.border },
+                              ]}
+                              onPress={() => handleSetCoverPhoto(photo)}
+                            >
+                              <Text style={{ color: theme.text }}>
+                                {t("vehicles.setCover", "Set as Cover Photo")}
+                              </Text>
+                            </TouchableOpacity>
+                          )}
 
                           <TouchableOpacity
                             style={[
@@ -599,7 +601,7 @@ export default function VehicleEditScreen() {
                   setShowYears(!showYears);
                   setShowBrands(false);
                   setShowModels(false);
-                  setShowFuelTypes(false)
+                  setShowFuelTypes(false);
                 }}
               >
                 <Text
@@ -632,7 +634,7 @@ export default function VehicleEditScreen() {
                           { borderBottomColor: theme.border },
                         ]}
                         onPress={() => {
-                          updateField('year', year);
+                          updateField("year", year);
                           setShowYears(false);
                         }}
                       >

@@ -21,7 +21,6 @@ export type ServiceAttachments = {
   mimeType?: string;
 };
 
-
 export type ServiceCategory =
   | "OIL_CHANGE"
   | "FILTER_CHANGE"
@@ -155,6 +154,7 @@ export type FuelRecord = {
   liters: number;
   pricePerLiter: string;
   totalAmount: string;
+  currency: string;
   km: number;
   consumption: number;
   createdAt: string;

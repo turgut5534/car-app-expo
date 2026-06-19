@@ -253,7 +253,7 @@ export function FuelTab({ fuelResponse, carId }: Props) {
               {fuelResponse?.averageFuelConsumption != null
                 ? Number(fuelResponse.averageFuelPrice).toFixed(2)
                 : "-"}{" "}
-              {fuelResponse?.fuels[0]?.createdBy.currency}
+              {fuelResponse?.fuels[0]?.currency}
             </Text>
           </View>
         </View>
@@ -269,7 +269,7 @@ export function FuelTab({ fuelResponse, carId }: Props) {
             <FuelItem
               key={fuel.id}
               fuel={fuel}
-              currency={fuel.createdBy.currency}
+              currency={fuel.currency}
               consumption={t("cars.staticConsumptionExample")}
             />
           ))}

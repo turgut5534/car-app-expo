@@ -320,6 +320,7 @@ export function useCarDetail(id?: string) {
     useCallback(() => {
       fetchCar();
       fetchOverView();
+      fetchDocuments();
       fetchServices(1, false);
     }, [fetchCar]),
   );

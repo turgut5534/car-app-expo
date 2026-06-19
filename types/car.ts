@@ -167,11 +167,13 @@ export type ExpenseRecord = {
   currency: string;
   title: string;
   mileage: number;
+  car: CarDetail;
   description: number;
   amount: number;
   expenseDate: Date
   category: ExpenseCategory[];
   createdAt: string;
+  attachments: ExpenseAttachments[]
 };
 
 export enum ExpenseCategory {
@@ -186,6 +188,13 @@ export enum ExpenseCategory {
   DOCUMENT = "DOCUMENT",
   OTHER = "OTHER",
 }
+
+export type ExpenseAttachments = {
+  id: string;
+  fileName: string;
+  fileUrl: string;
+  mimeType?: string;
+};
 
 export type Reminder = {
   id: string;

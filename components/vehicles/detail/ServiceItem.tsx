@@ -8,10 +8,9 @@ import { useTranslation } from "react-i18next";
 
 type Props = {
   service: Service;
-  currency: string;
 };
 
-export function ServiceItem({ service, currency }: Props) {
+export function ServiceItem({ service }: Props) {
   const { theme } = useAppTheme();
   const { t } = useTranslation();
 
@@ -79,7 +78,7 @@ export function ServiceItem({ service, currency }: Props) {
       {/* RIGHT SIDE */}
       <View style={styles.rightSide}>
         <Text style={[styles.serviceCost, { color: theme.text }]}>
-          {service.amount} {currency}
+          {service.amount} {service.currency}
         </Text>
 
         <Ionicons name="chevron-forward" size={20} color={theme.mutedText} />

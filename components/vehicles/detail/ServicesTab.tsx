@@ -121,7 +121,6 @@ export function ServicesTab({
             <ServiceItem
               key={service.id}
               service={service}
-              currency={service.createdBy.currency || ""}
             />
           ))}
 

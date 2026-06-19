@@ -24,34 +24,9 @@ import { WebView } from "react-native-webview";
 
 import { useAppTheme } from "@/context/ThemeContext";
 import { API_URL } from "@/constants/api";
-import { CarDetail } from "@/types/car";
+import { Service, ServiceAttachments } from "@/types/car";
 
 const { width } = Dimensions.get("window");
-
-type Attachment = {
-  id: string;
-  fileName: string;
-  fileUrl: string;
-  mimeType?: string;
-};
-
-type ServiceDetails = {
-  id: string;
-  title?: string;
-  description?: string;
-  category: string;
-  amount?: number;
-  km: number;
-  serviceDate: string;
-  createdAt: string;
-  car: CarDetail;
-  attachments: Attachment[];
-  createdBy: {
-    id: string;
-    name: string;
-    currency: string;
-  };
-};
 
 export default function ServiceDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -60,7 +35,7 @@ export default function ServiceDetailsScreen() {
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [service, setService] = useState<ServiceDetails | null>(null);
+  const [service, setService] = useState<Service | null>(null);
 
   // Slider State
   const [previewIndex, setPreviewIndex] = useState<number | null>(null);
@@ -106,7 +81,7 @@ export default function ServiceDetailsScreen() {
     fetchService();
   }, []);
 
-  const openAttachment = async (file: Attachment) => {
+  const openAttachment = async (file: ServiceAttachments) => {
     try {
       const url = `${API_URL}${file.fileUrl}`;
       const supported = await Linking.canOpenURL(url);
@@ -118,14 +93,14 @@ export default function ServiceDetailsScreen() {
     }
   };
 
-  const isImage = (file: Attachment) => {
+  const isImage = (file: ServiceAttachments) => {
     return (
       file.mimeType?.startsWith("image/") ||
       /\.(jpg|jpeg|png|webp)$/i.test(file.fileName)
     );
   };
 
-  const isPdf = (file: Attachment) => {
+  const isPdf = (file: ServiceAttachments) => {
     return file.mimeType === "application/pdf" || /\.pdf$/i.test(file.fileName);
   };
 
@@ -328,7 +303,7 @@ export default function ServiceDetailsScreen() {
           <View style={[styles.divider, { backgroundColor: theme.border }]} />
           <InfoRow
             label={t("services.cost")}
-            value={service.amount ? `${service.amount} ${service.createdBy.currency}` : "-"}
+            value={service.amount ? `${service.amount} ${service.currency}` : "-"}
             theme={theme}
             valueColor={theme.primary}
           />

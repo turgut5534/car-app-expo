@@ -5,11 +5,22 @@ export type Service = {
   createdBy: User;
   serviceDate: string;
   km: number;
+  currency: string;
+  description: string;
   amount: string;
   car: CarDetail;
   category: ServiceCategory;
   createdAt: string;
+  attachments: ServiceAttachments[]
 };
+
+export type ServiceAttachments = {
+  id: string;
+  fileName: string;
+  fileUrl: string;
+  mimeType?: string;
+};
+
 
 export type ServiceCategory =
   | "OIL_CHANGE"

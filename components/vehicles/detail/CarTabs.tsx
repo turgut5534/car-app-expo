@@ -17,7 +17,7 @@ export function CarTabs({ activeTab, onChange }: Props) {
     { key: "overview", label: t("cars.overview") },
     { key: "services", label: t("cars.services") },
     { key: "fuel", label: t("cars.fuel") },
-    // { key: "expenses", label: t("cars.expenses") },
+    { key: "expenses", label: t("cars.expenses") },
     { key: "documents", label: t("cars.documents") },
   ];
 

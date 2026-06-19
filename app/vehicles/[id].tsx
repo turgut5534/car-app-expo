@@ -14,6 +14,7 @@ import { ServicesTab } from "../../components/vehicles/detail/ServicesTab";
 import { FuelTab } from "../../components/vehicles/detail/FuelTab";
 import { DocumentsTab } from "../../components/vehicles/detail/DocumentsTab";
 import { ComingSoonTab } from "../../components/vehicles/detail/ComingSoonTab";
+import {ExpensesTab} from "@/components/vehicles/detail/ExpensesTab";
 
 export default function CarDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -37,7 +38,11 @@ export default function CarDetailScreen() {
     hasMore,  
     loadMore,
     refreshing,
+    expenses,
     expensesLoading,
+    loadMoreExpenses,
+    loadingMoreExpenses,
+    hasMoreExpenses
   } = useCarDetail(id);
 
   if (loading) {
@@ -101,14 +106,14 @@ export default function CarDetailScreen() {
             <FuelTab fuelResponse={fuels} carId={car.id} />
           )
         ) : null}
-        {/* 
+        
         {activeTab === "expenses" ? (
           expensesLoading ? (
             <ActivityIndicator color={theme.primary} />
           ) : (
-            <ExpensesTab car={car} />
+            <ExpensesTab expenses={expenses} carId={car.id} loadMoreExpenses={loadMoreExpenses} loadingMoreExpenses={loadingMoreExpenses} hasMoreExpenses={hasMoreExpenses} />
           )
-        ) : null} */}
+        ) : null}
 
         {activeTab === "documents" ? (
           documentsLoading ? (

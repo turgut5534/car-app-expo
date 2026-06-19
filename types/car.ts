@@ -11,7 +11,7 @@ export type Service = {
   car: CarDetail;
   category: ServiceCategory;
   createdAt: string;
-  attachments: ServiceAttachments[]
+  attachments: ServiceAttachments[];
 };
 
 export type ServiceAttachments = {
@@ -162,10 +162,16 @@ export type FuelRecord = {
 
 export type ExpenseRecord = {
   id: string;
+  carId: string;
+  createdBy: User;
+  currency: string;
   title: string;
+  mileage: number;
   description: number;
   amount: number;
+  expenseDate: Date
   category: ExpenseCategory[];
+  createdAt: string;
 };
 
 export enum ExpenseCategory {

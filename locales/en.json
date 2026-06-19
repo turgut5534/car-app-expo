@@ -203,6 +203,7 @@
     "detailTitleServices": "CAR DETAIL - SERVICES",
     "addService": "Add Service",
     "noServices": "No service records yet",
+    "noExpenses": "No expense records yet",
     "addDocument": "Add Document",
     "noDocuments": "No documents yet",
     "validUntil": "Valid until",

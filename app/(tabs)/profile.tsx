@@ -242,6 +242,11 @@ export default function ProfileScreen() {
             onPress={() => router.push("/vehicles")}
           />
           <MenuItem
+            icon="people-outline"
+            title={t("profile.myFamily")}
+            onPress={() => router.push("/users/family")}
+          />
+          <MenuItem
             icon="notifications-outline"
             title={t("profile.notifications")}
             onPress={() => {}}

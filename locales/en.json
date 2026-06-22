@@ -170,7 +170,8 @@
     "updateFailed": "Failed to update profile.",
     "currency": "Currency",
     "distanceUnit": "Distance Unit",
-    "dark": "Dark"
+    "dark": "Dark",
+    "myFamily": "My Family"
   },
   "theme": {
     "light": "Light",
@@ -378,5 +379,22 @@
     "TIRE": "Tires",
     "DOCUMENT": "Documents & Registration",
     "OTHER": "Other"
+  },
+  "family": {
+    "title": "Family & Sharing",
+    "addMember": "Add Family Member",
+    "addMemberDesc": "Invite someone to view or manage your vehicles and expenses.",
+    "searchPlaceholder": "Email or username...",
+    "enterEmailToSearch": "Please enter an email to search.",
+    "inviteSent": "Invite Sent",
+    "inviteSentDesc": "An invitation has been sent to",
+    "existingMembers": "Existing Members",
+    "noMembers": "You haven't added any family members yet.",
+    "fullAccess": "Full Access",
+    "viewOnly": "View Only",
+    "pending": "Pending Invite",
+    "manage": "Manage",
+    "manageDesc": "What would you like to do with this member?",
+    "changeAccess": "Change Access Level"
   }
 }

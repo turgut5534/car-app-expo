@@ -65,7 +65,7 @@ export function ExpenseItem({ expense }: Props) {
 
         <View style={{ flex: 1 }}>
           <Text style={[styles.serviceTitle, { color: theme.text }]}>
-            {t(`serviceCategories.${expense.category}`)}
+            {t(`expenseCategories.${expense.category}`)}
           </Text>
 
           <Text style={[styles.serviceMeta, { color: theme.mutedText }]}>

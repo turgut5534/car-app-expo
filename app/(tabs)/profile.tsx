@@ -249,7 +249,7 @@ export default function ProfileScreen() {
           <MenuItem
             icon="notifications-outline"
             title={t("profile.notifications")}
-            onPress={() => {}}
+            onPress={() => {router.push('/users/notifications')}}
           />
           <MenuItem
             icon="cloud-upload-outline"

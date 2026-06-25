@@ -211,6 +211,7 @@ export type HomeData = {
   upcomingReminders: number;
   ownedCars: CarDetail[];
   reminders: Reminder[];
+  notificationCount: number
 };
 
 export type CarTabKey =

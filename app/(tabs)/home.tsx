@@ -166,11 +166,19 @@ export default function HomeScreen() {
             ]}
             onPress={() => router.push("/users/notifications")}
           >
-            <Ionicons
-              name="notifications-outline"
-              size={24}
-              color={theme.text}
-            />
+            <View style={{ position: "relative" }}>
+              <Ionicons
+                name="notifications-outline"
+                size={24}
+                color={theme.text}
+              />
+
+              {data.notificationCount > 0 && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>{data.notificationCount}</Text>
+                </View>
+              )}
+            </View>
           </TouchableOpacity>
         </View>
 
@@ -644,15 +652,6 @@ const styles = StyleSheet.create({
     marginTop: 6,
     lineHeight: 20,
   },
-  card: {
-    flex: 1,
-    minHeight: 120,
-    borderRadius: 18,
-    padding: 18,
-    borderWidth: 1,
-    position: "relative",
-  },
-
   cardIcon: {
     position: "absolute",
     right: 14,
@@ -671,5 +670,23 @@ const styles = StyleSheet.create({
   carImage: {
     width: "100%",
     height: "100%",
+  },
+  badge: {
+    position: "absolute",
+    top: -6,
+    right: -10,
+    minWidth: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: "red",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 4,
+  },
+
+  badgeText: {
+    color: "#fff",
+    fontSize: 10,
+    fontWeight: "700",
   },
 });

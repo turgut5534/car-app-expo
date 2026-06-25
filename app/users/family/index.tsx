@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -10,62 +10,139 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { useAppTheme } from "@/context/ThemeContext";
-
-// Mock data for demonstration - replace with actual API fetching
-const MOCK_MEMBERS = [
-  {
-    id: "1",
-    name: "Sarah Jenkins",
-    email: "sarah.j@example.com",
-    avatar: "https://i.pravatar.cc/150?u=sarah",
-    accessLevel: "FULL_ACCESS", // FULL_ACCESS, VIEW_ONLY
-    status: "ACTIVE",
-  },
-  {
-    id: "2",
-    name: "Mike Jenkins",
-    email: "mike.jenkins99@example.com",
-    avatar: "https://i.pravatar.cc/150?u=mike",
-    accessLevel: "VIEW_ONLY",
-    status: "ACTIVE",
-  },
-  {
-    id: "3",
-    name: "Anna Smith",
-    email: "anna.s@example.com",
-    avatar: null, // Fallback to initial/icon
-    accessLevel: "VIEW_ONLY",
-    status: "PENDING", // Pending invite
-  },
-];
+import { API_URL } from "@/constants/api";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function FamilyMembersScreen() {
   const { t } = useTranslation();
   const { theme } = useAppTheme();
-  
-  const [members, setMembers] = useState(MOCK_MEMBERS);
-  const [searchQuery, setSearchQuery] = useState("");
 
-  const handleSearchAdd = () => {
-    if (!searchQuery.trim()) {
-      Alert.alert(t("common.error"), t("family.enterEmailToSearch", "Please enter an email to search."));
+  const [members, setMembers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [familyId, setFamilyId] = useState<string | null>(null);
+
+  // Search & Instant Lookup States
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearchingBackend, setIsSearchingBackend] = useState(false);
+  const [foundUser, setFoundUser] = useState<any | null>(null);
+
+  // Fetch initial family members
+  useEffect(() => {
+    const fetchFamily = async () => {
+      try {
+        setLoading(true);
+        const token = await AsyncStorage.getItem("token");
+
+        if (!token) {
+          router.replace("/(auth)/login");
+          return;
+        }
+
+        const response = await fetch(`${API_URL}/family/members`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (response.status === 404) {
+          setMembers([]);
+          return;
+        }
+
+        const data = await response.json();
+
+        if (!response.ok)
+          throw new Error(data.message || t("profile.loadFailed"));
+
+        setFamilyId(data.family.id)
+        setMembers(Array.isArray(data.members) ? data.members : []);
+      } catch (err) {
+        console.log("Failed to load family:", err);
+        Alert.alert("Error", "Failed to load family data");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFamily();
+  }, []);
+
+  // INSTANT SEARCH EFFECT: Triggers automatically when a valid email syntax is typed
+  useEffect(() => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const cleanEmail = searchQuery.trim();
+
+    // If it's not a complete email yet, clear any previously found user card
+    if (!emailRegex.test(cleanEmail)) {
+      setFoundUser(null);
       return;
     }
-    // Implement API call to search user and send invite
-    Alert.alert(
-      t("family.inviteSent", "Invite Sent"),
-      `${t("family.inviteSentDesc", "An invitation has been sent to")} ${searchQuery}`
-    );
-    setSearchQuery("");
+
+    const lookupUserByEmail = async () => {
+      try {
+        setIsSearchingBackend(true);
+        const token = await AsyncStorage.getItem("token");
+
+        // Adjust endpoint to match your user-lookup endpoint
+        const response = await fetch(
+          `${API_URL}/users/lookup?email=${encodeURIComponent(cleanEmail)}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        );
+
+        const data = await response.json();
+
+        if (response.ok && data) {
+          setFoundUser(data); // Expecting { id, name, email, avatar }
+        } else {
+          setFoundUser(null);
+        }
+      } catch (err) {
+        console.log("Instant search failed:", err);
+        setFoundUser(null);
+      } finally {
+        setIsSearchingBackend(false);
+      }
+    };
+
+    lookupUserByEmail();
+  }, [searchQuery]);
+
+  // Handle the action of actually inviting the found user
+  const handleSendInvite = async () => {
+    if (!foundUser) return;
+
+    try {
+      const token = await AsyncStorage.getItem("token");
+      console.log(familyId)
+      const response = await fetch(`${API_URL}/family/${familyId}/invite`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ email: foundUser.email }),
+      });
+
+
+      if (!response.ok) throw new Error();
+
+      Alert.alert("Success", `Invitation sent to ${foundUser.email}`);
+      setSearchQuery("");
+      setFoundUser(null);
+    } catch (err) {
+      console.log(err)
+      Alert.alert("Error", "Failed to send invite");
+    }
   };
 
-  const handleManageMember = (member: typeof MOCK_MEMBERS[0]) => {
+  const handleManageMember = (member: (typeof members)[0]) => {
     Alert.alert(
       `${t("family.manage", "Manage")} ${member.name}`,
       t("family.manageDesc", "What would you like to do with this member?"),
@@ -77,12 +154,11 @@ export default function FamilyMembersScreen() {
         {
           text: t("common.delete", "Remove Member"),
           style: "destructive",
-          onPress: () => {
-            setMembers((prev) => prev.filter((m) => m.id !== member.id));
-          },
+          onPress: () =>
+            setMembers((prev) => prev.filter((m) => m.id !== member.id)),
         },
         { text: t("common.cancel", "Cancel"), style: "cancel" },
-      ]
+      ],
     );
   };
 
@@ -94,109 +170,284 @@ export default function FamilyMembersScreen() {
     elevation: 4,
   };
 
+  if (loading) {
+    return (
+      <SafeAreaView
+        style={[styles.container, { backgroundColor: theme.background }]}
+      >
+        <View
+          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+        >
+          <Text style={{ color: theme.text }}>Loading family...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-      <KeyboardAvoidingView 
-        style={{ flex: 1 }} 
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: theme.background }]}
+    >
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        {/* HEADER */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={styles.backButton}
+          >
             <Ionicons name="chevron-back" size={28} color={theme.text} />
           </TouchableOpacity>
           <Text style={[styles.headerTitle, { color: theme.text }]}>
             {t("family.title", "Family & Sharing")}
           </Text>
-          <View style={{ width: 40 }} /> {/* Spacer */}
+          <View style={{ width: 40 }} />
         </View>
 
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-          
-          {/* SEARCH & ADD SECTION */}
-          <View style={[styles.searchSection, { backgroundColor: theme.card, borderColor: theme.border }, shadowStyle]}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+        >
+          {/* SEARCH & INSTANT ADD SECTION */}
+          <View
+            style={[
+              styles.searchSection,
+              { backgroundColor: theme.card, borderColor: theme.border },
+              shadowStyle,
+            ]}
+          >
             <View style={styles.iconCircle}>
               <Ionicons name="person-add" size={28} color={theme.primary} />
             </View>
-            <Text style={[styles.sectionTitle, { color: theme.text, textAlign: "center", marginBottom: 6 }]}>
+            <Text
+              style={[
+                styles.sectionTitle,
+                { color: theme.text, textAlign: "center", marginBottom: 6 },
+              ]}
+            >
               {t("family.addMember", "Add Family Member")}
             </Text>
-            <Text style={[styles.sectionSubtitle, { color: theme.mutedText, textAlign: "center", marginBottom: 20 }]}>
-              {t("family.addMemberDesc", "Invite someone to view or manage your vehicles and expenses.")}
+            <Text
+              style={[
+                styles.sectionSubtitle,
+                {
+                  color: theme.mutedText,
+                  textAlign: "center",
+                  marginBottom: 20,
+                },
+              ]}
+            >
+              {t(
+                "family.addMemberDesc",
+                "Type a complete email address to instantly search for your family member.",
+              )}
             </Text>
 
-            <View style={[styles.searchRow, { backgroundColor: theme.background, borderColor: theme.border }]}>
-              <Ionicons name="search" size={20} color={theme.mutedText} style={styles.searchIcon} />
+            <View
+              style={[
+                styles.searchRow,
+                {
+                  backgroundColor: theme.background,
+                  borderColor: theme.border,
+                },
+              ]}
+            >
+              <Ionicons
+                name="search"
+                size={20}
+                color={theme.mutedText}
+                style={styles.searchIcon}
+              />
               <TextInput
                 style={[styles.searchInput, { color: theme.text }]}
-                placeholder={t("family.searchPlaceholder", "Email or username...")}
+                placeholder={t(
+                  "family.searchPlaceholder",
+                  "Enter email address...",
+                )}
                 placeholderTextColor={theme.mutedText}
                 value={searchQuery}
                 onChangeText={setSearchQuery}
                 autoCapitalize="none"
                 keyboardType="email-address"
               />
-              <TouchableOpacity 
-                style={[styles.searchBtn, { backgroundColor: theme.primary }]}
-                onPress={handleSearchAdd}
-              >
-                <Text style={styles.searchBtnText}>{t("common.add", "Add")}</Text>
-              </TouchableOpacity>
+              {isSearchingBackend && (
+                <ActivityIndicator
+                  size="small"
+                  color={theme.primary}
+                  style={{ marginRight: 10 }}
+                />
+              )}
             </View>
+
+            {/* INSTANT RESULT INTERFACE */}
+            {foundUser && (
+              <View
+                style={[
+                  styles.foundUserCard,
+                  {
+                    borderColor: theme.border,
+                    backgroundColor: theme.background,
+                  },
+                ]}
+              >
+                <View
+                  style={[
+                    styles.avatarFallback,
+                    {
+                      backgroundColor: theme.primary + "20",
+                      width: 44,
+                      height: 44,
+                      borderRadius: 22,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={{
+                      color: theme.primary,
+                      fontWeight: "800",
+                      fontSize: 16,
+                    }}
+                  >
+                    {foundUser.name?.charAt(0).toUpperCase()}
+                  </Text>
+                </View>
+                <View style={{ flex: 1, marginLeft: 12 }}>
+                  <Text
+                    style={[
+                      styles.memberName,
+                      { color: theme.text, fontSize: 15 },
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {foundUser.name}
+                  </Text>
+                  <Text
+                    style={{ color: theme.mutedText, fontSize: 12 }}
+                    numberOfLines={1}
+                  >
+                    {foundUser.email}
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  style={[styles.inviteBtn, { backgroundColor: theme.primary }]}
+                  onPress={handleSendInvite}
+                >
+                  <Text style={styles.inviteBtnText}>
+                    {t("common.invite", "Invite")}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
 
           {/* MEMBERS LIST */}
           <View style={styles.listHeader}>
             <Text style={[styles.listTitle, { color: theme.text }]}>
-              {t("family.existingMembers", "Existing Members")} ({members.length})
+              {t("family.existingMembers", "Existing Members")} (
+              {members.length})
             </Text>
           </View>
 
           {members.length === 0 ? (
             <View style={styles.emptyState}>
-              <Ionicons name="people-outline" size={48} color={theme.mutedText} />
+              <Ionicons
+                name="people-outline"
+                size={48}
+                color={theme.mutedText}
+              />
               <Text style={[styles.emptyText, { color: theme.mutedText }]}>
-                {t("family.noMembers", "You haven't added any family members yet.")}
+                {t("family.noMembers", "You do not have a family member yet.")}
               </Text>
             </View>
           ) : (
             <View style={styles.membersList}>
               {members.map((member) => (
-                <View 
-                  key={member.id} 
-                  style={[styles.memberCard, { backgroundColor: theme.card, borderColor: theme.border }, shadowStyle]}
+                <View
+                  key={member.id}
+                  style={[
+                    styles.memberCard,
+                    { backgroundColor: theme.card, borderColor: theme.border },
+                    shadowStyle,
+                  ]}
                 >
-                  {/* AVATAR */}
                   {member.avatar ? (
-                    <Image source={{ uri: member.avatar }} style={styles.avatar} />
+                    <Image
+                      source={{ uri: member.avatar }}
+                      style={styles.avatar}
+                    />
                   ) : (
-                    <View style={[styles.avatarFallback, { backgroundColor: theme.primary + "20" }]}>
-                      <Text style={{ color: theme.primary, fontWeight: "800", fontSize: 18 }}>
-                        {member.name.charAt(0).toUpperCase()}
+                    <View
+                      style={[
+                        styles.avatarFallback,
+                        { backgroundColor: theme.primary + "20" },
+                      ]}
+                    >
+                      <Text
+                        style={{
+                          color: theme.primary,
+                          fontWeight: "800",
+                          fontSize: 18,
+                        }}
+                      >
+                        {member.email}
                       </Text>
                     </View>
                   )}
 
-                  {/* INFO */}
                   <View style={styles.memberInfo}>
-                    <Text style={[styles.memberName, { color: theme.text }]} numberOfLines={1}>
+                    <Text
+                      style={[styles.memberName, { color: theme.text }]}
+                      numberOfLines={1}
+                    >
                       {member.name}
                     </Text>
-                    <Text style={[styles.memberEmail, { color: theme.mutedText }]} numberOfLines={1}>
+                    <Text
+                      style={[styles.memberEmail, { color: theme.mutedText }]}
+                      numberOfLines={1}
+                    >
                       {member.email}
                     </Text>
-                    
-                    {/* BADGES */}
+
                     <View style={styles.badgesRow}>
-                      <View style={[styles.badge, { backgroundColor: member.accessLevel === "FULL_ACCESS" ? theme.primary + "20" : theme.mutedText + "20" }]}>
-                        <Text style={[styles.badgeText, { color: member.accessLevel === "FULL_ACCESS" ? theme.primary : theme.text }]}>
-                          {member.accessLevel === "FULL_ACCESS" ? t("family.fullAccess", "Full Access") : t("family.viewOnly", "View Only")}
+                      <View
+                        style={[
+                          styles.badge,
+                          {
+                            backgroundColor:
+                              member.accessLevel === "FULL_ACCESS"
+                                ? theme.primary + "20"
+                                : theme.mutedText + "20",
+                          },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.badgeText,
+                            {
+                              color:
+                                member.accessLevel === "FULL_ACCESS"
+                                  ? theme.primary
+                                  : theme.text,
+                            },
+                          ]}
+                        >
+                          {member.accessLevel === "FULL_ACCESS"
+                            ? t("family.fullAccess", "Full Access")
+                            : t("family.viewOnly", "View Only")}
                         </Text>
                       </View>
 
                       {member.status === "PENDING" && (
-                        <View style={[styles.badge, { backgroundColor: "#F59E0B20", marginLeft: 6 }]}>
-                          <Text style={[styles.badgeText, { color: "#D97706" }]}>
+                        <View
+                          style={[
+                            styles.badge,
+                            { backgroundColor: "#F59E0B20", marginLeft: 6 },
+                          ]}
+                        >
+                          <Text
+                            style={[styles.badgeText, { color: "#D97706" }]}
+                          >
                             {t("family.pending", "Pending Invite")}
                           </Text>
                         </View>
@@ -204,18 +455,20 @@ export default function FamilyMembersScreen() {
                     </View>
                   </View>
 
-                  {/* ACTION BUTTON */}
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     style={styles.actionBtn}
                     onPress={() => handleManageMember(member)}
                   >
-                    <Ionicons name="ellipsis-vertical" size={22} color={theme.mutedText} />
+                    <Ionicons
+                      name="ellipsis-vertical"
+                      size={22}
+                      color={theme.mutedText}
+                    />
                   </TouchableOpacity>
                 </View>
               ))}
             </View>
           )}
-
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -223,9 +476,7 @@ export default function FamilyMembersScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+  container: { flex: 1 },
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -240,15 +491,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "flex-start",
   },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: "800",
-  },
-  scrollContent: {
-    paddingBottom: 40,
-  },
-  
-  // SEARCH / ADD SECTION
+  headerTitle: { fontSize: 18, fontWeight: "800" },
+  scrollContent: { paddingBottom: 40 },
   searchSection: {
     marginHorizontal: 20,
     marginTop: 10,
@@ -267,14 +511,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 16,
   },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: "800",
-  },
-  sectionSubtitle: {
-    fontSize: 14,
-    lineHeight: 20,
-  },
+  sectionTitle: { fontSize: 20, fontWeight: "800" },
+  sectionSubtitle: { fontSize: 14, lineHeight: 20 },
   searchRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -282,43 +520,33 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     height: 56,
     paddingLeft: 16,
-    paddingRight: 6,
     width: "100%",
   },
-  searchIcon: {
-    marginRight: 10,
+  searchIcon: { marginRight: 10 },
+  searchInput: { flex: 1, fontSize: 15, height: "100%" },
+
+  // New instant user card layout styles
+  foundUserCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    width: "100%",
+    marginTop: 16,
+    padding: 12,
+    borderRadius: 16,
+    borderWidth: 1,
   },
-  searchInput: {
-    flex: 1,
-    fontSize: 15,
-    height: "100%",
-  },
-  searchBtn: {
-    height: 44,
-    paddingHorizontal: 20,
-    borderRadius: 12,
+  inviteBtn: {
+    height: 36,
+    paddingHorizontal: 16,
+    borderRadius: 10,
     justifyContent: "center",
     alignItems: "center",
   },
-  searchBtnText: {
-    color: "#FFF",
-    fontWeight: "700",
-    fontSize: 15,
-  },
+  inviteBtnText: { color: "#FFF", fontWeight: "700", fontSize: 13 },
 
-  // LIST SECTION
-  listHeader: {
-    paddingHorizontal: 24,
-    marginBottom: 16,
-  },
-  listTitle: {
-    fontSize: 18,
-    fontWeight: "800",
-  },
-  membersList: {
-    paddingHorizontal: 20,
-    gap: 12,
-  },
+  listHeader: { paddingHorizontal: 24, marginBottom: 16 },
+  listTitle: { fontSize: 18, fontWeight: "800" },
+  membersList: { paddingHorizontal: 20, gap: 12 },
   memberCard: {
     flexDirection: "row",
     alignItems: "center",
@@ -326,11 +554,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 1,
   },
-  avatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-  },
+  avatar: { width: 56, height: 56, borderRadius: 28 },
   avatarFallback: {
     width: 56,
     height: 56,
@@ -338,42 +562,18 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  memberInfo: {
-    flex: 1,
-    marginLeft: 16,
-    justifyContent: "center",
-  },
-  memberName: {
-    fontSize: 16,
-    fontWeight: "700",
-    marginBottom: 2,
-  },
-  memberEmail: {
-    fontSize: 13,
-    marginBottom: 8,
-  },
-  badgesRow: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  badge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  badgeText: {
-    fontSize: 11,
-    fontWeight: "700",
-    letterSpacing: 0.3,
-  },
+  memberInfo: { flex: 1, marginLeft: 16, justifyContent: "center" },
+  memberName: { fontSize: 16, fontWeight: "700", marginBottom: 2 },
+  memberEmail: { fontSize: 13, marginBottom: 8 },
+  badgesRow: { flexDirection: "row", alignItems: "center" },
+  badge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
+  badgeText: { fontSize: 11, fontWeight: "700", letterSpacing: 0.3 },
   actionBtn: {
     width: 40,
     height: 40,
     justifyContent: "center",
     alignItems: "flex-end",
   },
-
-  // EMPTY STATE
   emptyState: {
     alignItems: "center",
     justifyContent: "center",

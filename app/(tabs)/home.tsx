@@ -164,6 +164,7 @@ export default function HomeScreen() {
                 borderColor: theme.border,
               },
             ]}
+            onPress={() => router.push("/users/notifications")}
           >
             <Ionicons
               name="notifications-outline"
